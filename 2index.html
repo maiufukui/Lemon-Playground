@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lemon · Stats · Option 2</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #E8E6DF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; }
+  button { font-family: inherit; }
+  ::-webkit-scrollbar { width: 0; }
+  .slide-in { animation: slideIn 0.22s ease; }
+  @keyframes slideIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
+const C = {
+  bg:"#F7F6F2",card:"#FFFFFF",lemon:"#D4B84A",lemonLight:"#FDF6DC",lemonMid:"#E8D170",
+  green:"#4CAF7D",amber:"#F0A030",red:"#E05C5C",
+  text:"#1A1A1A",textMid:"#5A5A5A",textLight:"#9A9A9A",border:"#EFEFEB",ring:"#EEECEA",
+};
+const scoreColor  = v => v>=75?C.green:v>=50?C.amber:C.red;
+const statusLabel = v => v>=75?"Good":v>=50?"Fair":"Low";
+
+function seededRand(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;};}
+function makeHistory(base,variance,count,seed,drift=0){
+  const rand=seededRand(seed);
+  return Array.from({length:count},(_,i)=>Math.max(1,base+(drift*i/count)+(rand()-0.5)*variance*2));
+}
+
+const RANGES=[
+  {id:"7D",label:"7D",sublabel:"7 days",  count:7, axisLabels:["M","T","W","T","F","S","S"]},
+  {id:"1M",label:"1M",sublabel:"30 days", count:30},
+  {id:"6M",label:"6M",sublabel:"6 months",count:6, axisLabels:["Oct","Nov","Dec","Jan","Feb","Mar"]},
+  {id:"1Y",label:"1Y",sublabel:"1 year",  count:12,axisLabels:["A","M","J","J","A","S","O","N","D","J","F","M"]},
+];
+
+const MDEFS={
+  hrv:        {label:"HRV",         unit:"ms",   value:"44",    trend:+9, icon:"〰️",cfg:{base:38,  variance:8,  seed:6, drift:7  },isAvg:true, fmtVal:v=>Math.round(v)},
+  rhr:        {label:"Resting HR",  unit:"bpm",  value:"58",    trend:-4, icon:"❤️",cfg:{base:61,  variance:5,  seed:5, drift:-4 },isAvg:true, fmtVal:v=>Math.round(v)},
+  sleep_dur:  {label:"Sleep",       unit:"",     value:"7h 22m",trend:+5, icon:"🌙",cfg:{base:7.1, variance:0.9,seed:8, drift:0.3},isAvg:true, fmtVal:v=>`${v.toFixed(1)}h`},
+  acal:       {label:"Active Cal",  unit:"kcal", value:"412",   trend:+12,icon:"🔥",cfg:{base:400, variance:100,seed:2, drift:40 },isAvg:false,fmtVal:v=>Math.round(v)},
+  workout_min:{label:"Workout Min", unit:"min",  value:"34",    trend:+1, icon:"🏋️",cfg:{base:32,  variance:10, seed:11,drift:3  },isAvg:false,fmtVal:v=>Math.round(v)},
+  total_sleep:{label:"Total Sleep", unit:"",     value:"7h 22m",trend:+5, icon:"🌙",cfg:{base:7.1, variance:0.9,seed:8, drift:0.3},isAvg:true, fmtVal:v=>`${v.toFixed(1)}h`},
+  rem:        {label:"REM Sleep",   unit:"",     value:"1h 45m",trend:-3, icon:"💤",cfg:{base:1.75,variance:0.4,seed:12,drift:0.1},isAvg:true, fmtVal:v=>`${v.toFixed(1)}h`},
+  awake:      {label:"Awake Time",  unit:"min",  value:"18",    trend:-8, icon:"👁", cfg:{base:20,  variance:8,  seed:13,drift:-3 },isAvg:true, fmtVal:v=>Math.round(v)},
+  steps:      {label:"Steps",       unit:"",     value:"7,842", trend:+8, icon:"👟",cfg:{base:7800,variance:1800,seed:1,drift:600},isAvg:false,fmtVal:v=>Math.round(v/100)*100},
+  rcal:       {label:"Resting Cal", unit:"kcal", value:"1,680", trend:-2, icon:"⚡",cfg:{base:1680,variance:60, seed:3, drift:0  },isAvg:true, fmtVal:v=>Math.round(v)},
+  distance:   {label:"Distance",    unit:"km",   value:"5.2",   trend:+6, icon:"📍",cfg:{base:5.0, variance:1.8,seed:4, drift:0.5},isAvg:false,fmtVal:v=>v.toFixed(1)},
+  hr:         {label:"Heart Rate",  unit:"bpm",  value:"72",    trend:0,  icon:"💓",cfg:{base:74,  variance:10, seed:7, drift:0  },isAvg:true, fmtVal:v=>Math.round(v)},
+  workouts:   {label:"Workouts",    unit:"/ wk", value:"4",     trend:+1, icon:"🏋️",cfg:{base:3.5, variance:1.2,seed:9, drift:0.5},isAvg:false,fmtVal:v=>Math.max(0,Math.round(v))},
+};
+
+const HEALTH={value:76,delta:+2,insight:"Your overall health is up this week — sleep consistency and lower resting HR are the biggest drivers."};
+const READINESS={value:67,delta:-3,label:"Readiness",insight:"Recovery is slightly lower today. HRV dipped and workout intensity was high — a lighter day would serve you well.",contributors:[
+  {label:"HRV",            value:"44 ms",   score:68,status:"Fair",   metricId:"hrv"},
+  {label:"Resting HR",     value:"58 bpm",  score:80,status:"Good",   metricId:"rhr"},
+  {label:"Sleep",          value:"7h 22m",  score:82,status:"Good",   metricId:"sleep_dur"},
+  {label:"Active Calories",value:"412 kcal",score:55,status:"Fair",   metricId:"acal"},
+  {label:"Workout Min",    value:"34 min",  score:52,status:"Fair",   metricId:"workout_min"},
+]};
+const SLEEP={value:82,delta:+4,label:"Sleep",insight:"Great sleep last night. You hit deep sleep earlier than usual and woke up less. REM could still improve.",contributors:[
+  {label:"Total Sleep",value:"7h 22m",score:85,status:"Good",   metricId:"total_sleep"},
+  {label:"REM Sleep",  value:"1h 45m",score:68,status:"Fair",   metricId:"rem"},
+  {label:"Awake Time", value:"18 min", score:90,status:"Optimal",metricId:"awake"},
+]};
+
+function useChartData(metricId,rangeId){
+  return useMemo(()=>{
+    const m=MDEFS[metricId],r=RANGES.find(x=>x.id===rangeId);
+    const {base,variance,seed,drift}=m.cfg;
+    const sb=rangeId==="6M"?base*0.92:rangeId==="1Y"?base*0.85:base;
+    const sd=rangeId==="6M"?drift*0.8:rangeId==="1Y"?drift:drift*0.1;
+    const so=rangeId==="1M"?100:rangeId==="6M"?200:rangeId==="1Y"?300:0;
+    return makeHistory(sb,variance*(rangeId==="6M"||rangeId==="1Y"?0.6:1),r.count,seed+so,sd);
+  },[metricId,rangeId]);
+}
+
+
+// ── Full charts ───────────────────────────────────────────────────────────────
+function BarChart({data,color,axisLabels}){
+  const max=Math.max(...data)*1.15,min=Math.min(...data)*0.85,range=max-min||1;
+  const H=64,bh=v=>Math.max(3,((v-min)/range)*(H-4));
+  return(<div style={{display:"flex",alignItems:"flex-end",gap:data.length>8?3:6,height:H+18}}>
+    {data.map((v,i)=>{const l=i===data.length-1;return(
+      <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+        <div style={{width:"100%",height:bh(v),borderRadius:data.length>8?2:5,background:l?color:`${color}50`,transition:"height 0.45s ease"}}/>
+        {axisLabels&&<span style={{fontSize:data.length>8?7.5:9,color:l?color:C.textLight,fontWeight:l?700:400,lineHeight:1}}>{axisLabels[i]}</span>}
+      </div>);})}
+  </div>);
+}
+
+function LineChart({data,color}){
+  const W=310,H=60,max=Math.max(...data)*1.1,min=Math.min(...data)*0.9,range=max-min||1;
+  const px=i=>(i/(data.length-1))*W,py=v=>H-((v-min)/range)*(H-6);
+  const pts=data.map((v,i)=>`${px(i)},${py(v)}`).join(" ");
+  const area=`M0,${H} `+data.map((v,i)=>`L${px(i)},${py(v)}`).join(" ")+` L${W},${H} Z`;
+  const gid=`g${color.replace(/[^a-z0-9]/gi,"")}`;
+  return(<svg width="100%" viewBox={`0 0 ${W} ${H+18}`} style={{overflow:"visible"}}>
+    <defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor={color} stopOpacity="0.18"/>
+      <stop offset="100%" stopColor={color} stopOpacity="0.02"/>
+    </linearGradient></defs>
+    <path d={area} fill={`url(#${gid})`}/>
+    <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx={px(data.length-1)} cy={py(data[data.length-1])} r="3.5" fill={color}/>
+    {[6,13,20,27].map((idx,wi)=><text key={idx} x={(idx/(data.length-1))*W} y={H+14} textAnchor="middle" fontSize="9" fill={C.textLight}>W{wi+1}</text>)}
+  </svg>);
+}
+
+// ── Detail view ───────────────────────────────────────────────────────────────
+function DetailView({metricId,onBack}){
+  const [range,setRange]=useState("7D");
+  const m=MDEFS[metricId],r=RANGES.find(x=>x.id===range);
+  const data=useChartData(metricId,range);
+  const tc=m.trend>0?C.green:m.trend<0?C.red:C.textLight;
+  const ta=m.trend>0?"↑":m.trend<0?"↓":"→";
+  const avg=data.reduce((a,b)=>a+b,0)/data.length;
+  const sv=m.isAvg?m.fmtVal(avg):m.fmtVal(data.reduce((a,b)=>a+b,0));
+  return(
+    <div className="slide-in" style={{position:"absolute",inset:0,background:C.bg,display:"flex",flexDirection:"column",zIndex:10}}>
+      {/* Header */}
+      <div style={{height:44,display:"flex",alignItems:"center",padding:"0 20px",flexShrink:0,background:C.bg}}>
+        <button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:C.ring,border:"none",cursor:"pointer",
+          display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:C.text}}>←</button>
+        <span style={{fontSize:15,fontWeight:700,color:C.text,marginLeft:12}}>{m.label}</span>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"4px 20px 32px"}}>
+        {/* Hero value */}
+        <div style={{padding:"10px 0 20px",borderBottom:`1px solid ${C.border}`}}>
+          <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontSize:42,fontWeight:800,color:C.text,lineHeight:1}}>
+                {m.value}
+                {m.unit&&<span style={{fontSize:16,fontWeight:500,color:C.textLight,marginLeft:6}}>{m.unit}</span>}
+              </div>
+              <div style={{fontSize:12,color:C.textLight,marginTop:5}}>Today</div>
+            </div>
+            <div style={{background:tc+"18",borderRadius:10,padding:"6px 12px",textAlign:"center"}}>
+              <div style={{fontSize:16,fontWeight:800,color:tc}}>{ta} {Math.abs(m.trend)}%</div>
+              <div style={{fontSize:10,color:C.textLight,marginTop:1}}>vs prev period</div>
+            </div>
+          </div>
+        </div>
+        {/* Range selector */}
+        <div style={{display:"flex",background:C.ring,borderRadius:10,padding:3,gap:2,margin:"18px 0 16px"}}>
+          {RANGES.map(rx=>(
+            <button key={rx.id} onClick={()=>setRange(rx.id)} style={{flex:1,padding:"7px 0",borderRadius:7,border:"none",
+              background:range===rx.id?C.card:"transparent",color:range===rx.id?C.text:C.textLight,
+              fontWeight:range===rx.id?700:500,fontSize:12,cursor:"pointer",transition:"all 0.18s ease",
+              boxShadow:range===rx.id?"0 1px 3px rgba(0,0,0,0.1)":"none"}}>{rx.label}</button>
+          ))}
+        </div>
+        {/* Stat summary */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:14}}>
+          <div>
+            <span style={{fontSize:22,fontWeight:800,color:C.text}}>{sv}</span>
+            {m.unit&&<span style={{fontSize:12,color:C.textLight,marginLeft:4}}>{m.unit}</span>}
+          </div>
+          <span style={{fontSize:11,color:C.textLight}}>{m.isAvg?"avg":"total"} · {r.sublabel}</span>
+        </div>
+        {/* Chart — no card wrapper */}
+        {range==="1M"?<LineChart data={data} color={tc}/>:<BarChart data={data} color={tc} axisLabels={r.axisLabels}/>}
+      </div>
+    </div>
+  );
+}
+
+// ── Health hero ───────────────────────────────────────────────────────────────
+function HealthRing({value,delta}){
+  const r=50,stroke=7,circ=2*Math.PI*r,col=scoreColor(value);
+  return(
+    <div style={{display:"flex",alignItems:"center",gap:20,padding:"4px 0"}}>
+      <div style={{position:"relative",width:116,height:116,flexShrink:0}}>
+        <div style={{position:"absolute",inset:10,borderRadius:"50%",boxShadow:`0 0 24px ${col}35`,pointerEvents:"none"}}/>
+        <svg width="116" height="116" style={{transform:"rotate(-90deg)"}}>
+          <circle cx="58" cy="58" r={r} fill="none" stroke={C.ring} strokeWidth={stroke}/>
+          <circle cx="58" cy="58" r={r} fill="none" stroke={col} strokeWidth={stroke}
+            strokeDasharray={circ} strokeDashoffset={circ*(1-value/100)}
+            strokeLinecap="round" style={{transition:"stroke-dashoffset 1s ease"}}/>
+        </svg>
+        <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+          <span style={{fontSize:34,fontWeight:800,color:C.text,lineHeight:1}}>{value}</span>
+          <span style={{fontSize:11,fontWeight:700,color:col,letterSpacing:0.5,marginTop:2}}>{statusLabel(value).toUpperCase()}</span>
+        </div>
+      </div>
+      <div>
+        <div style={{fontSize:11,fontWeight:700,color:C.textLight,letterSpacing:0.7,marginBottom:4}}>HEALTH SCORE</div>
+        <div style={{fontSize:13,color:C.textMid,lineHeight:1.5,maxWidth:180}}>Your overall health, driven by sleep and readiness.</div>
+        <div style={{fontSize:12,color:delta>0?C.green:C.red,fontWeight:600,marginTop:6}}>{delta>0?`↑ +${delta}`:`↓ ${delta}`} vs last week</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Mini 7-day bar chart ─────────────────────────────────────────────────────
+function MiniBarChart({metricId,color}){
+  const data=useChartData(metricId,"7D");
+  const max=Math.max(...data)*1.1,min=Math.min(...data)*0.88,range=max-min||1;
+  const H=32,bh=v=>Math.max(2,((v-min)/range)*(H-2));
+  return(
+    <div style={{display:"flex",alignItems:"flex-end",gap:2,height:H}}>
+      {data.map((v,i)=>{
+        const isLast=i===data.length-1;
+        return(<div key={i} style={{flex:1,height:bh(v),borderRadius:2,
+          background:isLast?color:`${color}45`,transition:"height 0.4s ease"}}/>);
+      })}
+    </div>
+  );
+}
+
+// ── Score section — OPTION 2: mini histogram per row ─────────────────────────
+function ScoreSection({data,onSelect}){
+  const col=scoreColor(data.value);
+  return(
+    <div style={{background:C.card,borderRadius:20,overflow:"hidden",border:`1px solid ${C.border}`,boxShadow:"0 1px 6px rgba(0,0,0,0.04)"}}>
+      <div style={{padding:"18px 18px 14px",borderBottom:`1px solid ${C.border}`}}>
+        <div style={{fontSize:11,fontWeight:700,color:C.textLight,letterSpacing:0.7,marginBottom:6}}>{data.label.toUpperCase()} SCORE</div>
+        <div style={{display:"flex",alignItems:"baseline",gap:10}}>
+          <span style={{fontSize:44,fontWeight:800,color:C.text,lineHeight:1}}>{data.value}</span>
+          <div>
+            <div style={{fontSize:14,fontWeight:700,color:col}}>{statusLabel(data.value)}</div>
+            <div style={{fontSize:11,color:data.delta>0?C.green:C.red,fontWeight:500,marginTop:1}}>{data.delta>0?`+${data.delta}`:data.delta} vs last week</div>
+          </div>
+        </div>
+      </div>
+      {data.insight&&(
+        <div style={{margin:"12px 18px 14px",background:"#FDF6DC",borderRadius:12,padding:"10px 13px",border:"1px solid #E8D17055"}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.lemon,letterSpacing:0.7,marginBottom:3}}>LEMON INSIGHT</div>
+          <div style={{fontSize:12,color:"#5A4E00",lineHeight:1.5,fontWeight:500}}>{data.insight}</div>
+        </div>
+      )}
+      <div style={{padding:"4px 0 0"}}>
+        <div style={{fontSize:11,fontWeight:700,color:C.textLight,letterSpacing:0.7,padding:"10px 18px 6px"}}>CONTRIBUTORS</div>
+        {data.contributors.map((c,i)=>{
+          const cc=scoreColor(c.score),isLast=i===data.contributors.length-1;
+          return(
+            <button key={i} onClick={()=>onSelect(c.metricId)} style={{width:"100%",background:"none",border:"none",cursor:"pointer",textAlign:"left",
+              padding:`12px 18px ${isLast?"16px":"12px"}`,borderBottom:isLast?"none":`1px solid ${C.border}`,transition:"background 0.15s ease"}}
+              onMouseEnter={e=>e.currentTarget.style.background="#F7F6F2"}
+              onMouseLeave={e=>e.currentTarget.style.background="none"}>
+              {/* Top row: label + value + status + chevron */}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <span style={{fontSize:14,fontWeight:500,color:C.text}}>{c.label}</span>
+                <div style={{display:"flex",alignItems:"center",gap:7}}>
+                  <span style={{fontSize:13,fontWeight:700,color:C.textMid}}>{c.value}</span>
+                  <span style={{fontSize:12,fontWeight:700,color:cc,minWidth:46,textAlign:"right"}}>{c.status}</span>
+                  <span style={{fontSize:15,color:C.textLight}}>›</span>
+                </div>
+              </div>
+              {/* Mini histogram — 7-day bars */}
+              <MiniBarChart metricId={c.metricId} color={cc}/>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({metricId,activeRange,onSelect}){
+  const m=MDEFS[metricId],r=RANGES.find(x=>x.id===activeRange);
+  const data=useChartData(metricId,activeRange);
+  const tc=m.trend>0?C.green:m.trend<0?C.red:C.textLight;
+  const ta=m.trend>0?"↑":m.trend<0?"↓":"→";
+  const avg=data.reduce((a,b)=>a+b,0)/data.length;
+  const sv=m.isAvg?m.fmtVal(avg):m.fmtVal(data.reduce((a,b)=>a+b,0));
+  return(
+    <button onClick={()=>onSelect(metricId)} style={{background:C.card,borderRadius:20,padding:"16px 16px 14px",
+      border:`1px solid ${C.border}`,boxShadow:"0 1px 6px rgba(0,0,0,0.04)",textAlign:"left",cursor:"pointer",width:"100%",
+      transition:"transform 0.15s ease"}}
+      onMouseDown={e=>e.currentTarget.style.transform="scale(0.99)"}
+      onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}
+      onTouchStart={e=>e.currentTarget.style.transform="scale(0.99)"}
+      onTouchEnd={e=>e.currentTarget.style.transform="scale(1)"}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+        <div style={{display:"flex",alignItems:"center",gap:9}}>
+          <div style={{width:34,height:34,borderRadius:10,background:`${tc}15`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{m.icon}</div>
+          <div>
+            <div style={{fontSize:12,fontWeight:600,color:C.textMid}}>{m.label}</div>
+            <div style={{fontSize:19,fontWeight:800,color:C.text,lineHeight:1.1}}>
+              {m.value}{m.unit&&<span style={{fontSize:11,fontWeight:500,color:C.textLight,marginLeft:3}}>{m.unit}</span>}
+            </div>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:13,color:tc,fontWeight:700}}>{ta} {Math.abs(m.trend)}%</div>
+            <div style={{fontSize:10,color:C.textLight,marginTop:1}}>vs prev</div>
+          </div>
+          <span style={{fontSize:18,color:C.textLight}}>›</span>
+        </div>
+      </div>
+      {(activeRange==="6M"||activeRange==="1Y")&&(
+        <div style={{display:"flex",alignItems:"baseline",gap:5,marginBottom:10,paddingBottom:10,borderBottom:`1px solid ${C.border}`}}>
+          <span style={{fontSize:14,fontWeight:700,color:C.text}}>{sv}</span>
+          {m.unit&&<span style={{fontSize:11,color:C.textLight}}>{m.unit}</span>}
+          <span style={{fontSize:11,color:C.textLight}}>{m.isAvg?"avg":"total"} · {r.sublabel}</span>
+        </div>
+      )}
+      {activeRange==="1M"?<LineChart data={data} color={tc}/>:<BarChart data={data} color={tc} axisLabels={r.axisLabels}/>}
+    </button>
+  );
+}
+
+function App(){
+  const [selectedMetric,setSelectedMetric]=useState(null);
+  return(
+    <div style={{minHeight:"100vh",background:"#E8E6DF",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 16px"}}>
+      <div style={{width:390,height:844,background:C.bg,borderRadius:40,
+        boxShadow:"0 40px 80px rgba(0,0,0,0.25), 0 0 0 8px #1A1A1A, 0 0 0 10px #333",
+        overflow:"hidden",display:"flex",flexDirection:"column",position:"relative"}}>
+        <div style={{height:44,background:C.bg,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 28px",flexShrink:0}}>
+          <span style={{fontSize:13,fontWeight:600,color:C.text}}>9:41</span>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <span style={{fontSize:11,color:C.text}}>●●●</span><span style={{fontSize:11,color:C.text}}>WiFi</span><span style={{fontSize:11,color:C.text}}>🔋</span>
+          </div>
+        </div>
+        <div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
+          <div style={{padding:"8px 20px 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontSize:22,fontWeight:800,color:C.text}}>Stats</div>
+              <div style={{fontSize:12,color:C.textLight,marginTop:1}}>Thursday, Mar 26</div>
+            </div>
+            <div style={{width:38,height:38,borderRadius:99,background:`linear-gradient(135deg, ${C.lemon}, ${C.lemonMid})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:`0 2px 8px ${C.lemon}55`}}>🍋</div>
+          </div>
+          <div style={{margin:"16px 20px 0",background:C.card,borderRadius:20,overflow:"hidden",border:`1px solid ${C.border}`,boxShadow:"0 1px 6px rgba(0,0,0,0.04)"}}>
+            <div style={{padding:"18px 18px 14px"}}>
+              <HealthRing value={HEALTH.value} delta={HEALTH.delta}/>
+            </div>
+            <div style={{background:"#FDF6DC",borderTop:"1px solid #E8D17055",padding:"12px 18px"}}>
+              <div style={{display:"flex",gap:9,alignItems:"flex-start"}}>
+                <div style={{width:26,height:26,borderRadius:8,flexShrink:0,background:`linear-gradient(135deg, ${C.lemon}, ${C.lemonMid})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>🍋</div>
+                <div>
+                  <div style={{fontSize:10,fontWeight:700,color:C.lemon,letterSpacing:0.8,marginBottom:3}}>LEMON · TODAY</div>
+                  <div style={{fontSize:12,color:"#5A4E00",lineHeight:1.55,fontWeight:500}}>{HEALTH.insight}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{padding:"12px 20px 0"}}><ScoreSection data={READINESS} onSelect={setSelectedMetric}/></div>
+          <div style={{padding:"12px 20px 0"}}><ScoreSection data={SLEEP} onSelect={setSelectedMetric}/></div>
+          </div>
+        <div style={{height:80,background:C.card,borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"space-around",paddingBottom:16,flexShrink:0}}>
+          {[{icon:"🏠",label:"Home"},{icon:"📊",label:"Stats",active:true},{icon:"🍋",label:"Lemon"},{icon:"👤",label:"Profile"}].map(tab=>(
+            <button key={tab.label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",padding:"4px 12px"}}>
+              <span style={{fontSize:20}}>{tab.icon}</span>
+              <span style={{fontSize:10,fontWeight:tab.active?700:500,color:tab.active?C.lemon:C.textLight}}>{tab.label}</span>
+              {tab.active&&<div style={{width:4,height:4,borderRadius:99,background:C.lemon,marginTop:-2}}/>}
+            </button>
+          ))}
+        </div>
+        {selectedMetric&&<DetailView metricId={selectedMetric} onBack={()=>setSelectedMetric(null)}/>}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
