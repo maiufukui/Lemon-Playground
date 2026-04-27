@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lemon · Mockup 10 — Homepage</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+    margin:0; padding:48px 24px 80px; background:#e5e2dc;
+    display:flex; flex-direction:column; align-items:center; gap:32px; min-height:100vh;
+  }
+  .device {
+    width:375px; height:812px; border-radius:50px; position:relative;
+    box-shadow:0 40px 90px rgba(0,0,0,0.22),0 0 0 9px #1a1a1a,inset 0 0 0 1.5px #2e2e2e;
+    overflow:hidden; display:flex; flex-direction:column; background:#f8f7f3; flex-shrink:0;
+  }
+  .notch { width:110px;height:28px;background:#1a1a1a;border-radius:0 0 16px 16px;margin:0 auto;flex-shrink:0; }
+  .screen { flex:1;overflow-y:auto;overflow-x:hidden; }
+  .screen::-webkit-scrollbar { display:none; }
+  .nav { display:flex;justify-content:space-around;align-items:center;padding:8px 0 16px;background:rgba(248,247,243,0.97);border-top:1px solid #e8e5de;flex-shrink:0; }
+  .lemon-text { background:linear-gradient(135deg,#c9a227,#e8b820);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+
+  @keyframes slide-up   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes sheet-up   { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  @keyframes page-in    { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes fade-in    { from{opacity:0} to{opacity:1} }
+  @keyframes dot-bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+  @keyframes video-prog { from{width:0%} to{width:100%} }
+  @keyframes sound-wave { 0%,100%{height:4px} 50%{height:12px} }
+
+  .su  {animation:slide-up 0.4s ease-out both}
+  .su1 {animation:slide-up 0.4s ease-out 0.07s both}
+  .su2 {animation:slide-up 0.4s ease-out 0.14s both}
+  .su3 {animation:slide-up 0.4s ease-out 0.21s both}
+  .su4 {animation:slide-up 0.4s ease-out 0.28s both}
+  .fi  {animation:fade-in 0.3s ease-out both}
+  .pi  {animation:page-in 0.3s ease-out both}
+
+  .dot1{animation:dot-bounce 1.2s ease-in-out 0s infinite}
+  .dot2{animation:dot-bounce 1.2s ease-in-out 0.2s infinite}
+  .dot3{animation:dot-bounce 1.2s ease-in-out 0.4s infinite}
+  .vid-playing{animation:video-prog 10s linear both}
+  .sw1{animation:sound-wave 0.8s ease-in-out 0s infinite}
+  .sw2{animation:sound-wave 0.8s ease-in-out 0.15s infinite}
+  .sw3{animation:sound-wave 0.8s ease-in-out 0.3s infinite}
+  .sw4{animation:sound-wave 0.8s ease-in-out 0.45s infinite}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// ── Breathing constants ───────────────────────────────────────────────────
+const BPHASES = ['Inhale','Hold','Exhale','Hold'];
+const BPHASE_DUR = 4;
+const BTOTAL_CYCLES = 5;
+const BTOTAL_SECS = BTOTAL_CYCLES * BPHASES.length * BPHASE_DUR; // 80s
+
+// ── Icons ─────────────────────────────────────────────────────────────────
+const I = {
+  Walk:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/></svg>,
+  Swim:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M2 12h20"/><path d="M2 12c1.5 2 3.5 2 5 0s3.5-2 5 0 3.5 2 5 0"/><circle cx="12" cy="5" r="2"/><path d="m14 7-2 5"/></svg>,
+  Run:     ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M13 4a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/><path d="m14.5 5.5-1 4.5-3 2-2 4.5"/><path d="m9.5 12 3.5 2 2 4"/><path d="M6.5 17.5 8 16l2.5 2"/></svg>,
+  Bike:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>,
+  Apple:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></svg>,
+  Moon:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>,
+  Yoga:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><circle cx="12" cy="4" r="2"/><path d="M15 9c.5 0 1 .5 1 1v2"/><path d="M9 9c-.5 0-1 .5-1 1v2"/><path d="M4 18c1.5 0 3-1 3-2.5S5.5 14 4 14"/><path d="M20 18c-1.5 0-3-1-3-2.5s1.5-2.5 3-2.5"/><path d="M12 12v7"/><path d="M8 22h8"/></svg>,
+  Stretch: ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M18 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/><path d="m14.5 6.5-3 3.5H8"/><path d="m11.5 10 1.5 5H16"/><path d="m9 10-2 4"/><path d="m7 14 2 4"/></svg>,
+  Home:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  Chart:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  User:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  Breathe: ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M17 4.7a6 6 0 0 0-5 2.8A6 6 0 0 0 7 4.7a6 6 0 0 0 0 12 6 6 0 0 0 5-2.8 6 6 0 0 0 5 2.8 6 6 0 0 0 0-12Z"/></svg>,
+  Mind:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>,
+  Journal: ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="12" y1="7" x2="16" y2="7"/><line x1="12" y1="11" x2="16" y2="11"/></svg>,
+  Chef:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>,
+  Arrow:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="12" height="12"><path d="m9 18 6-6-6-6"/></svg>,
+  Back:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="18" height="18"><path d="m15 18-6-6 6-6"/></svg>,
+  Check:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>,
+  Play:    ()=><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" width="22" height="22"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+  Pause:   ()=><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,
+  Health:  ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+  Rain:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="8" y1="13" x2="8" y2="15"/><line x1="16" y1="19" x2="16" y2="21"/><line x1="16" y1="13" x2="16" y2="15"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="12" y1="15" x2="12" y2="17"/></svg>,
+  Leaf:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>,
+  Wave:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M2 12c.5-3 2.5-5 5-5s4.5 5 7 5 4.5-5 7-5"/><path d="M2 17c.5-3 2.5-5 5-5s4.5 5 7 5 4.5-5 7-5"/></svg>,
+  Note:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
+  Send:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  Close:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+};
+
+// ── Ambient sounds ────────────────────────────────────────────────────────
+const SOUNDS = [
+  { id:'brown', label:'Brown noise', IC:I.Wave  },
+  { id:'rain',  label:'Rain',        IC:I.Rain  },
+  { id:'forest',label:'Forest',      IC:I.Leaf  },
+  { id:'piano', label:'Calm piano',  IC:I.Note  },
+];
+
+// ── Persona data ──────────────────────────────────────────────────────────
+const PERSONAS = {
+
+  base: {
+    name:'Maya', initial:'M', avatarGrad:'linear-gradient(135deg,#778a62,#5d6e4d)',
+    goal:'Lose weight', goalColor:'#d97b45', goalBg:'#fdf0e8', condition:null,
+    slotsTotal:28, slotsDone:17,
+    isWorking:'Resting HR down 4bpm this week — your walks are showing up.',
+    isWorkingColor:'#4CAF7D',
+    cards:[
+      { pillar:'Move', color:'#778a62', bg:'#f6f7f4', conditionTag:null, conditionTagColor:null,
+        options:[
+          { IC:I.Run,  label:'30-min run',          detail:'After work · aerobic base',
+            modeLabel:'Push day', sessionProgress:'Session 3 of 4 this week',
+            description:'A moderate-pace run targeting Zone 2 heart rate. Builds aerobic capacity while burning fat.',
+            why:'3 runs this week hits your weekly movement target. Running builds the aerobic base that makes everything else better.',
+            tips:['Keep pace conversational — if you can\'t speak in short phrases, slow down','Run after work — cortisol is lower in the evening and fat oxidation is higher'] },
+          { IC:I.Walk, label:'Brisk 30-min walk',   detail:'Same calorie burn, easier on joints',
+            modeLabel:'Recovery day', sessionProgress:'Session 3 of 4 this week',
+            description:'A brisk walk at 5–6km/h. Nearly identical calorie burn to running when matched for time.',
+            why:'Same aerobic benefit as a run on a tired day. Your weekly target doesn\'t care how you hit it.',
+            tips:['Brisk means slightly breathless — aim for 60–70% max HR','Add hills if flat ground feels too easy'] },
+          { IC:I.Bike, label:'30-min cycle',         detail:'Low-impact · same Zone 2',
+            modeLabel:'Steady day', sessionProgress:'Session 3 of 4 this week',
+            description:'Steady-state cycling. No impact on joints, same cardiovascular demand as running.',
+            why:'Cardio without the impact. Ideal if legs are tired from yesterday.',
+            tips:['Keep resistance moderate — heavy resistance shifts you out of Zone 2','Match pace to keep HR 120–140bpm throughout'] },
+        ]},
+      { pillar:'Nutrition', color:'#c9a227', bg:'#fef9e7', conditionTag:null, conditionTagColor:null,
+        options:[
+          { IC:I.Apple, label:'Protein-first dinner',   detail:'Chicken + veg before carbs',
+            description:'Eat protein and vegetables first, then carbs. Protein signals satiety earlier, so you naturally eat fewer total calories.',
+            why:'Protein satiety cuts late-night snacking — biggest calorie saving of the day.',
+            tips:['Aim for 30–35g protein in your dinner — a palm-sized portion of chicken, fish, or eggs','Finish the protein and veg before touching carbs — you\'ll often find you don\'t need them'],
+            recipes:[
+              { name:'Lemon herb chicken + roasted veg', protein:'35g', cal:'420', time:'25 min', tag:'High protein' },
+              { name:'Salmon + quinoa bowl',              protein:'38g', cal:'480', time:'20 min', tag:'Omega-3'     },
+              { name:'Turkey & edamame lettuce cups',     protein:'32g', cal:'320', time:'15 min', tag:'Quick'       },
+            ] },
+          { IC:I.Apple, label:'Swap pasta for lentils', detail:'Same satiety, 30% fewer calories',
+            description:'Replace pasta or rice with lentils. Same volume, significantly more protein and fibre with lower calorie load.',
+            why:'Lentils hit your protein target and keep you full longer. Same food volume, very different macros.',
+            tips:['Red lentils take 15 min to cook — barely more than pasta','Season well — lentils absorb flavour from stock, garlic, and spices easily'],
+            recipes:[
+              { name:'Red lentil dahl',                    protein:'18g', cal:'380', time:'20 min', tag:'Plant-based' },
+              { name:'Lentil bolognese',                   protein:'22g', cal:'410', time:'30 min', tag:'Comfort'     },
+              { name:'French lentil salad + poached egg',  protein:'24g', cal:'340', time:'15 min', tag:'Quick'       },
+            ] },
+          { IC:I.Apple, label:'Add extra veg to any meal',detail:'Minimum effort · maximum volume',
+            description:'Double the vegetable portion in whatever you\'re already cooking. Volume eating reduces total calorie intake without restriction.',
+            why:'More veg = more fibre, more volume, fewer total calories. Works with any meal.',
+            tips:['Spinach wilts to almost nothing — add a large handful to any hot dish','Frozen veg is nutritionally equivalent to fresh and requires zero prep'],
+            recipes:[
+              { name:'Stir-fried tofu + mixed greens',   protein:'24g', cal:'350', time:'18 min', tag:'Plant-based' },
+              { name:'Roasted veg & feta frittata',       protein:'20g', cal:'370', time:'28 min', tag:'Meal prep'   },
+              { name:'Spinach & chickpea curry',          protein:'19g', cal:'390', time:'22 min', tag:'Bulk cook'   },
+            ] },
+        ]},
+      { pillar:'Sleep', color:'#5b7fa6', bg:'#edf2f8', conditionTag:null, conditionTagColor:null,
+        sleepForecast:{ now:84, later:76 },
+        options:[
+          { IC:I.Moon,    label:'10:30pm bedtime',    detail:'4th consistent night — keep it',
+            description:'Getting into bed at the same time each night anchors your circadian rhythm.',
+            why:'Consistent sleep timing is protecting your REM. Breaking the streak tonight costs 2–3 days to re-stabilise.',
+            tips:['Set a 10:10pm alarm as a wind-down cue','Your sleep is measurably improving — this streak is doing real work'] },
+          { IC:I.Yoga,    label:'10-min wind-down',   detail:'Before bed · lowers cortisol',
+            description:'A short gentle yoga sequence. Activates the parasympathetic nervous system before sleep.',
+            why:'Elevated cortisol at night delays sleep onset. 10 minutes of slow movement drops cortisol enough to fall asleep 20 minutes faster.',
+            tips:['Focus on child\'s pose and legs-up-the-wall','Do it in dim lighting — bright light will undo the cortisol benefit'] },
+          { IC:I.Moon,    label:'Screens off at 10:00',detail:'Blue light blocks melatonin 30+ min',
+            description:'Blue light from phones suppresses melatonin for 30–60 minutes after exposure.',
+            why:'Screen light delays sleep onset by avg 15–20 min. At 10:30 bedtime, that\'s the difference between 7 hours and 6.5.',
+            tips:['Put your phone in another room — most effective intervention','Enable night mode if you must use a screen'] },
+        ]},
+      { pillar:'Mind', color:'#8b6daa', bg:'#f5f0fb', conditionTag:null, conditionTagColor:null,
+        options:[
+          { IC:I.Breathe, label:'5-min box breathing',  detail:'Before bed · 4-4-4-4 pattern',
+            isBreathing:true,
+            description:'Box breathing: inhale 4 counts, hold 4, exhale 4, hold 4. Directly activates your parasympathetic nervous system.',
+            why:'Pre-sleep worry delays onset by avg 20 min. Box breathing interrupts the cycle within 5 minutes.',
+            tips:['Do it lying down in the dark — you\'ll often be asleep before 5 minutes is up','Make the exhale deliberate and slow, not rushed'] },
+          { IC:I.Walk,    label:'10-min outdoor walk',   detail:'Clears cortisol better than screens',
+            description:'A slow walk outside — no headphones. Combines daylight, mild movement, and sensory distraction to clear mental load.',
+            why:'Daylight + mild movement flush cortisol more effectively than any app.',
+            tips:['Morning outdoor light is especially powerful for sleep that night','Leave the phone in your pocket — the goal is sensory decompression'] },
+          { IC:I.Journal, label:'5-min journaling',      detail:'Write tomorrow\'s top 3 tasks',
+            isJournal:true,
+            journalPrompt:'What happened today that made you feel proud, however small? And what\'s one thing you\'re setting down tonight?',
+            journalResponse:'Consistent small wins are exactly what your data reflects. Your resting HR is quieter on the nights you write before sleep.',
+            description:'Write down your top 3 priorities for tomorrow. Externalise the mental to-do list so your brain stops processing it in bed.',
+            why:'Your brain works on unfinished tasks during sleep. Writing them down signals completion and stops the mental cycling.',
+            tips:['3 items only — more than 3 creates anxiety','Keep the journal on your bedside table so there\'s no friction'] },
+        ]},
+    ],
+  },
+
+  backPain: {
+    name:'James', initial:'J', avatarGrad:'linear-gradient(135deg,#6b82b5,#4a5e8a)',
+    goal:'Lose weight', goalColor:'#d97b45', goalBg:'#fdf0e8',
+    condition:'Back pain', conditionColor:'#6b82b5', conditionBg:'#eef1f9',
+    slotsTotal:28, slotsDone:14,
+    isWorking:'Resting HR down 3bpm — aerobic base building despite low-impact sessions.',
+    isWorkingColor:'#4CAF7D',
+    cards:[
+      { pillar:'Move', color:'#3d7a9e', bg:'#e8f3f9', conditionTag:'adjusted: back pain', conditionTagColor:'#6b82b5',
+        options:[
+          { IC:I.Swim,    label:'30-min swim',           detail:'Low-impact · same calorie burn',
+            modeLabel:'Push day', sessionProgress:'Session 2 of 4 this week',
+            description:'Freestyle or backstroke at moderate pace. Buoyancy eliminates spinal compression while delivering full aerobic output.',
+            why:'Running removed — spinal compression risk. Swimming gives identical aerobic output with zero load on the lumbar.',
+            tips:['Avoid butterfly stroke — it requires spinal extension that aggravates disc issues','Start with 20 min and build — fatigue in swimming can strain the lower back'] },
+          { IC:I.Bike,    label:'30-min cycle',           detail:'Seated, low-impact',
+            modeLabel:'Steady day', sessionProgress:'Session 2 of 4 this week',
+            description:'Stationary or road cycling in an upright position. Cardio with minimal spinal load.',
+            why:'Cardio without spinal load. Good if the pool isn\'t available today.',
+            tips:['Seat height matters: knee should have slight bend at the bottom of the stroke','Upright cycling posture preferred over aggressive forward lean'] },
+          { IC:I.Stretch, label:'Mobility + brisk walk', detail:'20-min walk + hip flexors',
+            modeLabel:'Recovery day', sessionProgress:'Session 2 of 4 this week',
+            description:'10 min hip flexor and glute mobilisation followed by 20-min brisk walk.',
+            why:'Tight hip flexors pull the pelvis forward and increase lumbar compression. Releasing them before walking reduces back strain.',
+            tips:['Spend 2–3 min in a kneeling hip flexor stretch on each side before walking','Stop and return home if pain increases during the walk'] },
+        ]},
+      { pillar:'Nutrition', color:'#c9a227', bg:'#fef9e7', conditionTag:null, conditionTagColor:null,
+        options:[
+          { IC:I.Apple, label:'Anti-inflammatory dinner',detail:'Salmon + leafy greens',
+            description:'Omega-3-rich fish and dark leafy vegetables. Directly targets systemic inflammation driving chronic back pain.',
+            why:'Omega-3s reduce the inflammatory load driving your back pain. Effects compound after 3+ consecutive days.',
+            tips:['Salmon, mackerel, and sardines all high-omega-3 — rotate them','Leafy greens contain magnesium, which also reduces muscle tension'],
+            recipes:[
+              { name:'Baked salmon + wilted spinach',   protein:'36g', cal:'430', time:'20 min', tag:'Omega-3'      },
+              { name:'Mackerel niçoise salad',           protein:'32g', cal:'390', time:'15 min', tag:'Anti-inflam.' },
+              { name:'Sardine & kale frittata',          protein:'28g', cal:'360', time:'22 min', tag:'Quick'        },
+            ] },
+          { IC:I.Apple, label:'Protein-first dinner',   detail:'Chicken + veg · skip the bread',
+            description:'Lean protein with vegetables first. Avoids high-glycaemic foods that spike systemic inflammation.',
+            why:'Processed carbs increase systemic inflammatory markers. Same protein target, lower inflammatory load.',
+            tips:['Chicken, turkey, and eggs are all anti-inflammatory protein sources','Avoid seed oils when cooking — use olive oil or butter instead'],
+            recipes:[
+              { name:'Herb-roasted chicken + root veg', protein:'38g', cal:'450', time:'35 min', tag:'High protein' },
+              { name:'Turkey meatballs + courgette',    protein:'34g', cal:'400', time:'25 min', tag:'Low-carb'     },
+              { name:'Egg scramble + avocado + greens', protein:'28g', cal:'380', time:'10 min', tag:'Quick'        },
+            ] },
+          { IC:I.Apple, label:'Add turmeric to any meal',detail:'Curcumin · anti-inflammatory',
+            description:'1 tsp of turmeric added to any cooked meal. Strongest clinical evidence of any dietary supplement for chronic musculoskeletal pain.',
+            why:'Curcumin directly reduces inflammatory compounds driving your back pain. Measurable after 4–6 weeks.',
+            tips:['Add black pepper alongside — it increases curcumin absorption by 2000%','Works in eggs, curries, soups — invisible in anything savoury'],
+            recipes:[
+              { name:'Golden turmeric lentil soup',      protein:'17g', cal:'310', time:'25 min', tag:'Anti-inflam.' },
+              { name:'Turmeric chicken & brown rice',    protein:'36g', cal:'460', time:'30 min', tag:'Bulk cook'   },
+              { name:'Spiced egg scramble',              protein:'22g', cal:'290', time:'8 min',  tag:'Quick'       },
+            ] },
+        ]},
+      { pillar:'Sleep', color:'#5b7fa6', bg:'#edf2f8', conditionTag:'adjusted: back pain', conditionTagColor:'#6b82b5',
+        sleepForecast:{ now:79, later:70 },
+        options:[
+          { IC:I.Moon,  label:'10:30pm · side-sleep + pillow',detail:'Pillow between knees tonight',
+            description:'Sleep on your side with a pillow between your knees. Keeps spine in neutral alignment, reduces lumbar disc pressure by up to 40%.',
+            why:'Position is the controllable variable here. Side-sleep with knee support directly addresses disc compression during sleep.',
+            tips:['Tuck the bottom arm under your pillow to prevent upper body rotation','A firm pillow between the knees works better than a soft one'] },
+          { IC:I.Yoga,  label:'Lumbar wind-down yoga',  detail:'12 min · hip flexors + lower back',
+            description:'Targeted sequence of hip flexor release, knee-to-chest, and child\'s pose.',
+            why:'Tight psoas is the primary driver of lumbar tension during sleep. Releasing it takes 8–12 minutes.',
+            tips:['Knee-to-chest held 60 seconds each side is the most effective posture','Do this on the floor, not your bed — you need a firm surface'] },
+          { IC:I.Moon,  label:'Magnesium before bed',   detail:'300mg · muscle relaxant',
+            description:'Magnesium glycinate or citrate taken 30–60 min before sleep. Relaxes skeletal muscle, reduces pain sensitivity.',
+            why:'Magnesium deficiency amplifies pain signals and worsens sleep quality. Supplementing addresses both.',
+            tips:['Glycinate form is the most absorbable and least likely to cause digestive issues','300mg is the clinical dose — start there'] },
+        ]},
+      { pillar:'Mind', color:'#8b6daa', bg:'#f5f0fb', conditionTag:null, conditionTagColor:null,
+        options:[
+          { IC:I.Breathe, label:'5-min body scan',         detail:'Lying down · releases held tension',
+            isBreathing:true,
+            description:'Guided or self-directed body scan from feet to head. Identifies and releases areas of held muscle tension.',
+            why:'Chronic pain keeps your sympathetic system activated. Body scan interrupts this and reduces pain perception.',
+            tips:['Start from the feet upward — this direction is more effective for pain relief','When you find tension, breathe into it rather than forcing it to release'] },
+          { IC:I.Mind,    label:'Progressive muscle relaxation',detail:'8 min · tense and release',
+            isBreathing:true,
+            description:'Systematically tense each muscle group for 5 seconds, then release. Teaches your nervous system to recognise and drop held tension.',
+            why:'PMR is the most evidence-backed mind-body technique for chronic pain. Reduces pain scores by avg 30% over 4 weeks.',
+            tips:['Work from feet upward: calves, thighs, glutes, abdomen, hands, arms, shoulders, face','Don\'t tense the lower back muscles directly — they\'re already overworked'] },
+          { IC:I.Journal, label:'5-min progress focus',     detail:'Reframe progress, not pain',
+            isJournal:true,
+            journalPrompt:'Where in your body do you feel today\'s effort? Not the pain — the progress. What did you do despite it?',
+            journalResponse:'Focusing on capability rather than limitation is part of the treatment. Pain science supports this directly — attention shapes perception.',
+            description:'Write 2–3 sentences about something that improved — however small. Pain catastrophizing is a clinical phenomenon that amplifies pain signals.',
+            why:'Consistently directing attention to progress (not pain) is a clinical pain management technique.',
+            tips:['Compare to your worst day, not your best — it makes the progress more visible','Even "I managed my walk today despite discomfort" counts'] },
+        ]},
+    ],
+  },
+
+  prediabetes: {
+    name:'Priya', initial:'P', avatarGrad:'linear-gradient(135deg,#d97b3a,#b85c20)',
+    goal:'Eat healthier', goalColor:'#c9a227', goalBg:'#fef9e7',
+    condition:'Pre-diabetes', conditionColor:'#d97b3a', conditionBg:'#fdf3eb',
+    slotsTotal:28, slotsDone:19,
+    isWorking:'Post-meal glucose response down 18% — the walks after lunch are the reason.',
+    isWorkingColor:'#4CAF7D',
+    cards:[
+      { pillar:'Move', color:'#d97b3a', bg:'#fdf3eb', conditionTag:'timed: after meals', conditionTagColor:'#d97b3a',
+        options:[
+          { IC:I.Walk,    label:'10-min walk after lunch',   detail:'Within 30 min · glucose window',
+            modeLabel:'Timing', sessionProgress:'3 of 7 days this week',
+            description:'A short walk within 30 minutes of eating lunch. Muscles absorb glucose directly from the bloodstream, bypassing the insulin pathway.',
+            why:'Post-meal walking reduces glucose spike by 34%. Timing matters more than duration.',
+            tips:['Even 5 minutes counts if 10 isn\'t possible','Don\'t wait longer than 45 min — the glucose spike peaks at 30–45 min after eating'] },
+          { IC:I.Walk,    label:'10-min walk after dinner',  detail:'Second best window today',
+            modeLabel:'Evening', sessionProgress:'3 of 7 days this week',
+            description:'Same mechanism as the lunch walk. Dinner is the second most important meal window.',
+            why:'Evening glucose tolerance is naturally lower — making dinner the riskiest meal glycaemically.',
+            tips:['Make it a ritual: shoes on as soon as dinner is done','Bring someone from the household — accountability makes it stick'] },
+          { IC:I.Stretch, label:'Stand 5 min every hour',    detail:'Desk-friendly · keeps glucose stable',
+            modeLabel:'Desk day', sessionProgress:'3 of 7 days this week',
+            description:'Set a timer to stand and move lightly for 5 minutes every hour. Breaks up prolonged sitting which independently raises insulin resistance.',
+            why:'Sitting for 90+ minutes continuously raises blood glucose by up to 20% even without eating.',
+            tips:['A standing desk timer app makes this automatic','Walking to a colleague instead of emailing counts'] },
+        ]},
+      { pillar:'Nutrition', color:'#c9a227', bg:'#fef9e7', conditionTag:'adjusted: pre-diabetes', conditionTagColor:'#d97b3a',
+        options:[
+          { IC:I.Apple, label:'Lentils instead of rice',  detail:'−40% glycaemic load, same satiety',
+            description:'Swap rice, pasta, or bread for lentils. Same volume, dramatically lower glycaemic impact.',
+            why:'Lentils have a glycaemic index of 30 vs. white rice at 73. Same volume, 40% lower glucose impact.',
+            tips:['Red lentils absorb the most flavour and take only 15 min to cook','Prep a large batch on Sunday — keeps for 5 days'],
+            recipes:[
+              { name:'Red lentil dahl',               protein:'18g', cal:'360', time:'20 min', tag:'Low GI'    },
+              { name:'Lentil bolognese',               protein:'22g', cal:'400', time:'30 min', tag:'Bulk cook' },
+              { name:'Warm lentil & spinach salad',    protein:'20g', cal:'310', time:'15 min', tag:'Quick'     },
+            ] },
+          { IC:I.Apple, label:'Whole grain + extra veg',  detail:'Fibre slows glucose absorption',
+            description:'Whole grain varieties plus as many vegetables as possible. Fibre slows glucose absorption and flattens the post-meal spike.',
+            why:'Soluble fibre forms a gel in the gut that slows glucose entry into the bloodstream.',
+            tips:['Barley has the highest beta-glucan fibre content of any grain','Add legumes to any grain dish to further slow absorption'],
+            recipes:[
+              { name:'Barley & roasted veg bowl',       protein:'14g', cal:'380', time:'25 min', tag:'High fibre'  },
+              { name:'Quinoa & chickpea tabbouleh',     protein:'18g', cal:'350', time:'15 min', tag:'Prep-ahead'  },
+              { name:'Oat & vegetable soup',            protein:'12g', cal:'290', time:'20 min', tag:'Comfort'     },
+            ] },
+          { IC:I.Apple, label:'Vinegar dressing on lunch',detail:'1 tbsp ACV · slows starch digestion',
+            description:'Add 1 tablespoon of apple cider or red wine vinegar to your lunch. Acetic acid slows starch-digesting enzymes.',
+            why:'Vinegar with a meal reduces post-meal glucose by avg 20%. One of the most evidence-backed dietary interventions.',
+            tips:['Mix 1 tbsp ACV with salt and olive oil for a quick dressing','Drink in water if you prefer: 1 tbsp in a small glass before eating'],
+            recipes:[
+              { name:'ACV-dressed kale & grain salad', protein:'16g', cal:'320', time:'10 min', tag:'Quick'      },
+              { name:'Pickled veg & brown rice bowl',  protein:'14g', cal:'370', time:'20 min', tag:'Fermented'  },
+              { name:'Greek salad + vinaigrette',      protein:'12g', cal:'280', time:'10 min', tag:'Light'      },
+            ] },
+        ]},
+      { pillar:'Sleep', color:'#5b7fa6', bg:'#edf2f8', conditionTag:'critical: pre-diabetes', conditionTagColor:'#d97b3a',
+        sleepForecast:{ now:86, later:74 },
+        options:[
+          { IC:I.Moon,  label:'10:30pm — non-negotiable', detail:'1 bad night = 25% insulin resistance',
+            description:'A single night of poor sleep reduces insulin sensitivity by 25% the next day.',
+            why:'Sleep deprivation is a direct insulin resistance driver. This bedtime is part of your treatment plan.',
+            tips:['Set a hard stop on social media at 10pm','Tell your household you\'re unavailable after 10'] },
+          { IC:I.Apple, label:'Almonds before bed',       detail:'Stabilises overnight glucose',
+            description:'A small handful of almonds (20–25g) 30–60 minutes before sleep.',
+            why:'Overnight glucose variance disrupts sleep quality. A small fat+protein snack creates a more stable overnight curve.',
+            tips:['Don\'t exceed 25g — this is a stabiliser, not a meal','Walnuts also work — they add omega-3s'] },
+          { IC:I.Moon,  label:'Same wake time daily',     detail:'Circadian rhythm stabilises insulin',
+            description:'Set a fixed wake time 7 days a week. Circadian consistency directly regulates cortisol rhythm.',
+            why:'Irregular wake times disrupt the cortisol cycle that controls morning blood glucose.',
+            tips:['A consistent wake time matters more than bedtime for circadian regulation','Even weekends — sleeping in 2+ hours resets your rhythm negatively'] },
+        ]},
+      { pillar:'Mind', color:'#8b6daa', bg:'#f5f0fb', conditionTag:null, conditionTagColor:null,
+        options:[
+          { IC:I.Breathe, label:'5-min breathing after lunch',detail:'Parasympathetic · aids digestion',
+            isBreathing:true,
+            description:'5 minutes of slow deep breathing (4-second inhale, 6-second exhale) immediately after lunch.',
+            why:'Stress activates the sympathetic nervous system and redirects blood away from digestion, worsening glucose processing.',
+            tips:['Do it seated, eyes closed, at your desk','Extend the exhale longer than the inhale'] },
+          { IC:I.Walk,    label:'Post-meal walk + breathing',detail:'Two benefits, one action',
+            description:'Walk and breathe slowly at the same time — stacking two of the most evidence-backed interventions for glucose management.',
+            why:'Post-meal walking reduces glucose by 34% and slow breathing reduces cortisol simultaneously.',
+            tips:['Breathe in for 4 steps, out for 6 steps','This is your highest-ROI 10 minutes today'] },
+          { IC:I.Journal, label:'5-min gratitude journaling',detail:'Evening · reduces cortisol',
+            isJournal:true,
+            journalPrompt:'What did you eat today that you feel good about? What\'s one swap you want to try tomorrow?',
+            journalResponse:'Noticing the good choices is as important as making them. Your glucose data looks measurably different on days you check in like this.',
+            description:'Write 3 specific things you\'re grateful for before sleep.',
+            why:'Chronic stress is a direct insulin resistance driver. 5 minutes of positive focus measurably reduces evening cortisol.',
+            tips:['Specificity is what activates the cortisol response — be precise, not generic','Keep the journal next to your bed'] },
+        ]},
+    ],
+  },
+
+  hypertension: {
+    name:'Alex', initial:'A', avatarGrad:'linear-gradient(135deg,#3d9e9e,#2a7a7a)',
+    goal:'Lower BP', goalColor:'#3d9e9e', goalBg:'#e8f6f6',
+    condition:'Hypertension', conditionColor:'#e05c5c', conditionBg:'#fdf0f0',
+    slotsTotal:28, slotsDone:20,
+    isWorking:'Avg systolic down 6 pts this week — walks and breathing are working.',
+    isWorkingColor:'#4CAF7D',
+    cards:[
+      { pillar:'Move', color:'#3d9e9e', bg:'#e8f6f6', conditionTag:null, conditionTagColor:null,
+        options:[
+          { IC:I.Walk, label:'30-min moderate walk',  detail:'Zone 2 · 50–70% max HR',
+            modeLabel:'Zone 2', sessionProgress:'Session 3 of 4 this week',
+            description:'A sustained walk at a brisk but conversational pace. Zone 2 cardio is the most clinically validated exercise modality for lowering BP.',
+            why:'3+ Zone 2 sessions/week reduces resting systolic by 5–8 pts over 8 weeks. Pace matters: moderate, not intense.',
+            tips:['If you can sing but not hold a full conversation, you\'re over Zone 2 — slow down','Consistency across weeks matters more than any single session'] },
+          { IC:I.Swim, label:'20-min swim',            detail:'Aerobic · full body',
+            modeLabel:'Cross-train', sessionProgress:'Session 3 of 4 this week',
+            description:'Freestyle or breaststroke at moderate pace. Water immersion itself has mild vasodilatory effects.',
+            why:'Same Zone 2 benefit as walking, with the added advantage that water pressure mildly reduces vascular resistance.',
+            tips:['Breaststroke is most accessible and least likely to cause breathing irregularities','Shower in warm (not cold) water after — cold showers can spike BP transiently'] },
+          { IC:I.Bike, label:'30-min cycle',           detail:'Seated, sustained, low impact',
+            modeLabel:'Steady day', sessionProgress:'Session 3 of 4 this week',
+            description:'Steady-state cycling in an upright position.',
+            why:'Any sustained aerobic movement in Zone 2 accumulates toward your BP reduction target.',
+            tips:['Avoid sprint intervals — they push you into zones that transiently raise BP','Upright bike posture preferred for BP management'] },
+        ]},
+      { pillar:'Nutrition', color:'#c9a227', bg:'#fef9e7', conditionTag:'DASH adjusted', conditionTagColor:'#e05c5c',
+        options:[
+          { IC:I.Apple, label:'Leafy greens + fish dinner',detail:'DASH pattern · high K, low Na',
+            description:'A dinner built around leafy greens (high potassium) and oily fish (omega-3s). The DASH diet has the most clinical evidence for sustained BP reduction.',
+            why:'Potassium counteracts sodium in the kidneys and relaxes arterial walls. This single meal hits your daily potassium target.',
+            tips:['Spinach, kale, and rocket are among the highest potassium leafy greens','Season with herbs and lemon instead of salt'],
+            recipes:[
+              { name:'Baked salmon + wilted spinach & garlic', protein:'36g', cal:'430', time:'22 min', tag:'DASH'   },
+              { name:'Mackerel with kale & lemon dressing',    protein:'32g', cal:'390', time:'15 min', tag:'High K' },
+              { name:'Sea bass + roasted beetroot salad',      protein:'30g', cal:'380', time:'28 min', tag:'Nitrates'},
+            ] },
+          { IC:I.Apple, label:'Skip added salt today',  detail:'No processed food · cook fresh',
+            description:'Avoid all added salt and processed foods for the day.',
+            why:'One high-sodium meal can raise systolic BP by up to 6 points within 1–2 hours.',
+            tips:['Processed foods account for ~70% of dietary sodium — cooking fresh removes this automatically','Herbs, spices, citrus, and vinegar are all flavour substitutes that improve BP'],
+            recipes:[
+              { name:'Herb-roasted chicken + sweet potato', protein:'38g', cal:'450', time:'35 min', tag:'Low Na'     },
+              { name:'Lemon & herb white fish + veg',       protein:'30g', cal:'330', time:'18 min', tag:'Salt-free'  },
+              { name:'Chickpea & tomato stew (no salt)',    protein:'16g', cal:'340', time:'25 min', tag:'Plant-based'},
+            ] },
+          { IC:I.Apple, label:'Beetroot or berry smoothie',detail:'Natural nitrates · vasodilator',
+            description:'A smoothie with beetroot, mixed berries, and leafy greens. Dietary nitrates convert to nitric oxide, which dilates blood vessels.',
+            why:'Studies show 4–10 point systolic reduction within 2–3 hours of consumption.',
+            tips:['Drink it in the morning for the vasodilation to peak during active hours','Don\'t use mouthwash before or after — oral bacteria are required to convert nitrates'],
+            recipes:[
+              { name:'Beetroot, berry & spinach smoothie', protein:'8g',  cal:'190', time:'5 min', tag:'Nitrates'  },
+              { name:'Berry & chia overnight oats',        protein:'14g', cal:'380', time:'5 min', tag:'Prep-ahead'},
+              { name:'Pomegranate & walnut yoghurt bowl',  protein:'18g', cal:'320', time:'5 min', tag:'Quick'    },
+            ] },
+        ]},
+      { pillar:'Sleep', color:'#5b7fa6', bg:'#edf2f8', conditionTag:'critical: hypertension', conditionTagColor:'#e05c5c',
+        sleepForecast:{ now:81, later:72 },
+        options:[
+          { IC:I.Moon,  label:'10:00pm bedtime',   detail:'BP resets in deep sleep',
+            description:'BP drops by 10–20% during deep sleep (the nocturnal dip). Earlier bedtime = more deep sleep = more complete dip.',
+            why:'Poor sleep raises next-day systolic by 5+ points. This is a direct treatment mechanism, not a lifestyle preference.',
+            tips:['The nocturnal BP dip starts ~1–2 hours after sleep onset — earlier bedtime protects the full window','Alcohol before bed suppresses deep sleep and eliminates the nocturnal BP dip entirely'] },
+          { IC:I.Moon,  label:'Screens off at 9:45',detail:'Blue light spikes cortisol',
+            description:'Cortisol from blue light exposure suppresses melatonin and raises baseline sympathetic tone.',
+            why:'Blue light at night delays the BP drop that happens during deep sleep.',
+            tips:['The bedroom should be for sleep only — remove the TV if possible','Read a physical book or listen to low-stimulation audio for wind-down content'] },
+          { IC:I.Apple, label:'Magnesium supplement',detail:'Vasodilator + sleep aid',
+            description:'Magnesium relaxes vascular smooth muscle (lowering BP) and improves sleep depth simultaneously.',
+            why:'Studies show 5–8 systolic point reduction with consistent supplementation plus measurable sleep quality improvement.',
+            tips:['Magnesium glycinate is the most bioavailable form','Take 30–60 min before bed for maximum sleep benefit'] },
+        ]},
+      { pillar:'Mind', color:'#8b6daa', bg:'#f5f0fb', conditionTag:'critical: hypertension', conditionTagColor:'#e05c5c',
+        options:[
+          { IC:I.Breathe, label:'10-min box breathing',     detail:'4-4-4-4 · twice daily',
+            isBreathing:true,
+            description:'Structured breathing: inhale 4 counts, hold 4, exhale 4, hold 4. Directly activates the vagus nerve.',
+            why:'Deep breathing lowers systolic by 3–5 pts within minutes via parasympathetic activation. Twice daily creates a sustained effect.',
+            tips:['Morning breathing reduces the cortisol spike that causes the "morning BP surge"','Evening breathing ensures the nocturnal BP dip occurs fully'] },
+          { IC:I.Mind,    label:'10-min guided meditation', detail:'Reduces cortisol · lowers BP directly',
+            isBreathing:true,
+            description:'A structured guided meditation session. Body-focused audio guide.',
+            why:'10 min daily reduces systolic by avg 4.7 pts over 8 weeks. Chronic stress is a primary hypertension driver.',
+            tips:['Consistency matters more than session length','Start with body scan meditations — more accessible for beginners'] },
+          { IC:I.Breathe, label:'Progressive muscle relaxation',detail:'5 min · tense and release',
+            isBreathing:true,
+            description:'Tense each muscle group for 5 seconds, then release.',
+            why:'PMR interrupts chronic vascular and muscular tension simultaneously.',
+            tips:['Focus on shoulders, jaw, and hands — common sites of held tension in hypertension','Even just releasing jaw and shoulder tension has measurable BP effects'] },
+        ]},
+    ],
+  },
+
+  newMom: {
+    name:'Sophie', initial:'S', avatarGrad:'linear-gradient(135deg,#c47aaa,#a0568a)',
+    goal:'Lose weight', goalColor:'#c47aaa', goalBg:'#fdf0f8',
+    condition:'New mom', conditionColor:'#c47aaa', conditionBg:'#fdf0f8',
+    slotsTotal:28, slotsDone:11,
+    isWorking:'Down 1.2kg since week 1 — this pace is right for post-partum recovery.',
+    isWorkingColor:'#4CAF7D',
+    cards:[
+      { pillar:'Move', color:'#778a62', bg:'#f6f7f4', conditionTag:null, conditionTagColor:null,
+        options:[
+          { IC:I.Walk,    label:'20-min walk with pram',     detail:'Outdoor · fresh air for both',
+            modeLabel:'Active day', sessionProgress:'Session 2 of 3 this week',
+            description:'A brisk 20-minute walk outdoors with the pram. Low-impact aerobic plus outdoor light exposure.',
+            why:'Low-impact, calorie-burning, and outdoor light regulates your disrupted sleep hormones. Most effective single activity at this stage.',
+            tips:['Morning walks are most effective for resetting your circadian rhythm','Brisk enough to feel warm but not breathless — your body is still recovering'] },
+          { IC:I.Stretch, label:'15-min home workout',       detail:'During nap · bodyweight only',
+            modeLabel:'Nap window', sessionProgress:'Session 2 of 3 this week',
+            description:'A short equipment-free workout during baby\'s nap. Squats, lunges, modified push-ups, gentle core.',
+            why:'Same calorie burn in 15 minutes at higher intensity. Practical when a pram walk isn\'t possible.',
+            tips:['Check with GP before starting core work — diastasis recti is common and changes what\'s safe','Have the workout ready on your phone so you don\'t use nap time planning'] },
+          { IC:I.Yoga,    label:'10-min core + stretch',     detail:'Post-birth recovery safe',
+            modeLabel:'Restore day', sessionProgress:'Session 2 of 3 this week',
+            description:'Gentle core rehabilitation and hip flexor stretching. Foundation-building that protects you from injury later.',
+            why:'Core rehab before heavier exercise prevents complications and sets you up for more effective workouts in 4–6 weeks.',
+            tips:['Diaphragmatic breathing is the starting point for all post-partum core work','Pelvic floor activation can be done multiple times daily — no equipment needed'] },
+        ]},
+      { pillar:'Nutrition', color:'#c9a227', bg:'#fef9e7', conditionTag:null, conditionTagColor:null,
+        options:[
+          { IC:I.Apple, label:'Batch protein lunch prep',   detail:'Cook once · eat 3 days',
+            description:'Spend 30 minutes now prepping a high-protein lunch you can eat for 3 days.',
+            why:'Protein is the hardest macro to hit when exhausted. Prepping it means you eat well on your worst days.',
+            tips:['Double a dinner recipe and portion it for 2 lunches — zero extra effort','Keep boiled eggs, canned fish, and Greek yoghurt as fallbacks'],
+            recipes:[
+              { name:'Baked chicken + roasted veg (4 serves)', protein:'38g', cal:'420', time:'35 min', tag:'Batch cook' },
+              { name:'Tuna, egg & chickpea salad',              protein:'34g', cal:'360', time:'10 min', tag:'No-cook'   },
+              { name:'Greek yoghurt & berry protein bowl',      protein:'26g', cal:'310', time:'3 min',  tag:'Quick'     },
+            ] },
+          { IC:I.Apple, label:'Almonds + Greek yoghurt',   detail:'20g protein · stabilises energy',
+            description:'High-protein, high-fat snack for the 3pm energy dip.',
+            why:'New moms experience frequent cortisol spikes that destabilise blood sugar. Protein + fat provides 3–4 hours of stable energy.',
+            tips:['Keep a bag of almonds and individual yoghurts in an accessible spot','Full-fat Greek yoghurt has more protein and keeps you fuller longer than low-fat'],
+            recipes:[
+              { name:'Greek yoghurt + almond + honey bowl', protein:'22g', cal:'280', time:'2 min', tag:'Quick'   },
+              { name:'Cottage cheese + cucumber + walnuts', protein:'20g', cal:'240', time:'3 min', tag:'Savoury' },
+              { name:'Peanut butter + banana on rice cake', protein:'14g', cal:'290', time:'2 min', tag:'One-hand'},
+            ] },
+          { IC:I.Apple, label:'Add spinach to anything',   detail:'30-second swap · big nutrient boost',
+            description:'Throw a large handful of spinach into whatever you\'re cooking.',
+            why:'When time-poor: spinach adds iron, magnesium, and folate — all commonly depleted in post-partum women.',
+            tips:['Buy pre-washed bags of spinach — the prep barrier is zero','Frozen spinach works equally well nutritionally'],
+            recipes:[
+              { name:'Scrambled eggs + spinach + feta',           protein:'22g', cal:'320', time:'8 min',  tag:'One pan'   },
+              { name:'Spinach & lentil soup',                     protein:'16g', cal:'290', time:'20 min', tag:'Batch cook' },
+              { name:'Green smoothie (spinach + banana + milk)',  protein:'14g', cal:'260', time:'3 min',  tag:'One-hand'  },
+            ] },
+        ]},
+      { pillar:'Sleep', color:'#5b7fa6', bg:'#edf2f8', conditionTag:'new mom mode', conditionTagColor:'#c47aaa',
+        sleepForecast:{ now:72, later:61 },
+        options:[
+          { IC:I.Moon,  label:'Sleep when baby sleeps',  detail:'Skip the chores — nap now',
+            description:'When the baby naps, your priority is to nap too.',
+            why:'Post-partum recovery depends on total sleep hours, not unbroken sleep. A 20-min nap replaces 45 min of lost night sleep.',
+            tips:['Have your sleep position ready — don\'t waste nap time scrolling','Tell your partner nap time is sacred — the chores genuinely can wait'] },
+          { IC:I.Moon,  label:'Delegate one night feed', detail:'One unbroken 4-hour block',
+            description:'Arrange for your partner to take one overnight feed, giving you one unbroken 4-hour sleep block.',
+            why:'Even one unbroken 4-hour block creates a measurable difference in next-day energy, mood, and decision-making.',
+            tips:['If breastfeeding, this can still work with expressed milk or formula for a single feed','Put this conversation on the calendar — easier to arrange when not already exhausted'] },
+          { IC:I.Moon,  label:'Wind-down before last feed',detail:'Dim lights · phone down',
+            description:'For 10 minutes before the last night feed, put down the phone and dim all lights.',
+            why:'You\'ll fall back asleep 12 minutes faster after a night feed if your nervous system is already in a low-arousal state.',
+            tips:['Charging your phone outside the bedroom removes the temptation that delays re-sleep','A low-light amber feeding lamp makes the feed itself less alerting'] },
+        ]},
+      { pillar:'Mind', color:'#8b6daa', bg:'#f5f0fb', conditionTag:'post-partum support', conditionTagColor:'#c47aaa',
+        options:[
+          { IC:I.Breathe, label:'3-min breathing',             detail:'Fits in any gap',
+            isBreathing:true,
+            description:'Three minutes of slow breathing (4-second inhale, 6-second exhale) during any pause.',
+            why:'3 minutes of slow breathing lowers cortisol enough to meaningfully shift your nervous system state.',
+            tips:['The exhale is the key — longer and slower than the inhale','You can do this while holding or feeding baby'] },
+          { IC:I.Journal, label:'Text your accountability partner',detail:'One sentence counts',
+            isJournal:true,
+            journalPrompt:'One sentence about today — what do you want your accountability partner to know?',
+            journalResponse:'Sent. Social check-ins measurably reduce post-partum stress hormones. You don\'t need more than that.',
+            description:'Send one message to a friend or accountability buddy.',
+            why:'Social connection reduces post-partum stress hormones. Even one sentence activates oxytocin and measurably lowers cortisol.',
+            tips:['Pick someone who will respond — the reply is part of the mechanism','Voice notes count and are easier when your hands are full'] },
+          { IC:I.Journal, label:'5-min brain dump',             detail:'Write it down · stop it spinning',
+            isJournal:true,
+            journalPrompt:'What\'s circling in your head right now? Just write it — no structure, no editing.',
+            journalResponse:'Externalising it works. Your mind is doing invisible labour — naming it is the first step to setting it down.',
+            description:'Write whatever is circling in your head — worries, to-dos, feelings. No editing, no structure.',
+            why:'New-parent mental load is relentless. Externalizing 3–5 thoughts frees working memory and reduces the spinning feeling before sleep.',
+            tips:['Keep a notebook by your feeding spot','Tear out and throw away the page after if keeping it creates more anxiety'] },
+        ]},
+    ],
+  },
+};
+
+const PERSONA_LIST = [
+  { key:'base',         label:'Maya',   sub:'No condition', grad:'linear-gradient(135deg,#778a62,#5d6e4d)', initial:'M' },
+  { key:'backPain',     label:'James',  sub:'Back pain',    grad:'linear-gradient(135deg,#6b82b5,#4a5e8a)', initial:'J' },
+  { key:'prediabetes',  label:'Priya',  sub:'Pre-diabetes', grad:'linear-gradient(135deg,#d97b3a,#b85c20)', initial:'P' },
+  { key:'hypertension', label:'Alex',   sub:'Hypertension', grad:'linear-gradient(135deg,#3d9e9e,#2a7a7a)', initial:'A' },
+  { key:'newMom',       label:'Sophie', sub:'New mom',      grad:'linear-gradient(135deg,#c47aaa,#a0568a)', initial:'S' },
+];
+
+// ── Progress arc ──────────────────────────────────────────────────────────
+const ProgressArc = ({ done, total, goalColor }) => {
+  const pct = Math.min(done / total, 1);
+  const r = 50, cx = 65, cy = 65;
+  const start = -Math.PI * 0.8, sweep = Math.PI * 1.6;
+  const toXY = a => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  const [sx,sy] = toXY(start), [ex,ey] = toXY(start + sweep);
+  const [px,py] = toXY(start + sweep * pct);
+  return (
+    <svg width="130" height="100" viewBox="0 0 130 100">
+      <path d={`M ${sx} ${sy} A ${r} ${r} 0 1 1 ${ex} ${ey}`} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="9" strokeLinecap="round"/>
+      {pct > 0 && <path d={`M ${sx} ${sy} A ${r} ${r} 0 ${pct > 0.5 ? 1:0} 1 ${px} ${py}`} fill="none" stroke={goalColor} strokeWidth="9" strokeLinecap="round" opacity="0.95"/>}
+      <text x={cx} y={cy-5} textAnchor="middle" fontSize="22" fontWeight="900" fill="white">{Math.round(pct*100)}%</text>
+      <text x={cx} y={cy+13} textAnchor="middle" fontSize="9.5" fontWeight="600" fill="rgba(255,255,255,0.4)">{done} of {total}</text>
+    </svg>
+  );
+};
+
+// ── Breathing session (full-screen) ───────────────────────────────────────
+const BreathingSession = ({ option, card, onClose, onDone }) => {
+  const [tick, setTick] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+
+  useEffect(() => {
+    if (isComplete) return;
+    const t = setInterval(() => {
+      setTick(s => {
+        const next = s + 1;
+        if (next >= BTOTAL_SECS) { setIsComplete(true); return BTOTAL_SECS; }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [isComplete]);
+
+  const phaseIdx   = Math.floor(tick / BPHASE_DUR) % BPHASES.length;
+  const countdown  = BPHASE_DUR - (tick % BPHASE_DUR);
+  const phase      = BPHASES[phaseIdx];
+  const isExpanded = phaseIdx === 0 || phaseIdx === 1;
+  const ringScale  = isExpanded ? 1.0 : 0.52;
+  const progressPct = tick / BTOTAL_SECS;
+  const circ       = 2 * Math.PI * 130;
+
+  return (
+    <div className="fi" style={{position:'absolute',inset:0,background:'#0e0e1a',zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'space-between',padding:'20px 0 32px'}}>
+      {/* Top bar */}
+      <div style={{width:'100%',display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0 20px'}}>
+        <button onClick={onClose} style={{background:'rgba(255,255,255,0.08)',border:'none',borderRadius:12,padding:'7px 13px',color:'rgba(255,255,255,0.6)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>End</button>
+        <p style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.5)',margin:0}}>{option.label}</p>
+        <div style={{width:60}}/>
+      </div>
+
+      {/* Breathing ring area */}
+      <div style={{position:'relative',width:300,height:300,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        {/* Outer progress arc */}
+        <svg width="300" height="300" style={{position:'absolute',top:0,left:0}}>
+          <circle cx="150" cy="150" r="130" fill="none" stroke="rgba(139,109,170,0.12)" strokeWidth="2"/>
+          <circle cx="150" cy="150" r="130" fill="none" stroke={card.color} strokeWidth="2.5"
+            strokeDasharray={circ} strokeDashoffset={circ * (1 - progressPct)}
+            strokeLinecap="round" transform="rotate(-90 150 150)"
+            style={{transition:'stroke-dashoffset 1s linear'}}/>
+        </svg>
+
+        {/* Glow ring (static) */}
+        <div style={{position:'absolute',width:220,height:220,borderRadius:'50%',border:`1px solid ${card.color}20`}}/>
+
+        {/* Animated breathing ring */}
+        <div style={{
+          width:180, height:180, borderRadius:'50%',
+          border:`2px solid ${card.color}`,
+          transform:`scale(${ringScale})`,
+          transition:`transform ${BPHASE_DUR}s ease-in-out, box-shadow ${BPHASE_DUR}s ease-in-out`,
+          boxShadow: isExpanded ? `0 0 50px ${card.color}55, inset 0 0 30px ${card.color}18` : `0 0 15px ${card.color}22`,
+          display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:4,
+        }}>
+          {!isComplete ? (
+            <>
+              <p style={{fontSize:22,fontWeight:800,color:'#fff',margin:0,letterSpacing:'-0.02em'}}>{phase}</p>
+              <p style={{fontSize:36,fontWeight:900,color:card.color,margin:0,lineHeight:1}}>{countdown}</p>
+            </>
+          ) : (
+            <p style={{fontSize:28,fontWeight:800,color:'#fff',margin:0}}>Done</p>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom info */}
+      {!isComplete ? (
+        <div style={{textAlign:'center'}}>
+          <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',margin:'0 0 4px'}}>{Math.ceil((BTOTAL_SECS - tick) / 60)} min remaining · {BTOTAL_CYCLES} breath cycles</p>
+          <p style={{fontSize:11,color:'rgba(255,255,255,0.2)',margin:0}}>Tap End to exit early</p>
+        </div>
+      ) : (
+        <div style={{textAlign:'center',padding:'0 32px'}}>
+          <p style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.8)',margin:'0 0 4px'}}>Your nervous system just shifted.</p>
+          <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',margin:'0 0 20px'}}>Check your HRV tomorrow morning for the impact.</p>
+          <button onClick={onDone} style={{padding:'13px 32px',borderRadius:14,background:card.color,border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>Back to home</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Chat / Journal view ───────────────────────────────────────────────────
+const ChatView = ({ option, card, persona, onBack, onActivityDone }) => {
+  const [messages, setMessages] = useState([
+    { from:'lemon', text: option.journalPrompt }
+  ]);
+  const [input, setInput]       = useState('');
+  const [thinking, setThinking] = useState(false);
+  const [sent, setSent]         = useState(false);
+
+  const handleSend = () => {
+    if (!input.trim() || sent) return;
+    const txt = input;
+    setMessages(m => [...m, { from:'user', text:txt }]);
+    setInput('');
+    setSent(true);
+    setThinking(true);
+    setTimeout(() => {
+      setThinking(false);
+      setMessages(m => [...m, { from:'lemon', text: option.journalResponse }]);
+      onActivityDone && onActivityDone();
+    }, 1600);
+  };
+
+  return (
+    <div className="pi" style={{position:'absolute',inset:0,background:'#f8f7f3',display:'flex',flexDirection:'column',zIndex:150}}>
+      {/* Header */}
+      <div style={{background:'#fff',borderBottom:'1px solid #efefed',padding:'12px 16px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+        <button onClick={onBack} style={{background:'none',border:'none',cursor:'pointer',padding:'4px',color:'#57534e',display:'flex',alignItems:'center'}}><I.Back/></button>
+        <div style={{width:30,height:30,borderRadius:'50%',background:'linear-gradient(135deg,#778a62,#5d6e4d)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+          <span style={{fontSize:10,fontWeight:700,color:'#fff'}}>L</span>
+        </div>
+        <div>
+          <p style={{fontSize:13,fontWeight:700,color:'#1a1a1a',margin:0}}>Lemon</p>
+          <p style={{fontSize:10,color:'#4CAF7D',margin:0}}>● Active now</p>
+        </div>
+        <div style={{marginLeft:'auto',display:'inline-flex',alignItems:'center',gap:4,background:card.bg,borderRadius:20,padding:'3px 8px'}}>
+          <span style={{fontSize:9,fontWeight:700,color:card.color,textTransform:'uppercase',letterSpacing:'0.06em'}}>{card.pillar}</span>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div style={{flex:1,overflowY:'auto',padding:'16px 14px',display:'flex',flexDirection:'column',gap:10}}>
+        {messages.map((m, i) => (
+          <div key={i} style={{display:'flex',justifyContent:m.from==='user'?'flex-end':'flex-start'}}>
+            {m.from === 'lemon' && (
+              <div style={{width:24,height:24,borderRadius:'50%',background:'linear-gradient(135deg,#778a62,#5d6e4d)',display:'flex',alignItems:'center',justifyContent:'center',marginRight:6,flexShrink:0,marginTop:2}}>
+                <span style={{fontSize:8,fontWeight:700,color:'#fff'}}>L</span>
+              </div>
+            )}
+            <div style={{
+              maxWidth:'75%',padding:'10px 12px',borderRadius: m.from==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',
+              background: m.from==='user' ? '#1a1a1a' : '#fff',
+              border: m.from==='user' ? 'none' : '1px solid #efefed',
+              boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
+            }}>
+              <p style={{fontSize:13,color:m.from==='user'?'#fff':'#1a1a1a',margin:0,lineHeight:1.55}}>{m.text}</p>
+            </div>
+          </div>
+        ))}
+        {thinking && (
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:24,height:24,borderRadius:'50%',background:'linear-gradient(135deg,#778a62,#5d6e4d)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <span style={{fontSize:8,fontWeight:700,color:'#fff'}}>L</span>
+            </div>
+            <div style={{background:'#fff',border:'1px solid #efefed',borderRadius:'16px 16px 16px 4px',padding:'12px 14px',display:'flex',gap:4,alignItems:'center'}}>
+              <div className="dot1" style={{width:5,height:5,borderRadius:'50%',background:'#c4bfb8'}}/>
+              <div className="dot2" style={{width:5,height:5,borderRadius:'50%',background:'#c4bfb8'}}/>
+              <div className="dot3" style={{width:5,height:5,borderRadius:'50%',background:'#c4bfb8'}}/>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input */}
+      <div style={{padding:'10px 14px 20px',background:'#fff',borderTop:'1px solid #efefed',display:'flex',gap:8,alignItems:'flex-end',flexShrink:0}}>
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder={sent ? 'Entry saved' : 'Write freely…'}
+          disabled={sent}
+          rows={2}
+          style={{flex:1,resize:'none',border:'1.5px solid #e8e5de',borderRadius:14,padding:'10px 12px',fontSize:13,fontFamily:'inherit',color:'#1a1a1a',background:sent?'#f8f7f3':'#fff',outline:'none',lineHeight:1.5}}
+        />
+        <button onClick={handleSend} disabled={!input.trim() || sent} style={{
+          width:38,height:38,borderRadius:12,flexShrink:0,
+          background: input.trim() && !sent ? card.color : '#e8e5de',
+          border:'none',cursor: input.trim() && !sent ? 'pointer':'default',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          color:'#fff',transition:'background 0.2s',
+        }}><I.Send/></button>
+      </div>
+    </div>
+  );
+};
+
+// ── Detail sheet ──────────────────────────────────────────────────────────
+const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreathing, onOpenChat, onActivityDone }) => {
+  const [added, setAdded]           = useState({});
+  const [videoState, setVideoState] = useState('idle'); // idle | playing | done
+  const [activeSound, setActiveSound] = useState(null);
+  const [doneMark, setDoneMark]     = useState(false);
+
+  const isMove      = card.pillar === 'Move';
+  const isNutrition = card.pillar === 'Nutrition';
+  const isSleep     = card.pillar === 'Sleep';
+  const isMind      = card.pillar === 'Mind';
+  const hasRecipes  = option.recipes && option.recipes.length > 0;
+
+  const tagBg     = card.conditionTagColor ? card.conditionTagColor + '15' : 'rgba(107,130,181,0.1)';
+  const tagColor  = card.conditionTagColor || '#6b82b5';
+
+  const handleMarkDone = () => { setVideoState('done'); onActivityDone && onActivityDone(); };
+
+  useEffect(() => {
+    if (videoState === 'playing') {
+      const t = setTimeout(() => handleMarkDone(), 10000);
+      return () => clearTimeout(t);
+    }
+  }, [videoState]);
+
+  return (
+    <>
+      <div onClick={onClose} className="fi" style={{position:'absolute',inset:0,background:'rgba(10,15,30,0.52)',zIndex:50}}/>
+      <div style={{position:'absolute',bottom:0,left:0,right:0,background:'#fafaf8',borderRadius:'22px 22px 0 0',maxHeight:'88%',overflowY:'auto',zIndex:51,animation:'sheet-up 0.28s cubic-bezier(0.32,0.72,0,1) both',paddingBottom:32}}>
+        <div style={{width:36,height:4,borderRadius:2,background:'#e0dcd6',margin:'10px auto 0'}}/>
+        <div style={{padding:'14px 18px 0'}}>
+
+          {/* Header */}
+          <div style={{display:'flex',gap:12,alignItems:'center',marginBottom:12}}>
+            <div style={{width:50,height:50,borderRadius:16,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><option.IC/></div>
+            <div style={{flex:1}}>
+              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
+                <span style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:card.color}}>{card.pillar}</span>
+                {isMove && option.modeLabel && <span style={{fontSize:9,fontWeight:700,background:card.bg,color:card.color,borderRadius:20,padding:'2px 8px',border:`1px solid ${card.color}30`}}>{option.modeLabel}</span>}
+                {card.conditionTag && <span style={{fontSize:8,fontWeight:600,background:tagBg,color:tagColor,borderRadius:20,padding:'1px 6px'}}>{card.conditionTag}</span>}
+              </div>
+              <p style={{fontSize:17,fontWeight:800,color:'#1a1a1a',margin:0,letterSpacing:'-0.02em',lineHeight:1.2}}>{option.label}</p>
+              {isMove && option.sessionProgress && <p style={{fontSize:10,color:'#a8a29e',margin:'2px 0 0'}}>{option.sessionProgress}</p>}
+            </div>
+          </div>
+
+          {/* Description */}
+          {option.description && <p style={{fontSize:13,color:'#57534e',lineHeight:1.65,margin:'0 0 13px'}}>{option.description}</p>}
+
+          {/* ── MOVE: video preview ── */}
+          {isMove && (
+            <div style={{marginBottom:14}}>
+              {videoState === 'done' ? (
+                <div style={{background:'#f0faf4',borderRadius:16,padding:'16px',textAlign:'center',border:'1.5px solid #4CAF7D33'}}>
+                  <div style={{width:44,height:44,borderRadius:'50%',background:'#4CAF7D',margin:'0 auto 8px',display:'flex',alignItems:'center',justifyContent:'center'}}><I.Check/></div>
+                  <p style={{fontSize:14,fontWeight:700,color:'#1a1a1a',margin:'0 0 3px'}}>Session logged</p>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+                    <I.Health/><span style={{fontSize:11,color:'#4CAF7D',fontWeight:600}}>Synced to Apple Health</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{borderRadius:16,overflow:'hidden',background:`linear-gradient(135deg,${card.color}dd,${card.color}88)`,position:'relative'}}>
+                  <div style={{padding:'18px 16px 14px'}}>
+                    <p style={{fontSize:10,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'rgba(255,255,255,0.6)',margin:'0 0 4px'}}>Session guide</p>
+                    <p style={{fontSize:16,fontWeight:800,color:'#fff',margin:'0 0 2px',letterSpacing:'-0.01em'}}>{option.label}</p>
+                    <p style={{fontSize:11,color:'rgba(255,255,255,0.6)',margin:'0 0 14px'}}>{option.modeLabel} · Warm-up + main set + cool-down</p>
+
+                    {videoState === 'idle' ? (
+                      <button onClick={()=>setVideoState('playing')} style={{display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,0.18)',border:'1.5px solid rgba(255,255,255,0.3)',borderRadius:12,padding:'9px 16px',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                        <I.Play/> Watch session guide
+                      </button>
+                    ) : (
+                      <div>
+                        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                          <div style={{width:8,height:8,borderRadius:'50%',background:'#fff',animation:'dot-bounce 1s ease-in-out infinite'}}/>
+                          <span style={{fontSize:11,color:'rgba(255,255,255,0.8)',fontWeight:600}}>Playing…</span>
+                        </div>
+                        <div style={{background:'rgba(255,255,255,0.2)',borderRadius:4,height:4,overflow:'hidden'}}>
+                          <div className="vid-playing" style={{height:'100%',background:'#fff',borderRadius:4}}/>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Why it works */}
+          <div style={{background:'#f2f0eb',borderRadius:14,padding:'11px 13px',marginBottom:13}}>
+            <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:card.color,margin:'0 0 5px'}}>Why it works</p>
+            <p style={{fontSize:12,color:'#3a3a38',lineHeight:1.6,margin:0}}>{option.why}</p>
+          </div>
+
+          {/* Tips */}
+          {option.tips && option.tips.length > 0 && (
+            <div style={{marginBottom:14}}>
+              <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:'0 0 8px'}}>Tips</p>
+              {option.tips.map((tip,i) => (
+                <div key={i} style={{display:'flex',gap:9,marginBottom:6,alignItems:'flex-start'}}>
+                  <div style={{width:5,height:5,borderRadius:'50%',background:card.color,marginTop:5.5,flexShrink:0,opacity:0.7}}/>
+                  <p style={{fontSize:12,color:'#57534e',margin:0,lineHeight:1.6}}>{tip}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── SLEEP: ambient sounds + forecast ── */}
+          {isSleep && (
+            <div style={{marginBottom:14}}>
+              {/* Sleep forecast */}
+              {card.sleepForecast && (
+                <div style={{marginBottom:14}}>
+                  <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:'0 0 8px'}}>Sleep forecast</p>
+                  <div style={{display:'flex',gap:8}}>
+                    <div style={{flex:1,background:'#f0faf4',borderRadius:14,padding:'12px',textAlign:'center',border:'1.5px solid #4CAF7D33'}}>
+                      <p style={{fontSize:10,color:'#4CAF7D',fontWeight:700,margin:'0 0 4px'}}>Sleep now</p>
+                      <p style={{fontSize:28,fontWeight:900,color:'#1a1a1a',margin:'0 0 2px',lineHeight:1}}>{card.sleepForecast.now}</p>
+                      <p style={{fontSize:10,color:'#a8a29e',margin:0}}>Est. score</p>
+                    </div>
+                    <div style={{flex:1,background:'#fdf6f0',borderRadius:14,padding:'12px',textAlign:'center',border:'1.5px solid #e05c5c22'}}>
+                      <p style={{fontSize:10,color:'#e05c5c',fontWeight:700,margin:'0 0 4px'}}>+30 min</p>
+                      <p style={{fontSize:28,fontWeight:900,color:'#1a1a1a',margin:'0 0 2px',lineHeight:1}}>{card.sleepForecast.later}</p>
+                      <p style={{fontSize:10,color:'#a8a29e',margin:0}}>Est. score</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Ambient sounds */}
+              <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:'0 0 8px'}}>Wind-down sounds</p>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7}}>
+                {SOUNDS.map(s => {
+                  const isPlaying = activeSound === s.id;
+                  return (
+                    <button key={s.id} onClick={()=>setActiveSound(isPlaying ? null : s.id)} style={{
+                      display:'flex',alignItems:'center',gap:8,padding:'10px 11px',
+                      borderRadius:13,border:`1.5px solid ${isPlaying ? card.color+'60' : '#e8e5de'}`,
+                      background: isPlaying ? card.bg : '#fff',
+                      cursor:'pointer',fontFamily:'inherit',transition:'all 0.15s',
+                    }}>
+                      <div style={{color:isPlaying ? card.color : '#a8a29e'}}><s.IC/></div>
+                      <span style={{fontSize:11,fontWeight:600,color:isPlaying?card.color:'#57534e',flex:1,textAlign:'left'}}>{s.label}</span>
+                      {isPlaying && (
+                        <div style={{display:'flex',gap:2,alignItems:'flex-end',height:14}}>
+                          <div className="sw1" style={{width:3,borderRadius:2,background:card.color}}/>
+                          <div className="sw2" style={{width:3,borderRadius:2,background:card.color}}/>
+                          <div className="sw3" style={{width:3,borderRadius:2,background:card.color}}/>
+                          <div className="sw4" style={{width:3,borderRadius:2,background:card.color}}/>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── MIND: breathing or journal CTA ── */}
+          {isMind && option.isBreathing && (
+            <button onClick={onStartBreathing} style={{
+              width:'100%',padding:'13px',borderRadius:14,marginBottom:14,
+              background:`linear-gradient(135deg,${card.color},${card.color}bb)`,
+              border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',
+              boxShadow:`0 4px 16px ${card.color}40`,
+            }}>
+              Start guided session
+            </button>
+          )}
+          {isMind && option.isJournal && (
+            <button onClick={onOpenChat} style={{
+              width:'100%',padding:'13px',borderRadius:14,marginBottom:14,
+              background:`linear-gradient(135deg,${card.color},${card.color}bb)`,
+              border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',
+              boxShadow:`0 4px 16px ${card.color}40`,
+            }}>
+              Open in Lemon Chat
+            </button>
+          )}
+
+          {/* ── NUTRITION: recipes ── */}
+          {isNutrition && hasRecipes && (
+            <div style={{marginBottom:8}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:9}}>
+                <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:0}}>Add to meal plan</p>
+                <div style={{display:'flex',alignItems:'center',gap:4,background:'#f0ede8',borderRadius:20,padding:'3px 8px'}}>
+                  <I.Chef/><span style={{fontSize:10,fontWeight:600,color:'#94a47f'}}>Meal Prep</span><I.Arrow/>
+                </div>
+              </div>
+              {option.recipes.map((r,i) => {
+                const isAdded = added[i];
+                return (
+                  <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:'#fff',borderRadius:14,border:`1.5px solid ${isAdded?'#4CAF7D33':'#efefed'}`,marginBottom:6,transition:'border-color 0.2s'}}>
+                    <div style={{width:38,height:38,borderRadius:11,background:card.bg,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',color:card.color}}><I.Apple/></div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px',lineHeight:1.3}}>{r.name}</p>
+                      <p style={{fontSize:10,color:'#a8a29e',margin:0}}>{r.protein} protein · {r.cal} cal · {r.time}</p>
+                    </div>
+                    <button onClick={()=>setAdded(a=>({...a,[i]:true}))} style={{padding:'5px 12px',borderRadius:20,flexShrink:0,border:`1.5px solid ${isAdded?'#4CAF7D':card.color}`,background:isAdded?'#4CAF7D':'transparent',color:isAdded?'#fff':card.color,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',transition:'all 0.2s',display:'flex',alignItems:'center',gap:4}}>
+                      {isAdded ? <><I.Check/> Added</> : '+ Add'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* I did this / Mark as done */}
+          {!isSelected && (
+            <button onClick={()=>{ onSelect && onSelect(); onActivityDone && onActivityDone(); onClose(); }} style={{width:'100%',padding:'13px',borderRadius:14,marginTop:4,background:`linear-gradient(135deg,${card.color},${card.color}cc)`,border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 4px 16px ${card.color}44`}}>
+              I did this
+            </button>
+          )}
+          {isSelected && !isMove && !doneMark && (
+            <button onClick={()=>{ setDoneMark(true); onActivityDone && onActivityDone(); }} style={{width:'100%',padding:'13px',borderRadius:14,marginTop:4,background:`linear-gradient(135deg,${card.color},${card.color}cc)`,border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 4px 16px ${card.color}44`}}>
+              I did this
+            </button>
+          )}
+          {isSelected && !isMove && doneMark && (
+            <div style={{width:'100%',padding:'13px',borderRadius:14,marginTop:4,background:'#f0faf4',border:'1.5px solid #4CAF7D33',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+              <I.Check/><span style={{fontSize:14,fontWeight:700,color:'#4CAF7D'}}>Done — arc updated</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
+// ── Recommendation card ───────────────────────────────────────────────────
+const RecCard = ({ card, onDetail, onActivityDone }) => {
+  const [sel, setSel]           = useState(0);
+  const [ownOpen, setOwnOpen]   = useState(false);
+  const [ownText, setOwnText]   = useState('');
+  const [ownDone, setOwnDone]   = useState(false);
+  const chosen = card.options[sel];
+  const others = card.options.filter((_,i) => i !== sel);
+  const tagBg     = card.conditionTagColor ? card.conditionTagColor + '15' : 'rgba(107,130,181,0.1)';
+  const tagColor  = card.conditionTagColor || '#6b82b5';
+  const tagBorder = card.conditionTagColor ? card.conditionTagColor + '28' : 'rgba(107,130,181,0.18)';
+
+  const handleOwnSubmit = () => {
+    if (!ownText.trim()) return;
+    setOwnDone(true);
+    onActivityDone && onActivityDone();
+  };
+
+  return (
+    <div style={{background:'#fff',borderRadius:20,border:'1px solid #efefed',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,0.05)'}}>
+      <div style={{height:3,background:`linear-gradient(90deg,${card.color},${card.color}55)`}}/>
+      <div style={{padding:'11px 13px 12px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+          <span style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:card.color}}>{card.pillar}</span>
+          <div style={{display:'flex',alignItems:'center',gap:5}}>
+            {card.pillar === 'Move' && chosen.modeLabel && (
+              <span style={{fontSize:9,fontWeight:600,background:card.bg,color:card.color,borderRadius:20,padding:'2px 7px'}}>{chosen.modeLabel}</span>
+            )}
+            {card.conditionTag && (
+              <span style={{fontSize:9,fontWeight:600,background:tagBg,color:tagColor,borderRadius:20,padding:'2px 8px',border:`1px solid ${tagBorder}`}}>{card.conditionTag}</span>
+            )}
+          </div>
+        </div>
+        {/* Selected → tap to detail */}
+        <div onClick={()=>onDetail({option:chosen,card,isSelected:true,onSelect:null})} style={{display:'flex',gap:9,alignItems:'flex-start',marginBottom:8,cursor:'pointer'}}>
+          <div style={{width:38,height:38,borderRadius:12,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><chosen.IC/></div>
+          <div style={{flex:1,minWidth:0}}>
+            <p style={{fontSize:14,fontWeight:800,color:'#1a1a1a',margin:'0 0 2px',letterSpacing:'-0.02em',lineHeight:1.2}}>{chosen.label}</p>
+            <p style={{fontSize:11,color:'#78716c',margin:0}}>{chosen.detail}</p>
+          </div>
+          <div style={{color:'#c4bfb8',flexShrink:0,marginTop:2}}><I.Arrow/></div>
+        </div>
+        {/* Why */}
+        <div style={{padding:'7px 10px',background:'#f8f7f3',borderRadius:10,marginBottom:9}}>
+          <p style={{fontSize:11,color:'#57534e',margin:0,lineHeight:1.5}}>{chosen.why}</p>
+        </div>
+        {/* Others */}
+        {others.length > 0 && (
+          <div>
+            <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#c4bfb8',margin:'0 0 4px'}}>Other options</p>
+            {others.map((opt,i) => {
+              const origIdx = card.options.indexOf(opt);
+              return (
+                <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:11,background:'#f8f7f3',marginBottom:3}}>
+                  <div onClick={()=>setSel(origIdx)} style={{width:26,height:26,borderRadius:9,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,cursor:'pointer'}}><opt.IC/></div>
+                  <div onClick={()=>onDetail({option:opt,card,isSelected:false,onSelect:()=>setSel(origIdx)})} style={{flex:1,minWidth:0,cursor:'pointer'}}>
+                    <p style={{fontSize:12,fontWeight:600,color:'#3a3a38',margin:0,lineHeight:1.2}}>{opt.label}</p>
+                    {card.pillar==='Move' && opt.modeLabel && <p style={{fontSize:9,color:card.color,fontWeight:600,margin:'1px 0 0'}}>{opt.modeLabel}</p>}
+                    {!(card.pillar==='Move' && opt.modeLabel) && <p style={{fontSize:10,color:'#a8a29e',margin:'1px 0 0'}}>{opt.detail}</p>}
+                  </div>
+                  <div style={{color:'#c4bfb8',flexShrink:0}}><I.Arrow/></div>
+                </div>
+              );
+            })}
+
+            {/* My own activity */}
+            {!ownDone && !ownOpen && (
+              <div onClick={()=>setOwnOpen(true)} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:11,border:`1.5px dashed ${card.color}40`,background:'transparent',marginBottom:0,cursor:'pointer'}}>
+                <div style={{width:26,height:26,borderRadius:9,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:18,fontWeight:300,lineHeight:1}}>+</div>
+                <div style={{flex:1}}>
+                  <p style={{fontSize:12,fontWeight:600,color:card.color,margin:0,opacity:0.75}}>My own activity</p>
+                  <p style={{fontSize:10,color:'#a8a29e',margin:'1px 0 0'}}>Log something different</p>
+                </div>
+              </div>
+            )}
+
+            {!ownDone && ownOpen && (
+              <div style={{borderRadius:11,border:`1.5px solid ${card.color}50`,background:card.bg,padding:'9px 10px',marginBottom:0}}>
+                <p style={{fontSize:10,fontWeight:700,color:card.color,margin:'0 0 6px',letterSpacing:'0.04em',textTransform:'uppercase'}}>{card.pillar} — log your own</p>
+                <input
+                  autoFocus
+                  value={ownText}
+                  onChange={e=>setOwnText(e.target.value)}
+                  onKeyDown={e=>{ if(e.key==='Enter') handleOwnSubmit(); }}
+                  placeholder={`What did you do for ${card.pillar.toLowerCase()}?`}
+                  style={{width:'100%',border:`1.5px solid ${card.color}30`,borderRadius:9,padding:'8px 10px',fontSize:12,fontFamily:'inherit',color:'#1a1a1a',background:'#fff',outline:'none',marginBottom:7,boxSizing:'border-box'}}
+                />
+                <div style={{display:'flex',gap:6}}>
+                  <button onClick={()=>{ setOwnOpen(false); setOwnText(''); }} style={{flex:1,padding:'7px',borderRadius:9,border:'1.5px solid #e8e5de',background:'transparent',fontSize:12,fontWeight:600,color:'#78716c',cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+                  <button onClick={handleOwnSubmit} disabled={!ownText.trim()} style={{flex:2,padding:'7px',borderRadius:9,border:'none',background:ownText.trim()?card.color:'#e8e5de',fontSize:12,fontWeight:700,color:'#fff',cursor:ownText.trim()?'pointer':'default',fontFamily:'inherit',transition:'background 0.15s'}}>I did this</button>
+                </div>
+              </div>
+            )}
+
+            {ownDone && (
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:11,background:'#f0faf4',border:'1.5px solid #4CAF7D33'}}>
+                <div style={{width:26,height:26,borderRadius:9,background:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'#fff'}}><I.Check/></div>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:0,lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ownText}</p>
+                  <p style={{fontSize:10,color:'#4CAF7D',fontWeight:600,margin:'1px 0 0'}}>Logged · arc updated</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ── App ───────────────────────────────────────────────────────────────────
+const App = () => {
+  const [pk, setPk]           = useState('base');
+  const [animK, setAnimK]     = useState(0);
+  const [detail, setDetail]   = useState(null);
+  const [breathing, setBreathing] = useState(null); // { option, card }
+  const [chat, setChat]       = useState(null);     // { option, card }
+  const [doneSessions, setDoneSessions] = useState(0);
+  const p = PERSONAS[pk];
+
+  const switchPersona = key => { setPk(key); setAnimK(k=>k+1); setDetail(null); setBreathing(null); setChat(null); setDoneSessions(0); };
+  const openDetail  = data => setDetail(data);
+  const closeDetail = () => setDetail(null);
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:24,maxWidth:520,width:'100%'}}>
+      <div style={{textAlign:'center'}}>
+        <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#94a47f',margin:'0 0 4px'}}>Mockup 10 · Homepage</p>
+        <p style={{fontSize:20,fontWeight:800,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.02em'}}>Content library · Plan layer</p>
+        <p style={{fontSize:13,color:'#78716c',margin:0,lineHeight:1.5}}>Tap any card to explore. Move: session guide + done. Sleep: forecast + sounds. Mind: guided breathing or journal in chat.</p>
+      </div>
+
+      {/* Persona switcher */}
+      <div style={{width:'100%',overflowX:'auto',WebkitOverflowScrolling:'touch',paddingBottom:2}}>
+        <div style={{display:'flex',gap:6,padding:'0 2px',justifyContent:'center'}}>
+          {PERSONA_LIST.map(pp=>(
+            <button key={pp.key} onClick={()=>switchPersona(pp.key)} style={{display:'flex',alignItems:'center',gap:6,padding:'6px 10px',borderRadius:14,flexShrink:0,border:`1.5px solid ${pk===pp.key?'#778a62':'#e8e5de'}`,background:pk===pp.key?'#fff':'rgba(255,255,255,0.35)',cursor:'pointer',fontFamily:'inherit',transition:'all 0.18s',boxShadow:pk===pp.key?'0 2px 8px rgba(0,0,0,0.08)':'none'}}>
+              <div style={{width:24,height:24,borderRadius:'50%',background:pp.grad,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#fff',flexShrink:0}}>{pp.initial}</div>
+              <div>
+                <p style={{fontSize:11,fontWeight:700,color:pk===pp.key?'#1a1a1a':'#57534e',margin:0,whiteSpace:'nowrap'}}>{pp.label}</p>
+                <p style={{fontSize:9,color:'#a8a29e',margin:0,whiteSpace:'nowrap'}}>{pp.sub}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Device */}
+      <div className="device" key={pk}>
+        <div className="notch"/>
+
+        {/* Main screen — hidden when chat is active */}
+        {!chat && (
+          <>
+            <div className="screen">
+              {/* Header */}
+              <div style={{background:'linear-gradient(160deg,#1c2030 0%,#253248 100%)',padding:'14px 18px 18px',position:'relative',overflow:'hidden',flexShrink:0}}>
+                <div style={{position:'absolute',top:-40,right:-40,width:200,height:200,background:`radial-gradient(circle,${p.goalColor}18 0%,transparent 70%)`,borderRadius:'50%'}}/>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+                  <span className="lemon-text" style={{fontWeight:800,fontSize:20,letterSpacing:'-0.02em'}}>lemon</span>
+                  <div style={{display:'flex',alignItems:'center',gap:6}}>
+                    {p.condition && <div style={{display:'inline-flex',alignItems:'center',gap:4,background:'rgba(255,255,255,0.08)',borderRadius:20,padding:'3px 8px'}}><div style={{width:5,height:5,borderRadius:'50%',background:p.conditionColor}}/><span style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.65)'}}>{p.condition}</span></div>}
+                    <div style={{width:28,height:28,borderRadius:'50%',background:p.avatarGrad,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#fff'}}>{p.initial}</div>
+                  </div>
+                </div>
+                <div style={{display:'flex',alignItems:'center',gap:14}}>
+                  <ProgressArc done={p.slotsDone + doneSessions} total={p.slotsTotal} goalColor={p.goalColor}/>
+                  <div style={{flex:1}}>
+                    <div style={{display:'inline-flex',alignItems:'center',gap:5,background:p.goalBg+'22',borderRadius:20,padding:'3px 9px',marginBottom:7}}>
+                      <div style={{width:6,height:6,borderRadius:'50%',background:p.goalColor}}/><span style={{fontSize:11,fontWeight:700,color:p.goalColor}}>{p.goal}</span>
+                    </div>
+                    <p style={{fontSize:11,color:p.isWorkingColor,fontWeight:600,margin:0,lineHeight:1.45}}>{p.isWorking}</p>
+                  </div>
+                </div>
+              </div>
+              {/* Cards */}
+              <div style={{padding:'12px 13px 28px',display:'flex',flexDirection:'column',gap:9}} key={animK}>
+                <p style={{fontSize:11,fontWeight:600,color:'#a8a29e',margin:'2px 0 3px'}}>Today · Thursday</p>
+                {p.cards.map((card,i)=>(
+                  <div key={i} className={`su${i}`}><RecCard card={card} onDetail={openDetail} onActivityDone={()=>setDoneSessions(d=>d+1)}/></div>
+                ))}
+              </div>
+            </div>
+            <div className="nav">
+              {[{IC:I.Home,l:'Home',on:true},{IC:I.Chart,l:'Stats'},{IC:I.User,l:'Profile'}].map((n,i)=>(
+                <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+                  <div style={{color:n.on?'#778a62':'#b0a99e'}}><n.IC/></div>
+                  <span style={{fontSize:10,fontWeight:500,color:n.on?'#778a62':'#b0a99e'}}>{n.l}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Chat view — full screen replacement */}
+        {chat && (
+          <ChatView option={chat.option} card={chat.card} persona={p} onBack={()=>setChat(null)} onActivityDone={()=>setDoneSessions(d=>d+1)}/>
+        )}
+
+        {/* Detail sheet */}
+        {detail && !breathing && (
+          <DetailSheet
+            option={detail.option} card={detail.card} isSelected={detail.isSelected}
+            onClose={closeDetail}
+            onSelect={()=>{ detail.onSelect && detail.onSelect(); }}
+            onStartBreathing={()=>{ setBreathing({ option:detail.option, card:detail.card }); setDetail(null); }}
+            onOpenChat={()=>{ setChat({ option:detail.option, card:detail.card }); setDetail(null); }}
+            onActivityDone={()=>{ setDoneSessions(d=>d+1); }}
+          />
+        )}
+
+        {/* Breathing session — full screen overlay */}
+        {breathing && (
+          <BreathingSession
+            option={breathing.option} card={breathing.card}
+            onClose={()=>setBreathing(null)}
+            onDone={()=>{ setBreathing(null); setDoneSessions(d=>d+1); }}
+          />
+        )}
+      </div>
+
+      {/* Notes */}
+      <div style={{maxWidth:375,width:'100%',display:'flex',flexDirection:'column',gap:7}}>
+        {[
+          { label:'Move → session guide + arc fill', body:'Each Move option shows the session mode (Recovery / Push / Steady) and progression counter. Tapping opens a simulated session guide. Marking done logs to Apple Health and fills the arc.' },
+          { label:'Sleep → forecast + wind-down sounds', body:'Sleep detail shows projected score now vs. +30 min, grounded in the user\'s own data. Four ambient sounds play from within Lemon — no separate app needed.' },
+          { label:'Mind → guided breathing or Lemon Chat', body:'Breathing options launch a full-screen animated session (expanding ring, phase countdown, progress arc). Journal options open Lemon Chat with a personalised prompt and a contextual response.' },
+          { label:'Nutrition → meal plan + recipes', body:'Three matching recipes per option with macros and prep time. One tap adds to meal plan with a Meal Prep shortcut surfaced in context.' },
+        ].map((n,i)=>(
+          <div key={i} style={{background:'rgba(255,255,255,0.55)',borderRadius:12,padding:'10px 12px',border:'1px solid #e8e5de'}}>
+            <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px'}}>{n.label}</p>
+            <p style={{fontSize:12,color:'#57534e',margin:0,lineHeight:1.55}}>{n.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
