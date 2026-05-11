@@ -216,7 +216,7 @@ const CONTEXT_CHIPS = [
 // PERSONA DATA (Linda removed)
 // ─────────────────────────────────────────────────────────────────────────────
 const PERSONAS = {
-  // Maya — MVP user. No BP. 4 pillars. Pages 1, 2, 5 only.
+  // Maya — MVP user. Now BP-tracked. 4 pillars. Pages 1, 2, 5.
   maya: {
     key:'maya', name:'Maya', age:31, label:'Progress report MVP',
     initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', accent:'#c9a227',
@@ -224,10 +224,34 @@ const PERSONAS = {
     week:'Week 4 · Hold',
     summary:'Three Zone 2 walks and DASH dinners cut morning systolic 4 points, and weight is down 0.3 kg this week.',
     bp:{
-      notTracked:true,
-      sleepSeries:[68,72,70,75,72,78,75,80,78,75,82,80,77,84,82,80,86,84,80,82,86,84,82,84,86,84,82,86],
-      sleepAvg:84, sleepPrev:80, sleepDelta:+4,
-      stepsAvg:'8.4k', stepsPrev:'7.6k', stepsDelta:'+0.8k',
+      avgSys:122, avgDia:78, prevSys:126, prevDia:80,
+      deltaSys:-4, deltaDia:-2,
+      series:[130,128,131,127,129,126,128,125,127,124,126,123,125,122,124,121,123,122,124,121,123,120,122,123,121,122,121,122],
+      seriesDia:[84,83,84,82,83,81,82,80,81,79,80,79,80,78,79,77,78,79,78,77,78,76,78,77,76,78,77,78],
+      insights:[
+        { kind:'headline', text:'7-day average 122/78 — first time below 130/80 in 6 months.' },
+        { kind:'pattern',  text:'Mornings after 7+ hrs of sleep averaged 119/76 vs 125/80 on shorter nights.' },
+        { kind:'timing',   text:'Highest readings cluster on stressful weekdays — Wed and Thu.' },
+        { kind:'action',   text:'Three more weeks at this pace puts you in optimal range.' },
+      ],
+    },
+    weight:{ avg:68.4, prev:68.7, delta:-0.3,
+      series:[69.0,68.9,69.1,68.8,68.9,68.7,68.8,68.6,68.7,68.5,68.6,68.4,68.5,68.4],
+      insights:[
+        { kind:'headline', text:'Down 0.3 kg this week — sustainable pace.' },
+        { kind:'pattern',  text:'Drop correlates with 5 home-cooked dinners (sodium retention released).' },
+        { kind:'timing',   text:'Lowest readings on days following 8,000+ steps.' },
+        { kind:'action',   text:'On pace for -1.2 kg this month at current trend.' },
+      ],
+    },
+    actions:{ done:18, target:26, deltaText:'+2 vs last week',
+      series:[2,3,2,4,3,2,2,3,4,2,3,2,4,3],
+      insights:[
+        { kind:'headline', text:'18 of 26 actions done — your highest week in 4.' },
+        { kind:'pattern',  text:'Move 5/7 and Sleep 6/7 are your strongest pillars.' },
+        { kind:'timing',   text:'Mind is your work area — only 3 of 7 mindful pauses.' },
+        { kind:'action',   text:'Days you complete morning actions averaged sleep score 86.' },
+      ],
     },
     causeEffect:{
       headline:'On days you hit 8,000+ steps, your sleep score averaged 86 vs 73 on lower-step days.',
@@ -280,20 +304,43 @@ const PERSONAS = {
     initial:'S', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', accent:'#5d6e4d',
     goalLabel:'Lose weight',
     week:'Week 2 · Lose weight',
-    summary:'You\'re learning your patterns. Sleep is doing the most.',
+    summary:'You\'re building your BP baseline.',
     useReviewPage3:true,
     bp:{
       insufficient:true,
       avgSys:null, avgDia:null, prevSys:null, prevDia:null, deltaSys:null, deltaDia:null,
       logs:2, target:7,
       partialReadings:['134/84','141/86'],
-      note:'Two more readings this week unlocks your first 7-day trend.',
-      sleepSeries:[62,68,65,72,70,68,75,72,80,78,75,82,79,77,84,82,80,85,83,81,86,84,80,82,85,83,81,84],
+      note:'Log 5 more morning readings to unlock your first 7-day BP trend.',
+      insights:[
+        { kind:'headline', text:'2 of 7 readings logged — trend unlocks at day 7.' },
+        { kind:'pattern',  text:'First readings: 134/84 and 141/86 — both above your 130/80 goal.' },
+        { kind:'timing',   text:'Single readings vary by 5–10 mmHg with mood and posture. The average is what matters.' },
+        { kind:'action',   text:'Once unlocked, you\'ll see how sleep, walks, and meals move the number.' },
+      ],
+    },
+    weight:{ avg:84.8, prev:85.2, delta:-0.4,
+      series:[85.5,85.4,85.3,85.2,85.1,85.0,85.0,84.9,84.8,84.9,84.8,84.7,84.8,84.8],
+      insights:[
+        { kind:'headline', text:'Down 0.4 kg this week — walks and earlier dinners are the lever.' },
+        { kind:'pattern',  text:'Lowest readings on days following 8,000+ steps.' },
+        { kind:'timing',   text:'Trend smoother since week 1 — daily fluctuation is normal noise.' },
+        { kind:'action',   text:'On pace for ~1.6 kg this month at current rate.' },
+      ],
+    },
+    actions:{ done:14, target:21, deltaText:'+3 vs last week',
+      series:[1,2,2,3,2,1,3,2,3,2,3,2,3,2],
+      insights:[
+        { kind:'headline', text:'14 of 21 actions done — strongest pattern is morning walks.' },
+        { kind:'pattern',  text:'Sleep 5/7 nights is your most consistent habit.' },
+        { kind:'timing',   text:'BP logging at 2/7 is your lowest pillar — that\'s where trend lives.' },
+        { kind:'action',   text:'Two more logs this week unlocks your first 7-day BP average.' },
+      ],
     },
     causeEffect:{
-      headline:'On days you walked 8,000+ steps, your sleep score averaged 84 vs 71 on lower-step days.',
-      detail:'Without daily BP, we lean on sleep score and HRV to spot what\'s working. The walking-to-sleep loop is your strongest signal so far.',
-      pillar:'Move + Sleep',
+      headline:'Log 5 more morning readings to unlock your first 7-day BP trend.',
+      detail:'You\'re still in baseline-building. Once you have 7 mornings logged, Lemon can show your true average and what behaviors move it.',
+      pillar:'Logging',
     },
     pillarKeys:ALL_KEYS,
     pillars:{
@@ -347,7 +394,7 @@ const PERSONAS = {
     },
     canExport:false,
     exportLockReason:'Log 12 more readings to unlock the 28-day report.',
-    pageSequence:[1,2,3,4,5],
+    pageSequence:[1,2,3,5],
   },
 
   // Maya chat-logging MVP — G-refined Option G from lemon-chat-designs.html.
@@ -620,7 +667,6 @@ PERSONAS.mayaHomeV6 = {
 const PERSONA_LIST = [
   PERSONAS.maya,
   PERSONAS.sam,
-  PERSONAS.mayaChat,
   PERSONAS.mayaStats,
   PERSONAS.mayaMealPrep,
   PERSONAS.mayaCommunity,
@@ -668,26 +714,33 @@ const DeltaPill = ({ delta, kind, color }) => {
   );
 };
 
-const TrendChart = ({ series, accent, target=null, todayLabel='today' }) => {
-  const w=305, h=140, pad=18;
-  const min = (target!==null ? Math.min(...series, target) : Math.min(...series)) - 4;
-  const max = (target!==null ? Math.max(...series, target) : Math.max(...series)) + 4;
+const TrendChart = ({ series, accent, target=null, todayLabel='today', startLabel='28d ago', diaSeries=null, diaTarget=null, height=140 }) => {
+  const w=305, h=height, pad=18;
+  const allValues = diaSeries ? [...series, ...diaSeries] : [...series];
+  if (target!==null) allValues.push(target);
+  if (diaTarget!==null) allValues.push(diaTarget);
+  const min = Math.min(...allValues) - 4;
+  const max = Math.max(...allValues) + 4;
   const x = i => pad + (i*(w-pad*2))/(series.length-1);
   const y = v => h - pad - ((v-min)/(max-min))*(h-pad*2);
-  const rolling = series.map((_,i)=>{
+  const rollAvg = s => s.map((_,i)=>{
     const start = Math.max(0,i-6);
-    const slice = series.slice(start,i+1);
+    const slice = s.slice(start,i+1);
     return slice.reduce((a,b)=>a+b,0)/slice.length;
   });
+  const rolling = rollAvg(series);
   const linePath = series.map((v,i)=>`${i===0?'M':'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
   const avgPath  = rolling.map((v,i)=>`${i===0?'M':'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
   const tY = target!==null ? y(target).toFixed(1) : null;
+  const diaRolling = diaSeries ? rollAvg(diaSeries) : null;
+  const diaLinePath = diaSeries ? diaSeries.map((v,i)=>`${i===0?'M':'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ') : null;
+  const diaAvgPath  = diaRolling ? diaRolling.map((v,i)=>`${i===0?'M':'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ') : null;
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto">
       {target!==null && (
         <>
           <line x1={pad} y1={tY} x2={w-pad} y2={tY} stroke="#94a47f" strokeWidth="1" strokeDasharray="3 4" opacity="0.6"/>
-          <text x={w-pad} y={Number(tY)-4} fontSize="9" fill="#94a47f" textAnchor="end" fontWeight="600">target ≤ {target}</text>
+          <text x={w-pad} y={Number(tY)-4} fontSize="9" fill="#94a47f" textAnchor="end" fontWeight="600">target ≤ {target}{diaTarget?`/${diaTarget}`:''}</text>
         </>
       )}
       <path d={linePath} fill="none" stroke={accent+'40'} strokeWidth="1.4" strokeLinecap="round"/>
@@ -695,7 +748,38 @@ const TrendChart = ({ series, accent, target=null, todayLabel='today' }) => {
         <circle key={i} cx={x(i)} cy={y(v)} r={i===series.length-1?3.2:1.6} fill={i===series.length-1?accent:accent+'80'}/>
       ))}
       <path d={avgPath} fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" className="draw-line"/>
-      <text x={pad} y={h-4} fontSize="9" fill="#a8a29e">28d ago</text>
+      {diaSeries && (
+        <>
+          <path d={diaLinePath} fill="none" stroke={accent+'30'} strokeWidth="1.2" strokeLinecap="round" strokeDasharray="2 2"/>
+          <path d={diaAvgPath}  fill="none" stroke={accent+'80'} strokeWidth="1.8" strokeLinecap="round" className="draw-line"/>
+          {diaSeries.map((v,i)=> (
+            <circle key={'d'+i} cx={x(i)} cy={y(v)} r={i===diaSeries.length-1?2.6:1.2} fill={i===diaSeries.length-1?accent+'aa':accent+'55'}/>
+          ))}
+        </>
+      )}
+      <text x={pad} y={h-4} fontSize="9" fill="#a8a29e">{startLabel}</text>
+      <text x={w-pad} y={h-4} fontSize="9" fill="#a8a29e" textAnchor="end">{todayLabel}</text>
+    </svg>
+  );
+};
+
+// BarChart — small bar chart for actions-per-day visualization
+const BarChart = ({ series, accent, startLabel='14d ago', todayLabel='today' }) => {
+  const w=305, h=100, pad=18;
+  const max = Math.max(...series) + 1;
+  const barW = (w - pad*2) / series.length * 0.7;
+  const gap  = (w - pad*2) / series.length * 0.3;
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto">
+      {series.map((v,i)=> {
+        const xPos = pad + i*(barW + gap);
+        const barH = (v/max) * (h - pad*2);
+        return (
+          <rect key={i} x={xPos} y={h-pad-barH} width={barW} height={barH} rx="2"
+            fill={i===series.length-1 ? accent : accent+'66'}/>
+        );
+      })}
+      <text x={pad} y={h-4} fontSize="9" fill="#a8a29e">{startLabel}</text>
       <text x={w-pad} y={h-4} fontSize="9" fill="#a8a29e" textAnchor="end">{todayLabel}</text>
     </svg>
   );
@@ -705,12 +789,10 @@ const TrendChart = ({ series, accent, target=null, todayLabel='today' }) => {
 // PAGE 1
 // ─────────────────────────────────────────────────────────────────────────────
 const Page1 = ({ p }) => {
-  const fullBP   = !p.bp.insufficient && !p.bp.notTracked;
+  const fullBP   = !p.bp.insufficient;
   const sparseBP = !!p.bp.insufficient;
-  const noBP     = !!p.bp.notTracked;
   const trendKind  = fullBP && (p.bp.deltaSys < -1 ? 'good' : p.bp.deltaSys > 1 ? 'bad' : 'flat');
   const trendColor = trendKind==='good' ? '#4CAF7D' : trendKind==='bad' ? '#E05C5C' : '#F0A030';
-  const deltaTxt   = fullBP ? `${p.bp.deltaSys>0?'+':''}${p.bp.deltaSys}/${p.bp.deltaDia>0?'+':''}${p.bp.deltaDia} mmHg vs prior wk` : '';
 
   return (
     <div className="px-5 pt-6 pb-8 bg-gradient-to-b from-white via-warm-50 to-white min-h-full">
@@ -719,64 +801,72 @@ const Page1 = ({ p }) => {
         <h1 className="text-2xl font-bold text-stone-600 leading-tight mt-1">Week in review</h1>
       </div>
 
-      {fullBP && (
-        <div className="bg-white rounded-3xl border border-stone-150 p-5 mt-4 su1 shadow-sm">
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">7-day average</span>
-            <DeltaPill delta={deltaTxt} kind={trendKind} color={trendColor}/>
-          </div>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-[56px] font-bold leading-none" style={{color:p.accent}}>{p.bp.avgSys}</span>
-            <span className="text-3xl font-semibold text-stone-400 leading-none">/{p.bp.avgDia}</span>
-            <span className="text-sm text-stone-400 ml-1 mb-1">mmHg</span>
-          </div>
-          <p className="text-sm text-stone-500 mt-3 leading-relaxed">{p.summary}</p>
-          <p className="text-[11px] text-stone-400 mt-3 italic leading-snug">A single reading isn’t the trend. The 7-day average is the number we watch.</p>
-        </div>
-      )}
-
-      {sparseBP && (
-        <div className="bg-white rounded-3xl border border-stone-150 p-5 mt-4 su1 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Building your baseline</span>
-            <span className="text-[11px] font-semibold text-stone-400">{p.bp.logs} of {p.bp.target} logs</span>
-          </div>
-          <div className="flex gap-1.5 mb-4">
-            {[...Array(p.bp.target)].map((_,i)=>(
-              <div key={i} className="flex-1 h-2.5 rounded-full" style={{background: i < p.bp.logs ? p.accent : '#e7e5e4'}}/>
-            ))}
-          </div>
-          <p className="text-[15px] font-semibold text-stone-600 leading-snug">{p.summary}</p>
-          <p className="text-[12.5px] text-stone-500 mt-2 leading-relaxed">{p.bp.note}</p>
-          {p.bp.partialReadings && (
-            <div className="mt-3 pt-3 border-t border-stone-150 flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">Logged:</span>
-              {p.bp.partialReadings.map((r,i)=>(
-                <span key={i} className="text-[11px] font-semibold text-stone-500 px-2 py-0.5 rounded-full bg-stone-100">{r}</span>
-              ))}
-            </div>
+      <div className="grid grid-cols-3 gap-2 mt-4 su1">
+        {/* BP */}
+        <div className="bg-white rounded-2xl border border-stone-150 p-3 shadow-sm flex flex-col">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-stone-400 leading-tight">Blood pressure</p>
+          {fullBP ? (
+            <>
+              <div className="mt-1.5">
+                <span className="text-[22px] font-extrabold leading-none" style={{color:'#3d9e9e',letterSpacing:'-0.02em'}}>{p.bp.avgSys}</span>
+                <span className="text-[15px] font-bold text-stone-400 leading-none">/{p.bp.avgDia}</span>
+              </div>
+              <p className="text-[9px] text-stone-400 mt-1">mmHg · 7-day avg</p>
+              <span className="inline-flex items-center gap-0.5 mt-auto self-start text-[9px] font-bold px-1.5 py-0.5 rounded" style={{background:trendColor+'18',color:trendColor}}>
+                {p.bp.deltaSys<0?'↓':p.bp.deltaSys>0?'↑':'•'} {p.bp.deltaSys>0?'+':''}{p.bp.deltaSys}/{p.bp.deltaDia>0?'+':''}{p.bp.deltaDia}
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="mt-1.5 flex items-baseline">
+                <span className="text-[22px] font-extrabold leading-none text-stone-300">—</span>
+                <span className="text-[15px] font-bold text-stone-300 leading-none">/—</span>
+              </div>
+              <p className="text-[9px] text-stone-400 mt-1">{p.bp.logs} of {p.bp.target} logs</p>
+              <div className="flex gap-0.5 mt-1.5 mb-auto">
+                {[...Array(p.bp.target)].map((_,i)=>(
+                  <div key={i} className="flex-1 h-1 rounded-full" style={{background: i < p.bp.logs ? '#3d9e9e' : '#e7e5e4'}}/>
+                ))}
+              </div>
+              <span className="inline-block mt-1.5 self-start text-[9px] font-bold px-1.5 py-0.5 rounded" style={{background:'#3d9e9e18',color:'#3d9e9e'}}>
+                {p.bp.target - p.bp.logs} more
+              </span>
+            </>
           )}
         </div>
-      )}
 
-      {noBP && (
-        <div className="bg-white rounded-3xl border border-stone-150 p-5 mt-4 su1 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 mb-3">Week in numbers</p>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label:'Actions done',   value:'18',     sub:'of 26 this week', trend:'+2 vs last week', color:'#778a62' },
-              { label:'Blood pressure', value:'122/78', sub:'mmHg · morning',  trend:'↓ 4 systolic',    color:'#3d9e9e' },
-              { label:'Weight',         value:'68.4',   sub:'kg',              trend:'↓ 0.3 this week', color:'#c9a227' },
-            ].map((m,i) => (
-              <div key={i} className="rounded-xl p-2.5" style={{background:'#fafaf8',border:`1px solid ${m.color}22`}}>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-stone-400 leading-tight" style={{margin:0}}>{m.label}</p>
-                <p className="text-[19px] font-extrabold text-stone-700 leading-none mt-1.5" style={{letterSpacing:'-0.02em'}}>{m.value}</p>
-                <p className="text-[9px] text-stone-400 mt-0.5">{m.sub}</p>
-                <span className="inline-block mt-2 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{background:m.color+'18',color:m.color}}>{m.trend}</span>
-              </div>
-            ))}
+        {/* Weight */}
+        <div className="bg-white rounded-2xl border border-stone-150 p-3 shadow-sm flex flex-col">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-stone-400 leading-tight">Weight</p>
+          <div className="mt-1.5">
+            <span className="text-[22px] font-extrabold text-stone-700 leading-none" style={{letterSpacing:'-0.02em'}}>{p.weight.avg}</span>
           </div>
-          <p className="text-sm text-stone-500 mt-4 leading-relaxed">{p.summary}</p>
+          <p className="text-[9px] text-stone-400 mt-1">kg · this week</p>
+          <span className="inline-block mt-auto self-start text-[9px] font-bold px-1.5 py-0.5 rounded" style={{background:'#4CAF7D18',color:'#4CAF7D'}}>
+            {p.weight.delta<0?'↓':'↑'} {Math.abs(p.weight.delta)} kg
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="bg-white rounded-2xl border border-stone-150 p-3 shadow-sm flex flex-col">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-stone-400 leading-tight">Actions done</p>
+          <div className="mt-1.5">
+            <span className="text-[22px] font-extrabold text-stone-700 leading-none" style={{letterSpacing:'-0.02em'}}>{p.actions.done}</span>
+            <span className="text-[12px] font-semibold text-stone-400 ml-0.5">/{p.actions.target}</span>
+          </div>
+          <p className="text-[9px] text-stone-400 mt-1">this week</p>
+          <span className="inline-block mt-auto self-start text-[9px] font-bold px-1.5 py-0.5 rounded" style={{background:'#778a6218',color:'#778a62'}}>
+            {p.actions.deltaText}
+          </span>
+        </div>
+      </div>
+
+      {sparseBP && p.bp.partialReadings && (
+        <div className="mt-3 bg-stone-50 rounded-xl border border-stone-150 p-3 flex items-center gap-2 flex-wrap su1">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">BP logged so far:</span>
+          {p.bp.partialReadings.map((r,i)=>(
+            <span key={i} className="text-[11px] font-semibold text-stone-500 px-2 py-0.5 rounded-full bg-white border border-stone-200">{r}</span>
+          ))}
         </div>
       )}
 
@@ -791,62 +881,123 @@ const Page1 = ({ p }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PAGE 2
+// PAGE 2 — Interpretation. Three chart + insight cards mirroring Page 1's stats.
+// BP card uses the BP empty state when readings are insufficient (no sleep fallback).
 // ─────────────────────────────────────────────────────────────────────────────
+const INSIGHT_ICONS = {
+  headline: I.Sparkles,
+  pattern:  I.TrendDn,
+  timing:   I.Clock,
+  action:   I.Right,
+};
+const InsightRows = ({ rows, accent }) => (
+  <div className="mt-3 pt-3 border-t border-stone-150 space-y-2">
+    {rows.map((row,i) => {
+      const IC = INSIGHT_ICONS[row.kind] || I.Sparkles;
+      const isHeadline = row.kind === 'headline';
+      return (
+        <div key={i} className="flex items-start gap-2">
+          <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-md flex items-center justify-center"
+            style={{background: isHeadline ? accent : accent+'18', color: isHeadline ? '#fff' : accent}}>
+            <IC/>
+          </span>
+          <p className={`flex-1 text-[12.5px] leading-relaxed ${isHeadline?'font-semibold text-stone-700':'text-stone-600'}`}>
+            {row.text}
+          </p>
+        </div>
+      );
+    })}
+  </div>
+);
+
 const Page2 = ({ p }) => {
-  const fullBP = !p.bp.insufficient && !p.bp.notTracked;
-  const series = fullBP ? p.bp.series : p.bp.sleepSeries;
-  const target = fullBP ? 130 : null;
-  const heroVal = fullBP
-    ? `${p.bp.avgSys}/${p.bp.avgDia}`
-    : `${Math.round(series.slice(-7).reduce((a,b)=>a+b,0)/7)} avg`;
-  const heroLbl = fullBP ? '7-day BP average · today' : '7-day sleep score · today';
-  const noBP   = !fullBP;
-  const noBPSubtitle = p.bp.notTracked
-    ? 'BP logging is off — sleep score is the next-best signal we trust. Turn on logging in Settings to switch this view to BP.'
-    : 'Without daily BP, sleep score is the closest signal we trust. We’ll switch to BP once your trend lights up.';
+  const fullBP = !p.bp.insufficient;
+  const bpAccent     = '#3d9e9e';
+  const weightAccent = '#c9a227';
+  const actionAccent = '#778a62';
+
+  const bpDeltaTxt = fullBP ? `${p.bp.deltaSys>0?'+':''}${p.bp.deltaSys}/${p.bp.deltaDia>0?'+':''}${p.bp.deltaDia} mmHg` : null;
+  const bpDeltaKind = fullBP && (p.bp.deltaSys < -1 ? 'good' : p.bp.deltaSys > 1 ? 'bad' : 'flat');
+  const bpDeltaColor = bpDeltaKind==='good' ? '#4CAF7D' : bpDeltaKind==='bad' ? '#E05C5C' : '#F0A030';
+
+  const weightDeltaKind = p.weight.delta < 0 ? 'good' : p.weight.delta > 0 ? 'bad' : 'flat';
+  const weightDeltaColor = weightDeltaKind==='good' ? '#4CAF7D' : weightDeltaKind==='bad' ? '#E05C5C' : '#F0A030';
 
   return (
     <div className="px-5 pt-6 pb-8 bg-gradient-to-b from-white via-sage-50/40 to-white min-h-full">
-      <div className="su mb-3">
+      <div className="su mb-4">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Data &amp; insights</p>
-        <h1 className="text-2xl font-bold text-stone-600 leading-tight mt-1">{fullBP ? 'Your BP, last 28 days' : 'Your sleep, last 28 days'}</h1>
-        {noBP && <p className="text-[12.5px] text-stone-500 mt-1.5 leading-relaxed">{noBPSubtitle}</p>}
+        <h1 className="text-2xl font-bold text-stone-600 leading-tight mt-1">What's moving</h1>
+        <p className="text-[12.5px] text-stone-500 mt-1.5 leading-relaxed">28 days of your blood pressure, weight, and weekly actions.</p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-stone-150 p-4 mt-3 su1 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-[11px] text-stone-400">{heroLbl}</p>
-            <p className="text-2xl font-bold mt-0.5" style={{color:p.accent}}>{heroVal}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[11px] text-stone-400">28-day high</p>
-            <p className="text-sm font-semibold text-stone-600 mt-0.5">{Math.max(...series)}{fullBP?' sys':''}</p>
-          </div>
+      {/* BP card */}
+      <div className="bg-white rounded-3xl border border-stone-150 p-4 su1 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400">Blood pressure</p>
+          {fullBP
+            ? <DeltaPill delta={bpDeltaTxt} kind={bpDeltaKind} color={bpDeltaColor}/>
+            : <span className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">{p.bp.logs} of {p.bp.target} logs</span>}
         </div>
-        <TrendChart series={series} accent={p.accent} target={target}/>
-        <div className="mt-3 flex items-center gap-3 text-[11px] text-stone-500">
-          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-0.5 rounded-full" style={{background:p.accent+'80'}}/>{fullBP?'daily reading':'daily score'}</span>
-          <span className="inline-flex items-center gap-1.5"><span className="w-3 h-0.5 rounded-full" style={{background:p.accent}}/>7-day rolling avg</span>
-        </div>
+
+        {fullBP ? (
+          <>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-3xl font-bold leading-none" style={{color:bpAccent}}>{p.bp.avgSys}<span className="text-stone-400 font-semibold">/{p.bp.avgDia}</span></span>
+              <span className="text-[11px] text-stone-400 ml-1">mmHg · 7-day avg</span>
+            </div>
+            <TrendChart series={p.bp.series} diaSeries={p.bp.seriesDia} accent={bpAccent} target={130} diaTarget={80}/>
+            <div className="mt-2 flex items-center gap-3 text-[11px] text-stone-500">
+              <span className="inline-flex items-center gap-1.5"><span className="w-3 h-0.5 rounded-full" style={{background:bpAccent}}/>Systolic</span>
+              <span className="inline-flex items-center gap-1.5"><span className="w-3 h-0.5 rounded-full" style={{background:bpAccent+'80',borderTop:`1px dashed ${bpAccent}`}}/>Diastolic</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className="text-3xl font-bold leading-none text-stone-300">—<span className="text-stone-300">/—</span></span>
+              <span className="text-[11px] text-stone-400 ml-1">mmHg · awaiting trend</span>
+            </div>
+            <div className="rounded-2xl border-2 border-dashed border-stone-200 p-5 flex flex-col items-center justify-center text-center" style={{minHeight:140}}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2" style={{background:bpAccent+'15',color:bpAccent}}>
+                <I.Heart/>
+              </div>
+              <p className="text-[13px] font-semibold text-stone-600 leading-snug">{p.bp.target - p.bp.logs} more morning readings needed</p>
+              <p className="text-[11px] text-stone-400 mt-1 leading-snug max-w-[230px]">Your trend chart unlocks once you have a full 7-day window.</p>
+            </div>
+          </>
+        )}
+
+        <InsightRows rows={p.bp.insights || [{kind:'headline', text: fullBP ? (p.bp.insight||'') : (p.bp.note||'')}]} accent={bpAccent}/>
       </div>
 
-      <div className="mt-4 su2 rounded-3xl p-4 shadow-sm" style={{background:p.accent+'10',border:`1.5px solid ${p.accent}28`}}>
-        <div className="flex items-center gap-2 mb-2">
-          <span style={{color:p.accent}}><I.Sparkles/></span>
-          <p className="text-[11px] font-semibold uppercase tracking-wide" style={{color:p.accent}}>What moved the needle · {p.causeEffect.pillar}</p>
+      {/* Weight card */}
+      <div className="bg-white rounded-3xl border border-stone-150 p-4 mt-3 su2 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400">Weight</p>
+          <DeltaPill delta={`${p.weight.delta>0?'+':''}${p.weight.delta} kg vs last wk`} kind={weightDeltaKind} color={weightDeltaColor}/>
         </div>
-        <p className="text-base font-semibold text-stone-600 leading-snug">{p.causeEffect.headline}</p>
-        <p className="text-sm text-stone-500 mt-2 leading-relaxed">{p.causeEffect.detail}</p>
+        <div className="flex items-baseline gap-2 mb-1">
+          <span className="text-3xl font-bold leading-none" style={{color:weightAccent}}>{p.weight.avg}</span>
+          <span className="text-[11px] text-stone-400 ml-1">kg · 7-day avg</span>
+        </div>
+        <TrendChart series={p.weight.series} accent={weightAccent} startLabel="14d ago"/>
+        <InsightRows rows={p.weight.insights || [{kind:'headline', text:p.weight.insight||''}]} accent={weightAccent}/>
       </div>
 
-      {fullBP && (
-        <div className="mt-4 su3 rounded-2xl p-4 bg-stone-100 border border-stone-150">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">One high reading, in context</p>
-          <p className="text-sm text-stone-600 mt-1.5 leading-relaxed"><span className="font-semibold">{p.bp.single.value}</span> · {p.bp.single.day}. {p.bp.single.context} Your 7-day average is still {p.bp.avgSys}/{p.bp.avgDia}.</p>
+      {/* Actions card */}
+      <div className="bg-white rounded-3xl border border-stone-150 p-4 mt-3 su3 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400">Actions done</p>
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold" style={{background:actionAccent+'18',color:actionAccent}}>{p.actions.deltaText}</span>
         </div>
-      )}
+        <div className="flex items-baseline gap-2 mb-1">
+          <span className="text-3xl font-bold leading-none" style={{color:actionAccent}}>{p.actions.done}</span>
+          <span className="text-[11px] text-stone-400 ml-1">of {p.actions.target} this week</span>
+        </div>
+        <BarChart series={p.actions.series} accent={actionAccent} startLabel="14d ago"/>
+        <InsightRows rows={p.actions.insights || [{kind:'headline', text:p.actions.insight||''}]} accent={actionAccent}/>
+      </div>
     </div>
   );
 };
@@ -871,14 +1022,9 @@ const Page3 = ({ p, directions, setDirections, contexts, setContexts, otherNote,
       </div>
 
       {useReview ? (
-        <>
-          <div className="mt-5 su1">
-            <WeeklyPlanChat p={p} accent={p.accent}/>
-          </div>
-          <div className="mt-4 su2">
-            <PhysicianSummary p={p}/>
-          </div>
-        </>
+        <div className="mt-5 su1">
+          <WeeklyPlanChat p={p} accent={p.accent}/>
+        </div>
       ) : (
         <div className="mt-5 space-y-2.5 su1">
           {visible.map((d) => {
@@ -1447,21 +1593,44 @@ const Page5 = ({ p, directions, openSheet, onBackToHome }) => {
       {/* NON-MAYA branch */}
       {!isMaya && (
         <>
-          {/* Targets summary */}
-          <div className="mt-4 bg-white rounded-2xl border border-stone-150 p-4 su2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 mb-3">{p.plan.week} targets</p>
-            <div className="space-y-2.5">
-              {p.plan.targets.map((t,i)=>{
-                const TI = I[t.icon] || I.Heart;
-                return (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{background:p.accent+'14',color:p.accent}}><TI/></div>
-                    <span className="flex-1 text-[13px] text-stone-600">{t.label}</span>
-                    <span className="text-[13px] font-semibold" style={{color:p.accent}}>{t.target}<span className="text-stone-400 font-normal text-[11px] ml-0.5">{t.unit}</span></span>
-                  </div>
-                );
-              })}
+          {/* Editable plan — Lemon-drafted, with Adjust affordance */}
+          <div className="mt-4 su2">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Your {p.plan.week} plan</p>
+              {planMode === 'review' && (
+                <button onClick={()=>setPlanMode('adjusting')}
+                  className="text-[11.5px] font-semibold inline-flex items-center gap-1" style={{color:p.accent}}>
+                  <I.Edit/>Adjust
+                </button>
+              )}
             </div>
+            <WeeklyPlanChat p={p} accent={p.accent}/>
+            {planMode === 'adjusting' && (
+              <div className="mt-3 fi">
+                <textarea
+                  value={adjustText}
+                  onChange={e=>setAdjustText(e.target.value)}
+                  placeholder="Tell Lemon what to change — softer targets, swap activities, anything..."
+                  rows={3}
+                  className="adjust-area"/>
+                <div className="flex gap-2 mt-2 justify-end">
+                  <button onClick={()=>{ setPlanMode('review'); setAdjustText(''); }}
+                    className="px-4 py-2 rounded-xl text-[12.5px] font-semibold bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors">
+                    Cancel
+                  </button>
+                  <button onClick={()=>setPlanMode('review')}
+                    className="px-4 py-2 rounded-xl text-[12.5px] font-semibold"
+                    style={{background:p.accent,color:'#fff'}}>
+                    Save changes
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Physician summary — moved from Page 3 */}
+          <div className="mt-4 su3">
+            <PhysicianSummary p={p}/>
           </div>
 
           {/* Accountability — partner OR empty state. NO inline preview. NO Preview button. */}
@@ -3176,7 +3345,19 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
                 const val = base + doneSessions;
                 return {...w, value: String(val), sub: `of ${Math.max(val, 4)} today`};
               })}
-              extraMetrics={[]}
+              extraMetrics={[
+                { id:'steps',      label:'Steps',         value:'9,350',  sub:'today',       trend:'Steady',   color:'#3d9e9e' },
+                { id:'standing',   label:'Standing',      value:'4.1',    sub:'hrs · today', trend:'On track', color:'#778a62' },
+                { id:'activeCal',  label:'Active cal',    value:'410',    sub:'kcal · today',trend:'Monitor',  color:'#c9a227' },
+                { id:'restingCal', label:'Resting cal',   value:'412',    sub:'kcal · today',trend:'Steady',   color:'#94a47f' },
+                { id:'totalSleep', label:'Total sleep',   value:'7h 24m', sub:'last night',  trend:'Steady',   color:'#5b7fa6' },
+                { id:'rem',        label:'REM sleep',     value:'1h 28m', sub:'last night',  trend:'On track', color:'#5b7fa6' },
+                { id:'deep',       label:'Deep sleep',    value:'1h 12m', sub:'last night',  trend:'Good',     color:'#5b7fa6' },
+                { id:'awake',      label:'Awake time',    value:'12',     sub:'min · night', trend:'Monitor',  color:'#5b7fa6' },
+                { id:'hrv',        label:'HRV',           value:'44',     sub:'ms · today',  trend:'Steady',   color:'#8b6daa' },
+                { id:'rhr',        label:'Resting HR',    value:'58',     sub:'bpm · today', trend:'On track', color:'#8b6daa' },
+                { id:'workout',    label:'Workout',       value:'30',     sub:'min · today', trend:'Monitor',  color:'#778a62' },
+              ]}
               bpLogPrompt={p.bpLogVariant === 'tile' && !bpLogged}
               onBPLog={() => setLogSheetOpen(true)}
               bpOverride={bpOverride}
@@ -3910,7 +4091,7 @@ function App() {
       <div style={{textAlign:'center',maxWidth:620}}>
         <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#94a47f',margin:'0 0 4px'}}>Lemon · Hypertension use case</p>
         <h1 style={{fontSize:22,fontWeight:800,color:'#1a1a1a',margin:'0 0 6px',letterSpacing:'-0.02em'}}>Maya’s hypertension use case.</h1>
-        <p style={{fontSize:13,color:'#78716c',margin:0,lineHeight:1.5}}>{p.isChatView ? 'Chat-logging MVP (Option G) — sodium-aware AI meal flow. Tap "Looks right" to log; the red dot pulses; tap the hamburger to see the journal slide in.' : p.routerStrip ? 'Homepage MVP option 3 — logging lives in chat. Notification (above the device) is the daily-ritual path; the in-app router strip routes to chat for catch-up. The homepage carries no logging UI.' : p.weeklyReportPromoted ? 'Homepage MVP option 2 — weekly report promoted to hero, Logging pillar removed, LemonAsksBP carries the full BP form (sys / dia / pulse / notes) plus an X dismiss.' : p.bpLogVariant === 'ask' ? 'Homepage Logging CTA MVP — LemonAsksBP at the top with the full BP form (sys / dia / pulse / notes), Logging pillar in the rec stack with a "Logged today" state.' : isHomeView ? 'Hypertension homepage — DASH-adjusted nutrition, BP-aware sleep + mind cards, fully interactive. Tap any recommendation for the full detail sheet.' : 'Weekly progress report — 3 pages. Confirm or Submit lands on a celebration screen with a Back to home button that routes to the homepage.'}</p>
+        <p style={{fontSize:13,color:'#78716c',margin:0,lineHeight:1.5}}>{p.isChatView ? 'Chat-logging MVP (Option G) — sodium-aware AI meal flow. Tap "Looks right" to log; the red dot pulses; tap the hamburger to see the journal slide in.' : p.routerStrip ? 'Homepage MVP option 3 — logging lives in chat. Notification (above the device) is the daily-ritual path; the in-app router strip routes to chat for catch-up. The homepage carries no logging UI.' : p.weeklyReportPromoted ? 'Homepage MVP option 2 — weekly report promoted to hero, Logging pillar removed, LemonAsksBP carries the full BP form (sys / dia / pulse / notes) plus an X dismiss.' : p.bpLogVariant === 'ask' ? 'Homepage Logging CTA MVP — LemonAsksBP at the top with the full BP form (sys / dia / pulse / notes), Logging pillar in the rec stack with a "Logged today" state.' : isHomeView ? 'Hypertension homepage — DASH-adjusted nutrition, BP-aware sleep + mind cards, fully interactive. Tap any recommendation for the full detail sheet.' : `Weekly progress report — ${(p.pageSequence||[1,2,3,4,5]).length} pages. Page 1 stats, Page 2 chart + insight per metric, Page ${(p.pageSequence||[1,2,3,4,5]).slice(-1)[0]} commit.`}</p>
       </div>
 
       <div style={{width:'100%',maxWidth:1100,overflowX:'auto'}} className="hide-scrollbar">
@@ -4127,7 +4308,7 @@ function App() {
           ? <>Option 3 — Lemon asks. A warm conversational prompt at the top of the cards area. Two inline number fields with yesterday as anchor → submit collapses the ask to a single sage confirmation line; the BP metric tile updates in lockstep.<br/>Numbers are illustrative.</>
           : isHomeView
           ? <>Hypertension homepage · DASH-adjusted recommendations, fully interactive cards, calendar scheduling, and a Sunday "Week in review" banner that opens the weekly progress report.<br/>Numbers are illustrative.</>
-          : <>Weekly progress report · 3 pages — Page 1 week-in-numbers (Actions / BP / Weight), Page 2 cause-and-effect, Page 5 commit. Submit lands on a celebration screen with a Back to home button that routes to the hypertension homepage.<br/>Numbers are illustrative.</>
+          : <>Weekly progress report · {(p.pageSequence||[1,2,3,4,5]).length} pages — Page 1 stats (BP / Weight / Actions), Page 2 charts and insights, {p.pageSequence && p.pageSequence.includes(3) ? 'Page 3 plan review, ' : ''}Page {(p.pageSequence||[1,2,3,4,5]).slice(-1)[0]} commit. Submit lands on a celebration screen.<br/>Numbers are illustrative.</>
         }
       </div>
     </>
