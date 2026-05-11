@@ -54,6 +54,17 @@
     70%  { transform:scale(0.95) rotate(-1deg); }
     100% { transform:scale(1) rotate(0deg);     opacity:1; }
   }
+  @keyframes confetti-burst {
+    0%   { transform:translate(0,0) rotate(0); opacity:1; }
+    70%  { opacity:1; }
+    100% { transform:translate(var(--cx), var(--cy)) rotate(var(--cr)); opacity:0; }
+  }
+  .confetti-piece {
+    position:absolute; pointer-events:none;
+    width:6px; height:9px; border-radius:1.5px;
+    animation: confetti-burst 0.95s cubic-bezier(0.18, 0.62, 0.28, 1) both;
+    will-change:transform,opacity;
+  }
   @keyframes dot-bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
   @keyframes video-prog { from{width:0%} to{width:100%} }
   @keyframes sound-wave { 0%,100%{height:4px} 50%{height:12px} }
@@ -263,6 +274,82 @@ const PERSONAS = {
     pageSequence:[1,2,5],
   },
 
+  // Sam — pre-hypertension. Insufficient BP data (building baseline). Full 5-page progress report flow with doctor-share + commit partner.
+  sam: {
+    key:'sam', name:'Sam', age:38, label:'Progress report doctor MVP',
+    initial:'S', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', accent:'#5d6e4d',
+    goalLabel:'Lose weight',
+    week:'Week 2 · Lose weight',
+    summary:'You\'re learning your patterns. Sleep is doing the most.',
+    useReviewPage3:true,
+    bp:{
+      insufficient:true,
+      avgSys:null, avgDia:null, prevSys:null, prevDia:null, deltaSys:null, deltaDia:null,
+      logs:2, target:7,
+      partialReadings:['134/84','141/86'],
+      note:'Two more readings this week unlocks your first 7-day trend.',
+      sleepSeries:[62,68,65,72,70,68,75,72,80,78,75,82,79,77,84,82,80,85,83,81,86,84,80,82,85,83,81,84],
+    },
+    causeEffect:{
+      headline:'On days you walked 8,000+ steps, your sleep score averaged 84 vs 71 on lower-step days.',
+      detail:'Without daily BP, we lean on sleep score and HRV to spot what\'s working. The walking-to-sleep loop is your strongest signal so far.',
+      pillar:'Move + Sleep',
+    },
+    pillarKeys:ALL_KEYS,
+    pillars:{
+      move:      { value:'4 / 7', label:'walks ≥ 20 min',      state:'up',   delta:'+1 vs prior wk'    },
+      sleep:     { value:'5 / 7', label:'nights ≥ 7 hours',    state:'on',   delta:'same as last wk'   },
+      nutrition: { value:'4 / 7', label:'home-cooked dinners', state:'up',   delta:'+2 vs prior wk'    },
+      mind:      { value:'2 / 7', label:'mindful pauses',      state:'work', delta:'try +1 this wk'    },
+      logging:   { value:'2 / 7', label:'morning BP logs',     state:'work', delta:'baseline-building' },
+    },
+    suggestions:{ move:'maintain', sleep:'maintain', nutrition:'maintain', mind:'maintain', logging:'push' },
+    plan:{
+      week:'Week 3',
+      tip:{ title:'Why log even when you\'re feeling fine?', body:'You\'re building the baseline that future-you will thank you for. Two more morning logs unlocks your first 7-day average — and from there, every habit you change shows up in the trend.' },
+      targets:[
+        { pillar:'logging',   label:'Morning BP logs',     target:4, unit:'/wk',    icon:'Heart', min:1, max:7, step:1 },
+        { pillar:'sleep',     label:'Sleep ≥ 7 hours',     target:5, unit:'nights', icon:'Moon',  min:2, max:7, step:1 },
+        { pillar:'move',      label:'Walks ≥ 20 min',      target:4, unit:'/wk',    icon:'Walk',  min:2, max:7, step:1 },
+        { pillar:'nutrition', label:'Home-cooked dinners', target:4, unit:'/wk',    icon:'Apple', min:1, max:7, step:1 },
+        { pillar:'mind',      label:'Mindful pauses',      target:3, unit:'/wk',    icon:'Mind',  min:1, max:7, step:1 },
+      ],
+    },
+    weeklyPlan:{
+      greeting:"Here's the start I drafted for you, Sam.",
+      intro:'Two more morning BP logs unlock your first 7-day average. Until then, sleep and walks do the most work — both nudge weight in the right direction too.',
+      categories:[
+        { key:'logging', label:'Logging', items:[
+          'Morning BP, 4 mornings this week',
+          'Same arm, after 5 minutes seated',
+        ]},
+        { key:'movement', label:'Movement', items:[
+          'Walk 20+ minutes, 4 days this week',
+          '8,000 steps on at least 3 of those days',
+        ]},
+        { key:'nutrition', label:'Nutrition', items:[
+          'Home-cooked dinners 4 nights — keep sodium under 2,000mg',
+          'Add an extra serving of vegetables to two meals',
+        ]},
+        { key:'sleep', label:'Sleep', items:[
+          'Sleep 7+ hours, 5 nights',
+          'Lights out within 30 minutes of your usual time',
+        ]},
+        { key:'mental', label:'Mental wellbeing', items:[
+          'One 5-minute mindful pause every weekday',
+        ]},
+      ],
+      closing:'I\'ll keep adapting this as I learn more about you. Does this direction feel right to start?',
+    },
+    commit:{
+      headline:'Four mornings of BP logs, five nights of sleep, and one mindful pause a day.',
+      partner:{ name:'Riley', role:'Walking buddy', avatar:'R', grad:'linear-gradient(135deg,#3d7a9e,#2c5a78)' },
+    },
+    canExport:false,
+    exportLockReason:'Log 12 more readings to unlock the 28-day report.',
+    pageSequence:[1,2,3,4,5],
+  },
+
   // Maya chat-logging MVP — G-refined Option G from lemon-chat-designs.html.
   // Sodium-aware AI meal flow with sliding journal drawer.
   mayaChat: {
@@ -287,7 +374,7 @@ const PERSONAS = {
     greeting:'Good morning, Maya',
     isWorking:'18 of 26 actions done — three Zone 2 walks and DASH dinners cut morning systolic 4 points, and weight is down 0.3 kg this week.',
     widgets:[
-      { id:'actions', label:'Actions done',   value:'18',     sub:'of 26 this week', trend:'+2 vs last week', color:'#778a62' },
+      { id:'actions', label:'Actions done',   value:'3',      sub:'of 4 today',      trend:'on track',        color:'#778a62' },
       { id:'bp',      label:'Blood pressure', value:'122/78', sub:'mmHg · morning',  trend:'↓ 4 systolic',    color:'#3d9e9e' },
       { id:'weight',  label:'Weight',         value:'68.4',   sub:'kg',              trend:'↓ 0.3 this week', color:'#c9a227' },
     ],
@@ -301,17 +388,17 @@ const PERSONAS = {
     cards:[
       { pillar:'Move', color:'#3d9e9e', bg:'#e8f6f6', conditionTag:null, conditionTagColor:null,
         options:[
-          { IC:I.Walk, label:'30-min moderate walk', detail:'Zone 2 · 50–70% max HR',
+          { IC:I.Walk, label:'30-min moderate walk', detail:'Zone 2 · 50–70% max HR', bpImpact:'~4–7 mmHg',
             modeLabel:'Zone 2', sessionProgress:'Session 3 of 4 this week',
             description:'A sustained walk at a brisk but conversational pace. Per JACC there is a dose response, with an average 2/1 mm Hg reduction for each additional 30 minutes of aerobic exercise per week and the largest BP reduction at 150 minutes per week.',
             why:'3+ Zone 2 sessions/week reduces resting systolic by 5–8 pts over 8 weeks.',
             tips:['If you can sing but not hold a full conversation, you’re over Zone 2 — slow down','Consistency across weeks matters more than any single session'] },
-          { IC:I.Swim, label:'20-min swim', detail:'Aerobic · full body',
+          { IC:I.Swim, label:'20-min swim', detail:'Aerobic · full body', bpImpact:'~4–7 mmHg',
             modeLabel:'Cross-train', sessionProgress:'Session 3 of 4 this week',
             description:'Freestyle or breaststroke at moderate pace.',
             why:'Same Zone 2 benefit as walking, with the added advantage that water pressure mildly reduces vascular resistance.',
             tips:['Breaststroke is most accessible and least likely to cause breathing irregularities','Shower in warm (not cold) water after — cold showers can spike BP transiently'] },
-          { IC:I.Bike, label:'30-min cycle', detail:'Seated, sustained, low impact',
+          { IC:I.Bike, label:'30-min cycle', detail:'Seated, sustained, low impact', bpImpact:'~4–7 mmHg',
             modeLabel:'Steady day', sessionProgress:'Session 3 of 4 this week',
             description:'Steady-state cycling in an upright position.',
             why:'Any sustained aerobic movement in Zone 2 accumulates toward your BP reduction target.',
@@ -319,7 +406,7 @@ const PERSONAS = {
         ]},
       { pillar:'Nutrition', color:'#c9a227', bg:'#fef9e7', conditionTag:'adjusted: DASH diet', conditionTagColor:'#e05c5c', adjustedNote:'Recommendations follow the DASH dietary pattern — the most clinically validated approach for reducing blood pressure. Prioritises potassium-rich foods, omega-3s, and low sodium.',
         options:[
-          { IC:I.Apple, label:'Leafy greens + fish dinner', detail:'DASH pattern · high K, low Na',
+          { IC:I.Apple, label:'Leafy greens + fish dinner', detail:'DASH pattern · high K, low Na', bpImpact:'~5–11 mmHg',
             description:'A dinner built around leafy greens (high potassium) and oily fish (omega-3s).',
             why:'Potassium counteracts sodium in the kidneys and relaxes arterial walls.',
             tips:['Spinach, kale, and rocket are among the highest potassium leafy greens','Season with herbs and lemon instead of salt'],
@@ -328,7 +415,7 @@ const PERSONAS = {
               { name:'Mackerel with kale & lemon dressing',    protein:'32g', cal:'390', time:'15 min', tag:'High K'  },
               { name:'Sea bass + roasted beetroot salad',      protein:'30g', cal:'380', time:'28 min', tag:'Nitrates'},
             ] },
-          { IC:I.Apple, label:'Sodium-swap suggestion', detail:'No processed food · cook fresh',
+          { IC:I.Apple, label:'Sodium-swap suggestion', detail:'No processed food · cook fresh', bpImpact:'~6–8 mmHg',
             description:'Avoid all added salt and processed foods for the day. For example, the American College of Cardiology states that choosing a grain bowl instead of a deli sandwich saves ~1,100mg of sodium.',
             why:'One high-sodium meal can raise systolic BP by up to 6 points within 1–2 hours.',
             tips:['Processed foods account for ~70% of dietary sodium — cooking fresh removes this automatically','Herbs, spices, citrus, and vinegar are all flavour substitutes that improve BP'],
@@ -337,7 +424,7 @@ const PERSONAS = {
               { name:'Lemon & herb white fish + veg',       protein:'30g', cal:'330', time:'18 min', tag:'Salt-free' },
               { name:'Chickpea & tomato stew (no salt)',    protein:'16g', cal:'340', time:'25 min', tag:'Plant-based'},
             ] },
-          { IC:I.Apple, label:'Beetroot or berry smoothie', detail:'Natural nitrates · vasodilator',
+          { IC:I.Apple, label:'Beetroot or berry smoothie', detail:'Natural nitrates · vasodilator', bpImpact:'~5–6 mmHg',
             description:'A smoothie with beetroot, mixed berries, and leafy greens.',
             why:'Studies show 4–10 point systolic reduction within 2–3 hours of consumption.',
             tips:['Drink it in the morning for the vasodilation to peak during active hours','Don’t use mouthwash before or after — oral bacteria are required to convert nitrates'],
@@ -350,30 +437,30 @@ const PERSONAS = {
       { pillar:'Sleep', color:'#5b7fa6', bg:'#edf2f8', conditionTag:'adjusted: BP management', conditionTagColor:'#e05c5c', adjustedNote:'Your BP drops 10–20% during deep sleep (the nocturnal dip). Poor sleep raises next-day systolic by 5+ points. Sleep timing directly determines how much BP-lowering benefit you get overnight.',
         sleepForecast:{ now:81, later:72 },
         options:[
-          { IC:I.Moon, label:'10:00pm bedtime', detail:'BP resets in deep sleep',
+          { IC:I.Moon, label:'10:00pm bedtime', detail:'BP resets in deep sleep', bpImpact:'Protects ~5 mmHg',
             description:'BP drops by 10–20% during deep sleep.',
             why:'Poor sleep raises next-day systolic by 5+ points. This is a direct treatment mechanism.',
             tips:['The nocturnal BP dip starts ~1–2 hours after sleep onset — earlier bedtime protects the full window','Alcohol before bed suppresses deep sleep and eliminates the nocturnal BP dip entirely'] },
-          { IC:I.Moon, label:'Screens off at 9:45', detail:'Blue light spikes cortisol',
+          { IC:I.Moon, label:'Screens off at 9:45', detail:'Blue light spikes cortisol', bpImpact:'Protects ~3 mmHg',
             description:'Cortisol from blue light exposure suppresses melatonin and raises baseline sympathetic tone.',
             why:'Blue light at night delays the BP drop that happens during deep sleep.',
             tips:['The bedroom should be for sleep only — remove the TV if possible','Read a physical book or listen to low-stimulation audio for wind-down content'] },
-          { IC:I.Apple, label:'Magnesium supplement', detail:'Vasodilator + sleep aid',
+          { IC:I.Apple, label:'Magnesium supplement', detail:'Vasodilator + sleep aid', bpImpact:'~5–8 mmHg',
             description:'Magnesium relaxes vascular smooth muscle (lowering BP) and improves sleep depth simultaneously.',
             why:'Studies show 5–8 systolic point reduction with consistent supplementation.',
             tips:['Magnesium glycinate is the most bioavailable form','Take 30–60 min before bed for maximum sleep benefit'] },
         ]},
       { pillar:'Mind', color:'#8b6daa', bg:'#f5f0fb', conditionTag:'adjusted: BP management', conditionTagColor:'#e05c5c', adjustedNote:'Chronic stress raises cortisol, which constricts arteries and drives BP up. Breathing and relaxation techniques reduce systolic by 3–8 points — this is a direct treatment mechanism.',
         options:[
-          { IC:I.Breathe, label:'10-min box breathing', detail:'4-4-4-4 · twice daily', isBreathing:true,
+          { IC:I.Breathe, label:'10-min box breathing', detail:'4-4-4-4 · twice daily', bpImpact:'~5/3 mmHg', isBreathing:true,
             description:'Structured breathing: inhale 4 counts, hold 4, exhale 4, hold 4.',
             why:'Deep breathing lowers systolic by 3–5 pts within minutes via parasympathetic activation.',
             tips:['Morning breathing reduces the cortisol spike that causes the “morning BP surge”','Evening breathing ensures the nocturnal BP dip occurs fully'] },
-          { IC:I.Mind, label:'10-min guided meditation', detail:'Reduces cortisol · lowers BP directly', isBreathing:true,
+          { IC:I.Mind, label:'10-min guided meditation', detail:'Reduces cortisol · lowers BP directly', bpImpact:'~5/2 mmHg', isBreathing:true,
             description:'Per the American College of Cardiology, there is consistent moderate- to high-level evidence from short-term clinical trials that transcendental meditation can lower BP.',
             why:'10 min daily reduces systolic by avg 4.7 pts over 8 weeks.',
             tips:['Consistency matters more than session length','Start with body-scan meditations — more accessible for beginners'] },
-          { IC:I.Breathe, label:'Progressive muscle relaxation', detail:'5 min · tense and release', isBreathing:true,
+          { IC:I.Breathe, label:'Progressive muscle relaxation', detail:'5 min · tense and release', bpImpact:'~3 mmHg', isBreathing:true,
             description:'Tense each muscle group for 5 seconds, then release.',
             why:'PMR interrupts chronic vascular and muscular tension simultaneously.',
             tips:['Focus on shoulders, jaw, and hands — common sites of held tension in hypertension','Even just releasing jaw and shoulder tension has measurable BP effects'] },
@@ -404,6 +491,110 @@ const PERSONAS = {
   },
 };
 
+// Maya Meal Prep MVP — daily nutrition snapshot (neutral framework, goal-pinned highlights).
+// Daily snapshot: calories + macros (universal), then "Today's highlights" pinned to user goal.
+// HTN highlights = Sodium, Potassium, Na:K ratio. Same component supports weight loss / diabetes / sleep / cholesterol by swapping highlights.
+PERSONAS.mayaMealPrep = {
+  key:'mayaMealPrep', name:'Maya', age:31, label:'Meal prep MVP',
+  initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', accent:'#c9a227',
+  goalLabel:'Lose weight · Hypertension',
+  isMealPrepView:true,
+  avatarGrad:'linear-gradient(135deg,#fcd34d,#c9a227)',
+  daily:{
+    date:'April 28, 2026',
+    consumed:0, target:1500, burned:1100,
+    macros:[
+      { label:'Carbs',   value:0, target:138, color:'#fbbf24' },
+      { label:'Protein', value:0, target:138, color:'#94a47f' },
+      { label:'Fat',     value:0, target:138, color:'#3d9e9e' },
+    ],
+    // Goal-pinned (HTN). Swap this list to support other goals — same component renders.
+    highlights:[
+      { id:'sodium',    label:'Sodium',       value:'1,240', target:'1,500 mg', state:'amber' },
+      { id:'potassium', label:'Potassium',    value:'2,100', target:'3,500 mg', state:'green' },
+      { id:'naK',       label:'Na : K ratio', value:'0.59',  state:'green' },
+    ],
+  },
+  plans:[
+    { id:1, title:'DASH starter', days:5, mealsPerDay:3, calPerDay:1400,
+      tag:'CLEAN EATING', bpImpact:'~5–8 mmHg',
+      bgFrom:'#fde047', bgTo:'#fbbf24' },
+    { id:2, title:'Sodium swap', days:3, mealsPerDay:3, calPerDay:1450,
+      tag:'EASY START', bpImpact:'~3 mmHg',
+      bgFrom:'#94a47f', bgTo:'#5d6e4d' },
+  ],
+  swaps:[
+    { from:'Caesar salad w/ chicken',  to:'Sea bass + roasted beets',         save:'~600mg Na',   impact:'~1–2 mmHg' },
+    { from:'Deli turkey sandwich',     to:'Grain bowl with tuna',             save:'~1,100mg Na', impact:'~2–3 mmHg' },
+    { from:'Soy-glazed chicken wings', to:'Lemon-herb chicken thighs',        save:'~800mg Na',   impact:'~2 mmHg' },
+  ],
+};
+
+// Maya Community MVP — joined challenges with friends.
+PERSONAS.mayaCommunity = {
+  key:'mayaCommunity', name:'Maya', age:31, label:'Community MVP',
+  initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', accent:'#c9a227',
+  goalLabel:'Living healthier',
+  isCommunityView:true,
+  avatarGrad:'linear-gradient(135deg,#fcd34d,#c9a227)',
+  challenges:[
+    { id:1, daterange:'Apr 1 to Apr 28, 2026', title:'DASH reset — 28 days',
+      author:'Lemon', authorGrad:'linear-gradient(135deg,#fcd34d,#fbbf24)',
+      pillar:'Nutrition', pillarColor:'#c9a227', bpImpact:'~5–8 mmHg',
+      bgFrom:'#fde047', bgTo:'#fbbf24', joined:true },
+    { id:2, daterange:'Apr 10 to May 9, 2026', title:'Zone 2 Five — 30 days',
+      author:'Deniz B', authorGrad:'linear-gradient(135deg,#3d9e9e,#2c7878)',
+      pillar:'Movement', pillarColor:'#3d9e9e', bpImpact:'~4–7 mmHg',
+      bgFrom:'#94a47f', bgTo:'#5d6e4d', joined:true },
+    { id:3, daterange:'Apr 13 to May 4, 2026', title:'Steady Bedtime — 21 days',
+      author:'Stevan', authorGrad:'linear-gradient(135deg,#5b7fa6,#3d5a78)',
+      pillar:'Sleep', pillarColor:'#5b7fa6', bpImpact:'Protects ~5 mmHg',
+      bgFrom:'#5b7fa6', bgTo:'#3d5a78', joined:true },
+  ],
+};
+
+// Maya Stats MVP — 360-degree view of health: Lemon score, sub-scores, Activity/Sleep/Readiness tabs.
+PERSONAS.mayaStats = {
+  key:'mayaStats', name:'Maya', age:31, label:'Stats MVP',
+  initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', accent:'#c9a227',
+  goalLabel:'Living healthier',
+  isStatsView:true,
+  avatarGrad:'linear-gradient(135deg,#fcd34d,#c9a227)',
+  lemonScore:{ value:55, state:'Good', delta:+2 },
+  subScores:[
+    { label:'Sleep',     value:4, color:'#5b7fa6' },
+    { label:'Nutrition', value:4, color:'#fbbf24' },
+    { label:'Movement', value:8, color:'#3d9e9e' },
+    { label:'Mind',     value:5, color:'#8b6daa' },
+  ],
+  scoreInsight:'Your overall health is up this week — sleep consistency and lower resting HR are the biggest drivers.',
+  statsTabs:{
+    activity:[
+      { label:'Total steps',     value:'9,350 steps', state:'Steady'   },
+      { label:'Standing',        value:'4.1 hours',   state:'On track' },
+      { label:'Active calories', value:'410 kcal',    state:'Monitor'  },
+      { label:'Resting calories',value:'412 kcal',    state:'Steady'   },
+      { label:'Weight',          value:'—',           state:'Steady'   },
+    ],
+    sleep:[
+      { label:'Total Sleep', value:'7h 24m', state:'Steady'   },
+      { label:'REM Sleep',   value:'1h 28m', state:'On track' },
+      { label:'Deep Sleep',  value:'1h 12m', state:'Good'     },
+      { label:'Awake Time',  value:'12 min', state:'Monitor'  },
+    ],
+    readiness:[
+      { label:'HRV',                  value:'44 ms',  state:'Steady'   },
+      { label:'Resting HR',           value:'58 bpm', state:'On track' },
+      { label:'Workout',              value:'30 min', state:'Monitor'  },
+      { label:'Blood pressure · 7-day avg', value:'122/78', state:'On track' },
+    ],
+  },
+  attribution:{
+    headline:'On days you walked 8,000+ steps, your average systolic ran 6 mmHg lower.',
+    detail:'Across the last 28 days, the walking-to-BP signal is your strongest. The walking-to-sleep loop reinforces it overnight.',
+  },
+};
+
 // Homepage Weekly Progress MVP — weekly report hero + 4 pillar cards. Logging lives in chat (notification primary, chat tab backup).
 PERSONAS.mayaHomeV5 = {
   ...PERSONAS.mayaHTN,
@@ -428,7 +619,11 @@ PERSONAS.mayaHomeV6 = {
 
 const PERSONA_LIST = [
   PERSONAS.maya,
+  PERSONAS.sam,
   PERSONAS.mayaChat,
+  PERSONAS.mayaStats,
+  PERSONAS.mayaMealPrep,
+  PERSONAS.mayaCommunity,
   PERSONAS.mayaHomeV5,
   PERSONAS.mayaHomeV6,
 ];
@@ -664,57 +859,70 @@ const Page3 = ({ p, directions, setDirections, contexts, setContexts, otherNote,
   const allSet = visible.every(d => directions[d.key]);
   const setDir = (key, val) => setDirections(prev => ({...prev, [key]: val}));
   const toggleCtx = (id) => setContexts(prev => prev.includes(id) ? prev.filter(c=>c!==id) : [...prev, id]);
+  const useReview = !!p.useReviewPage3;
+  const canContinue = useReview ? true : allSet;
 
   return (
     <div className="px-5 pt-6 pb-8 bg-gradient-to-b from-white via-warm-50 to-white min-h-full">
       <div className="su">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Context check-in</p>
-        <h1 className="text-2xl font-bold text-stone-600 leading-tight mt-1">How do you want to take next week?</h1>
-        <p className="text-sm text-stone-500 mt-2 leading-relaxed">Set a direction for each pillar. Lemon’s suggestion is highlighted — change anything.</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">{useReview ? 'Your plan' : 'Context check-in'}</p>
+        <h1 className="text-2xl font-bold text-stone-600 leading-tight mt-1">{useReview ? 'Review your draft and confirm or adjust it.' : 'How do you want to take next week?'}</h1>
+        {!useReview && <p className="text-sm text-stone-500 mt-2 leading-relaxed">Set a direction for each pillar. Lemon’s suggestion is highlighted — change anything.</p>}
       </div>
 
-      <div className="mt-5 space-y-2.5 su1">
-        {visible.map((d) => {
-          const IC = I[d.icon] || I.Heart;
-          const data = p.pillars[d.key];
-          const sug  = p.suggestions[d.key];
-          const cur  = directions[d.key];
-          return (
-            <div key={d.key} className="bg-white rounded-2xl border border-stone-150 p-3.5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{background:p.accent+'18',color:p.accent}}><IC/></div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[13px] font-semibold text-stone-600">{d.name}</span>
-                    <StateBadge state={data.state}/>
+      {useReview ? (
+        <>
+          <div className="mt-5 su1">
+            <WeeklyPlanChat p={p} accent={p.accent}/>
+          </div>
+          <div className="mt-4 su2">
+            <PhysicianSummary p={p}/>
+          </div>
+        </>
+      ) : (
+        <div className="mt-5 space-y-2.5 su1">
+          {visible.map((d) => {
+            const IC = I[d.icon] || I.Heart;
+            const data = p.pillars[d.key];
+            const sug  = p.suggestions[d.key];
+            const cur  = directions[d.key];
+            return (
+              <div key={d.key} className="bg-white rounded-2xl border border-stone-150 p-3.5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{background:p.accent+'18',color:p.accent}}><IC/></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[13px] font-semibold text-stone-600">{d.name}</span>
+                      <StateBadge state={data.state}/>
+                    </div>
+                    <p className="text-[11px] text-stone-400 leading-snug">{data.value} · {data.label}</p>
                   </div>
-                  <p className="text-[11px] text-stone-400 leading-snug">{data.value} · {data.label}</p>
+                </div>
+                <div className="flex gap-1.5">
+                  {DIRECTION_OPTS.map(opt => {
+                    const selected   = cur===opt.id;
+                    const recommended= sug===opt.id;
+                    return (
+                      <button key={opt.id} onClick={()=>setDir(d.key, opt.id)}
+                        className="flex-1 py-2 rounded-xl text-[12px] font-semibold transition-all relative"
+                        style={{
+                          background: selected ? p.accent : recommended ? p.accent+'10' : '#f5f5f4',
+                          color:      selected ? '#fff'   : recommended ? p.accent      : '#78716c',
+                          border:     selected ? `1.5px solid ${p.accent}` : recommended ? `1.5px solid ${p.accent}40` : '1.5px solid transparent',
+                        }}>
+                        {opt.label}
+                        {recommended && !selected && (
+                          <span className="absolute -top-1.5 right-1.5 text-[8px] font-bold uppercase tracking-wider px-1 py-0.5 rounded" style={{background:p.accent,color:'#fff'}}>Suggested</span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-              <div className="flex gap-1.5">
-                {DIRECTION_OPTS.map(opt => {
-                  const selected   = cur===opt.id;
-                  const recommended= sug===opt.id;
-                  return (
-                    <button key={opt.id} onClick={()=>setDir(d.key, opt.id)}
-                      className="flex-1 py-2 rounded-xl text-[12px] font-semibold transition-all relative"
-                      style={{
-                        background: selected ? p.accent : recommended ? p.accent+'10' : '#f5f5f4',
-                        color:      selected ? '#fff'   : recommended ? p.accent      : '#78716c',
-                        border:     selected ? `1.5px solid ${p.accent}` : recommended ? `1.5px solid ${p.accent}40` : '1.5px solid transparent',
-                      }}>
-                      {opt.label}
-                      {recommended && !selected && (
-                        <span className="absolute -top-1.5 right-1.5 text-[8px] font-bold uppercase tracking-wider px-1 py-0.5 rounded" style={{background:p.accent,color:'#fff'}}>Suggested</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="mt-5 su2">
         <div className="bg-white rounded-2xl border border-stone-150 p-4">
@@ -744,17 +952,17 @@ const Page3 = ({ p, directions, setDirections, contexts, setContexts, otherNote,
         </div>
       </div>
 
-      <button onClick={onContinue} disabled={!allSet}
+      <button onClick={onContinue} disabled={!canContinue}
         className="w-full mt-6 py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
         style={{
-          background: allSet ? p.accent : '#e7e5e4',
-          color:      allSet ? '#fff'   : '#a8a29e',
-          boxShadow:  allSet ? `0 6px 20px ${p.accent}33` : 'none',
-          cursor:     allSet ? 'pointer' : 'not-allowed',
+          background: canContinue ? p.accent : '#e7e5e4',
+          color:      canContinue ? '#fff'   : '#a8a29e',
+          boxShadow:  canContinue ? `0 6px 20px ${p.accent}33` : 'none',
+          cursor:     canContinue ? 'pointer' : 'not-allowed',
         }}>
-        See your plan <I.Right/>
+        {useReview ? 'Continue' : 'See your plan'} <I.Right/>
       </button>
-      {!allSet && <p className="text-center text-[11px] text-stone-400 mt-2">Pick a direction for each pillar.</p>}
+      {!useReview && !allSet && <p className="text-center text-[11px] text-stone-400 mt-2">Pick a direction for each pillar.</p>}
     </div>
   );
 };
@@ -897,6 +1105,73 @@ const WeeklyPlanChat = ({ p, accent }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // DOCTOR EMAIL VIEW — what Marcus's doctor receives
 // ─────────────────────────────────────────────────────────────────────────────
+// ── PhysicianSummary — 90-day physician-ready export preview (Sam's Page 3)
+const PhysicianSummary = ({ p }) => {
+  const insufficient = !!(p.bp && p.bp.insufficient);
+  const sevenDayAvg  = insufficient ? '—' : `${p.bp.avgSys}/${p.bp.avgDia}`;
+  const trendText    = insufficient
+    ? 'baseline-building'
+    : (p.bp.deltaSys < 0 ? `↓ ${Math.abs(p.bp.deltaSys)} systolic vs prior` : p.bp.deltaSys > 0 ? `↑ ${p.bp.deltaSys} systolic` : 'flat');
+  const logsText = insufficient ? `${p.bp.logs} / ${p.bp.target} mornings` : '7 / 7 mornings';
+
+  return (
+    <div className="bg-white rounded-2xl border border-stone-150 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">90-day physician summary</p>
+        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{background:'#f0f4f7',color:'#3d7a9e'}}>Preview</span>
+      </div>
+
+      <div className="space-y-2 mb-3">
+        <div className="flex items-baseline justify-between">
+          <span className="text-[11.5px] text-stone-500">7-day BP average</span>
+          <span className="text-[12.5px] font-bold text-stone-700">{sevenDayAvg}</span>
+        </div>
+        <div className="flex items-baseline justify-between">
+          <span className="text-[11.5px] text-stone-500">Trend</span>
+          <span className="text-[12.5px] font-bold text-stone-700">{trendText}</span>
+        </div>
+        <div className="flex items-baseline justify-between">
+          <span className="text-[11.5px] text-stone-500">Morning logs</span>
+          <span className="text-[12.5px] font-bold text-stone-700">{logsText}</span>
+        </div>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-[11.5px] text-stone-500 flex-shrink-0">Pillar adherence</span>
+          <span className="text-[11px] text-stone-600 text-right">Move {p.pillars.move.value} · Sleep {p.pillars.sleep.value} · Nutr {p.pillars.nutrition.value} · Mind {p.pillars.mind.value}</span>
+        </div>
+      </div>
+
+      {p.causeEffect && (
+        <div className="bg-stone-50 rounded-lg p-3 mb-2">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-stone-400 mb-1">Strongest signal</p>
+          <p className="text-[11.5px] text-stone-600 leading-relaxed">{p.causeEffect.headline}</p>
+        </div>
+      )}
+
+      <div className="bg-stone-50 rounded-lg p-3 mb-3">
+        <p className="text-[9px] font-bold uppercase tracking-wide text-stone-400 mb-1">Where you stand</p>
+        <p className="text-[11.5px] text-stone-600 leading-relaxed">
+          {insufficient
+            ? <>Building your baseline. Your 7-day average unlocks once you log {p.bp.target - p.bp.logs} more mornings. {p.bp.note || ''}</>
+            : <>Below your &lt;130/80 goal. Trend is holding — keep this pattern through the next 4-week review.</>}
+        </p>
+      </div>
+
+      <div className="flex gap-2">
+        <button className="flex-1 py-2.5 rounded-xl text-[12px] font-bold border border-stone-200 text-stone-600 cursor-pointer" style={{background:'#fff',fontFamily:'inherit'}}>
+          Preview full report
+        </button>
+        <button className="flex-1 py-2.5 rounded-xl text-[12px] font-bold text-white inline-flex items-center justify-center gap-1.5 cursor-pointer" style={{background:`linear-gradient(135deg,${p.accent},${p.accent}d0)`,border:'none',fontFamily:'inherit',boxShadow:`0 4px 12px ${p.accent}33`}}>
+          <I.Share/> Export to physician
+        </button>
+      </div>
+
+      {p.canExport === false && p.exportLockReason && (
+        <p className="text-[10.5px] text-stone-400 mt-2 text-center leading-relaxed">{p.exportLockReason}</p>
+      )}
+    </div>
+  );
+};
+
 const DoctorView = ({ p, accent }) => {
   const d = p.commit.doctor;
   return (
@@ -1372,7 +1647,7 @@ const BottomSheet = ({ children, onClose, title }) => (
 // ─────────────────────────────────────────────────────────────────────────────
 const PILLAR_DOT_COLORS = ['#778a62', '#c9a227', '#5b7fa6', '#8b6daa']; // Move, Nutrition, Sleep, Mind
 
-const MetricWidgets = ({ initialWidgets, extraMetrics, bpLogPrompt, onBPLog, bpOverride, bpJustLogged }) => {
+const MetricWidgets = ({ initialWidgets, extraMetrics, bpLogPrompt, onBPLog, bpOverride, bpJustLogged, metricsEmpty, onMetricLog }) => {
   const [editing, setEditing] = useState(false);
   const [widgets, setWidgets] = useState(initialWidgets);
   const remove = (id) => setWidgets(w => w.filter(x => x.id !== id));
@@ -1389,6 +1664,24 @@ const MetricWidgets = ({ initialWidgets, extraMetrics, bpLogPrompt, onBPLog, bpO
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7}}>
         {widgets.map((w) => {
+          // BP-specific empty-state tile — centered + button when not logged today
+          if (metricsEmpty && w.id === 'bp') {
+            return (
+              <button key={w.id} onClick={()=>onMetricLog && onMetricLog(w.id)} className="su" aria-label="Log today's blood pressure" style={{
+                background:'rgba(255,255,255,0.7)',
+                border:`1.5px dashed ${w.color}66`,
+                borderRadius:14, padding:'10px 9px 9px',
+                position:'relative', cursor:'pointer', fontFamily:'inherit',
+                display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:78,
+              }}>
+                <p style={{fontSize:8,fontWeight:700,letterSpacing:'0.05em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 6px',lineHeight:1.2,textAlign:'center'}}>{w.label}</p>
+                <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:30,height:30,borderRadius:'50%',background:w.color,color:'#fff',boxShadow:`0 4px 12px ${w.color}55`}}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div>
+                <p style={{fontSize:9,fontWeight:700,color:w.color,margin:'5px 0 0',whiteSpace:'nowrap'}}>Log BP</p>
+              </button>
+            );
+          }
           // BP log-prompt CTA tile (Option 4 — tile variant, unlogged state)
           if (bpLogPrompt && w.id === 'bp') {
             return (
@@ -1603,32 +1896,20 @@ const BreathingSession = ({ option, card, onClose, onDone }) => {
 
 // ── CalendarSchedule — pick day + time, mock-add to calendar ──────────────
 const CalendarSchedule = ({ card, option }) => {
-  const [day, setDay]             = useState(null);
-  const [time, setTime]           = useState(null);
+  const [dateText, setDateText] = useState('');
+  const [timeText, setTimeText] = useState('');
   const [scheduled, setScheduled] = useState(null);
-  const days = [
-    { id:'today',    label:'Today'    },
-    { id:'tomorrow', label:'Tomorrow' },
-    { id:'wed',      label:'Wed'      },
-    { id:'thu',      label:'Thu'      },
-    { id:'fri',      label:'Fri'      },
-  ];
-  const times = [
-    { id:'morning',   label:'7:00 am'  },
-    { id:'lunch',     label:'12:00 pm' },
-    { id:'afternoon', label:'3:00 pm'  },
-    { id:'evening',   label:'6:00 pm'  },
-  ];
+  const ready = dateText.trim().length > 0 && timeText.trim().length > 0;
 
   if (scheduled) {
     return (
       <div style={{borderRadius:14,padding:'12px 13px',marginBottom:13,background:'#f0faf4',border:'1.5px solid #4CAF7D33',display:'flex',alignItems:'center',gap:10}}>
         <div style={{width:34,height:34,borderRadius:11,background:'#4CAF7D',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><I.Calendar/></div>
         <div style={{flex:1,minWidth:0}}>
-          <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:0,lineHeight:1.3}}>Scheduled · {scheduled.day} · {scheduled.time}</p>
+          <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:0,lineHeight:1.3}}>Scheduled · {scheduled.date} · {scheduled.time}</p>
           <p style={{fontSize:10,color:'#4CAF7D',fontWeight:600,margin:'2px 0 0'}}>Added to your calendar</p>
         </div>
-        <button onClick={()=>{ setScheduled(null); setDay(null); setTime(null); }}
+        <button onClick={()=>{ setScheduled(null); setDateText(''); setTimeText(''); }}
           style={{padding:'5px 10px',borderRadius:10,border:'1.5px solid #4CAF7D33',background:'transparent',color:'#4CAF7D',fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',flexShrink:0}}>
           Change
         </button>
@@ -1636,42 +1917,45 @@ const CalendarSchedule = ({ card, option }) => {
     );
   }
 
-  const ready = day && time;
   return (
     <div style={{borderRadius:14,padding:'12px 13px 13px',marginBottom:13,background:'#fff',border:'1px solid #efefed'}}>
-      <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:9}}>
+      <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:10}}>
         <span style={{color:card.color,display:'inline-flex',alignItems:'center'}}><I.Calendar/></span>
         <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:card.color,margin:0}}>Add to your calendar</p>
       </div>
-      <p style={{fontSize:10.5,color:'#a8a29e',margin:'0 0 6px',fontWeight:600,letterSpacing:'0.04em',textTransform:'uppercase'}}>Pick a day</p>
-      <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:11}}>
-        {days.map(d => (
-          <button key={d.id} onClick={()=>setDay(d.id)}
-            style={{padding:'5px 11px',borderRadius:18,fontSize:11,fontWeight:600,border:`1.5px solid ${day===d.id?card.color:'#e8e5de'}`,background:day===d.id?card.color:'#fff',color:day===d.id?'#fff':'#57534e',cursor:'pointer',fontFamily:'inherit',transition:'all 0.15s'}}>
-            {d.label}
-          </button>
-        ))}
+      <div style={{display:'flex',gap:8,marginBottom:11}}>
+        <div style={{flex:1.2}}>
+          <label style={{display:'block',fontSize:9,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',marginBottom:5}}>Date</label>
+          <input
+            type="text"
+            value={dateText}
+            onChange={e=>setDateText(e.target.value)}
+            placeholder="Tue, May 12"
+            style={{width:'100%',padding:'9px 11px',background:'#fafaf8',border:'1.5px solid #e8e5de',borderRadius:10,fontSize:13,fontWeight:600,color:'#1a1a1a',fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}
+          />
+        </div>
+        <div style={{flex:1}}>
+          <label style={{display:'block',fontSize:9,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',marginBottom:5}}>Time</label>
+          <input
+            type="text"
+            value={timeText}
+            onChange={e=>setTimeText(e.target.value)}
+            placeholder="7:00 AM"
+            style={{width:'100%',padding:'9px 11px',background:'#fafaf8',border:'1.5px solid #e8e5de',borderRadius:10,fontSize:13,fontWeight:600,color:'#1a1a1a',fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}
+          />
+        </div>
       </div>
-      <p style={{fontSize:10.5,color:'#a8a29e',margin:'0 0 6px',fontWeight:600,letterSpacing:'0.04em',textTransform:'uppercase'}}>Pick a time</p>
-      <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:11}}>
-        {times.map(t => (
-          <button key={t.id} onClick={()=>setTime(t.id)}
-            style={{padding:'5px 11px',borderRadius:18,fontSize:11,fontWeight:600,border:`1.5px solid ${time===t.id?card.color:'#e8e5de'}`,background:time===t.id?card.color:'#fff',color:time===t.id?'#fff':'#57534e',cursor:'pointer',fontFamily:'inherit',transition:'all 0.15s'}}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-      <button onClick={()=>ready && setScheduled({day:days.find(d=>d.id===day).label, time:times.find(t=>t.id===time).label})}
+      <button onClick={()=>ready && setScheduled({date:dateText.trim(), time:timeText.trim()})}
         disabled={!ready}
         style={{width:'100%',padding:'10px',borderRadius:12,background:ready?card.color:'#e8e5de',color:'#fff',fontSize:12.5,fontWeight:700,border:'none',cursor:ready?'pointer':'default',fontFamily:'inherit',transition:'background 0.15s',display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}>
-        <I.Calendar/> {ready ? `Add ${option.label} to calendar` : 'Pick a day and time first'}
+        <I.Calendar/> {ready ? `Add ${option.label} to calendar` : 'Enter a date and time'}
       </button>
     </div>
   );
 };
 
 // ── DetailSheet — full recommendation detail w/ pillar-specific UI ────────
-const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreathing, onActivityDone, onComplete, onBPSubmit, bpYesterday }) => {
+const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreathing, onActivityDone, onComplete, onLogActivity, onBPSubmit, bpYesterday }) => {
   const [added, setAdded]           = useState({});
   const [videoState, setVideoState] = useState('idle');
   const [activeSound, setActiveSound] = useState(null);
@@ -1877,19 +2161,21 @@ const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreat
               </div>
             )
           )}
-          {!isLoggingAction && !isSelected && (
-            <button onClick={()=>{ onSelect && onSelect(); onActivityDone && onActivityDone(); onComplete && onComplete(); onClose(); }} style={{width:'100%',padding:'13px',borderRadius:14,marginTop:4,background:`linear-gradient(135deg,${card.color},${card.color}cc)`,border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 4px 16px ${card.color}44`}}>
-              I did this
-            </button>
-          )}
-          {!isLoggingAction && isSelected && !isMove && !doneMark && (
-            <button onClick={()=>{ setDoneMark(true); onActivityDone && onActivityDone(); onComplete && onComplete(); }} style={{width:'100%',padding:'13px',borderRadius:14,marginTop:4,background:`linear-gradient(135deg,${card.color},${card.color}cc)`,border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 4px 16px ${card.color}44`}}>
-              I did this
-            </button>
-          )}
-          {!isLoggingAction && isSelected && !isMove && doneMark && (
-            <div style={{width:'100%',padding:'13px',borderRadius:14,marginTop:4,background:'#f0faf4',border:'1.5px solid #4CAF7D33',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:6,color:'#4CAF7D'}}>
-              <I.Check/><span style={{fontSize:14,fontWeight:700,color:'#4CAF7D'}}>Done — arc updated</span>
+          {!isLoggingAction && (
+            <div style={{display:'flex',gap:8,marginTop:4}}>
+              <button onClick={()=>{
+                if (!isSelected) onSelect && onSelect();
+                onActivityDone && onActivityDone();
+                onComplete && onComplete();
+                onClose();
+              }} style={{flex:1,padding:'13px',borderRadius:14,background:`linear-gradient(135deg,${card.color},${card.color}cc)`,border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 4px 16px ${card.color}44`,display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                <I.Check/> I did this
+              </button>
+              {isMove && (
+                <button onClick={()=>{ onLogActivity && onLogActivity(); onClose(); }} style={{flex:1,padding:'13px',borderRadius:14,background:'#fff',border:`1.5px solid ${card.color}40`,color:card.color,fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                  Log this
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1898,13 +2184,19 @@ const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreat
   );
 };
 
-const RecCard = ({ card, onDetail, onActivityDone, bpState }) => {
+const RecCard = ({ card, onDetail, onActivityDone, bpState, onLogWorkout }) => {
   const [sel, setSel]         = useState(0);
   const [ownOpen, setOwnOpen] = useState(false);
   const [ownText, setOwnText] = useState('');
   const [ownDone, setOwnDone] = useState(false);
-  const [completed, setCompleted] = useState(false); // Tracks "I did this" on the focus option
+  // Per-option completion. Each option index can be marked done independently of focus.
+  const [completedOpts, setCompletedOpts] = useState([]);
+  const isOptCompleted = (idx) => completedOpts.includes(idx);
+  const markOptCompleted = (idx) => setCompletedOpts(arr => arr.includes(idx) ? arr : [...arr, idx]);
+  const unmarkOptCompleted = (idx) => setCompletedOpts(arr => arr.filter(i => i !== idx));
   const chosen = card.options[sel];
+  const focusIdx = sel;
+  const focusCompleted = isOptCompleted(focusIdx);
   // Show only ONE alt + log option (focus + 1 alt + 1 log = 3 total per card)
   const others = card.options.filter((_,i) => i !== sel).slice(0, 1);
   const isLoggingPillar = card.pillar === 'Logging';
@@ -1916,16 +2208,17 @@ const RecCard = ({ card, onDetail, onActivityDone, bpState }) => {
     if (!ownText.trim()) return;
     setOwnDone(true);
     onActivityDone && onActivityDone();
-    setCompleted(true);
   };
   const openFocusDetail = () => onDetail && onDetail({
     option:chosen, card, isSelected:true, onSelect:null,
-    onComplete: () => setCompleted(true),
+    onComplete: () => markOptCompleted(focusIdx),
+    onLogActivity: () => onLogWorkout && onLogWorkout(chosen),
   });
+  // Alt detail — DO NOT auto-swap focus on completion. Each option tracks its own done state.
   const openAltDetail = (opt, origIdx) => onDetail && onDetail({
-    option:opt, card, isSelected:false,
-    onSelect: () => setSel(origIdx),
-    onComplete: () => setCompleted(true),
+    option:opt, card, isSelected:true, onSelect:null,
+    onComplete: () => markOptCompleted(origIdx),
+    onLogActivity: () => onLogWorkout && onLogWorkout(opt),
   });
 
   return (
@@ -1968,14 +2261,37 @@ const RecCard = ({ card, onDetail, onActivityDone, bpState }) => {
               Undo
             </button>
           </div>
-        ) : completed ? (
-          <div className="fi" style={{display:'flex',gap:10,alignItems:'center',marginBottom:9,background:'#f0faf4',borderRadius:14,padding:'10px 11px',border:'1.5px solid #4CAF7D33'}}>
-            <div style={{width:42,height:42,borderRadius:13,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)'}}><I.Check/></div>
-            <div style={{flex:1,minWidth:0}}>
+        ) : focusCompleted ? (
+          <div className="fi" style={{position:'relative',display:'flex',gap:10,alignItems:'center',marginBottom:9,background:'#f0faf4',borderRadius:14,padding:'10px 11px',border:'1.5px solid #4CAF7D33',overflow:'visible'}}>
+            <div style={{width:42,height:42,borderRadius:13,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',position:'relative',zIndex:2}}><I.Check/></div>
+            {/* Confetti burst — emanates from the check tile */}
+            <div style={{position:'absolute',top:21,left:32,width:0,height:0,pointerEvents:'none',zIndex:3}}>
+              {[
+                { cx:-44, cy:-32, cr:-220, c:'#fcd34d' },
+                { cx:-26, cy:-46, cr:160,  c:'#94a47f' },
+                { cx:0,   cy:-52, cr:-90,  c:'#3d9e9e' },
+                { cx:24,  cy:-46, cr:140,  c:'#e05c5c' },
+                { cx:46,  cy:-30, cr:-180, c:'#5b7fa6' },
+                { cx:-50, cy:-12, cr:90,   c:'#fbbf24' },
+                { cx:52,  cy:-10, cr:-100, c:'#778a62' },
+                { cx:-36, cy:18,  cr:200,  c:'#c9a227' },
+                { cx:34,  cy:22,  cr:-150, c:'#fcd34d' },
+                { cx:-14, cy:-58, cr:80,   c:'#3d9e9e' },
+                { cx:14,  cy:-58, cr:-80,  c:'#e05c5c' },
+                { cx:-58, cy:6,   cr:240,  c:'#94a47f' },
+              ].map((p,i)=>(
+                <div key={i} className="confetti-piece" style={{
+                  '--cx':`${p.cx}px`, '--cy':`${p.cy}px`, '--cr':`${p.cr}deg`,
+                  background:p.c,
+                  animationDelay:`${i*0.018}s`,
+                }}/>
+              ))}
+            </div>
+            <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
               <p style={{fontSize:14,fontWeight:800,color:'#78716c',margin:'0 0 2px',letterSpacing:'-0.02em',lineHeight:1.2,textDecoration:'line-through'}}>{chosen.label}</p>
               <p style={{fontSize:11,color:'#4CAF7D',fontWeight:700,margin:0}}>Done · arc updated</p>
             </div>
-            <button onClick={()=>setCompleted(false)} style={{padding:'5px 9px',borderRadius:10,background:'transparent',border:'1.5px solid #4CAF7D33',color:'#4CAF7D',fontSize:10,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
+            <button onClick={()=>unmarkOptCompleted(focusIdx)} style={{padding:'5px 9px',borderRadius:10,background:'transparent',border:'1.5px solid #4CAF7D33',color:'#4CAF7D',fontSize:10,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',position:'relative',zIndex:2}}>
               Undo
             </button>
           </div>
@@ -1983,12 +2299,10 @@ const RecCard = ({ card, onDetail, onActivityDone, bpState }) => {
           <div style={{position:'relative',marginBottom:9}}>
             <div onClick={openFocusDetail} style={{display:'flex',gap:10,alignItems:'center',cursor:'pointer',background:card.bg,borderRadius:14,padding:'10px 11px',border:`1.5px solid ${card.color}28`}}>
               <div style={{width:42,height:42,borderRadius:13,background:'#fff',color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 2px 6px ${card.color}22`}}><chosen.IC/></div>
-              <div style={{flex:1,minWidth:0,paddingRight:isBPPrimary?14:0}}>
-                <p style={{fontSize:14,fontWeight:800,color:'#1a1a1a',margin:'0 0 3px',letterSpacing:'-0.02em',lineHeight:1.2}}>{chosen.label}</p>
-                <p style={{fontSize:11,color:'#78716c',margin:'0 0 4px'}}>{chosen.detail}</p>
-                <p style={{fontSize:10,color:card.color,fontWeight:600,margin:0,lineHeight:1.4,opacity:0.8}}>{chosen.why.split('.')[0]}.</p>
+              <div style={{flex:1,minWidth:0,paddingRight:isBPPrimary?22:0}}>
+                <p style={{fontSize:14,fontWeight:800,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.02em',lineHeight:1.2}}>{chosen.label}</p>
+                <p style={{fontSize:10.5,color:card.color,fontWeight:600,margin:0,lineHeight:1.4,opacity:0.8}}>{chosen.why.split('.')[0]}.</p>
               </div>
-              <div style={{width:28,height:28,borderRadius:9,background:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'#fff',boxShadow:`0 2px 8px ${card.color}44`}}><I.Arrow/></div>
             </div>
             {isBPPrimary && bpState && bpState.onDismiss && (
               <button onClick={(e)=>{ e.stopPropagation(); bpState.onDismiss(); }} aria-label="Dismiss for today" style={{position:'absolute',top:4,right:4,width:22,height:22,borderRadius:'50%',background:'rgba(255,255,255,0.92)',border:`1px solid ${card.color}30`,color:'#a8a29e',cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'inherit'}}>
@@ -2002,12 +2316,21 @@ const RecCard = ({ card, onDetail, onActivityDone, bpState }) => {
             <p style={{fontSize:9,fontWeight:600,letterSpacing:'0.05em',textTransform:'uppercase',color:'#c4bfb8',margin:'0 0 4px'}}>Or try</p>
             {others.map((opt,i) => {
               const origIdx = card.options.indexOf(opt);
-              return (
+              const altDone = isOptCompleted(origIdx);
+              return altDone ? (
+                <div key={i} className="fi" style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:11,background:'#f0faf4',marginBottom:3,border:'1.5px solid #4CAF7D33'}}>
+                  <div style={{width:26,height:26,borderRadius:9,background:'#4CAF7D',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><I.Check/></div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <p style={{fontSize:12,fontWeight:600,color:'#78716c',margin:0,lineHeight:1.2,textDecoration:'line-through'}}>{opt.label}</p>
+                    <p style={{fontSize:10,color:'#4CAF7D',fontWeight:700,margin:'1px 0 0'}}>Done · arc updated</p>
+                  </div>
+                  <button onClick={()=>unmarkOptCompleted(origIdx)} style={{padding:'3px 8px',borderRadius:9,background:'transparent',border:'1.5px solid #4CAF7D33',color:'#4CAF7D',fontSize:9.5,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',flexShrink:0}}>Undo</button>
+                </div>
+              ) : (
                 <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:11,background:'#f8f7f3',marginBottom:3}}>
                   <div onClick={()=>setSel(origIdx)} style={{width:26,height:26,borderRadius:9,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,cursor:'pointer'}}><opt.IC/></div>
                   <div onClick={()=>openAltDetail(opt, origIdx)} style={{flex:1,minWidth:0,cursor:'pointer'}}>
                     <p style={{fontSize:12,fontWeight:600,color:'#3a3a38',margin:0,lineHeight:1.2}}>{opt.label}</p>
-                    <p style={{fontSize:10,color:'#a8a29e',margin:'1px 0 0'}}>{opt.detail}</p>
                   </div>
                   <div style={{color:'#c4bfb8',flexShrink:0}}><I.Arrow/></div>
                 </div>
@@ -2336,26 +2659,19 @@ const MONTH_LABELS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep
 const formatDateLabel = (d) => `${DAY_LABELS_SHORT[d.getDay()]} · ${MONTH_LABELS_SHORT[d.getMonth()]} ${d.getDate()}`;
 
 const CalendarSheet = ({ today, selectedDate, onClose, onSelect }) => {
-  // Build a 28-day grid (4 weeks Mon-Sun) anchored so today sits in the last row.
-  const start = new Date(today);
-  const dayOfWeekMonStart = (start.getDay() + 6) % 7; // Mon=0..Sun=6
-  start.setDate(start.getDate() - dayOfWeekMonStart - 21);
-  const weeks = [];
-  for (let w = 0; w < 4; w++) {
-    const week = [];
-    for (let d = 0; d < 7; d++) {
-      const date = new Date(start);
-      date.setDate(start.getDate() + w*7 + d);
-      const isToday = date.toDateString() === today.toDateString();
-      const isFuture = date > today;
-      const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
-      const daysSince = Math.round((today - date) / 86400000);
-      const hasData = daysSince >= 0 && daysSince <= 4; // 5-day streak
-      week.push({ date, isToday, isFuture, isSelected, hasData });
-    }
-    weeks.push(week);
-  }
-  const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const init = selectedDate || today;
+  const [monthInput, setMonthInput] = useState(MONTH_LABELS_SHORT[init.getMonth()]);
+  const [dateInput,  setDateInput]  = useState(String(init.getDate()));
+  const [timeInput,  setTimeInput]  = useState('07:14 AM');
+  const submit = () => {
+    const monthIdx = MONTH_LABELS_SHORT.findIndex(m => m.toLowerCase() === (monthInput || '').toLowerCase().slice(0,3));
+    const day = parseInt(dateInput, 10);
+    if (monthIdx < 0 || isNaN(day)) { onClose(); return; }
+    const newDate = new Date(today);
+    newDate.setMonth(monthIdx, day);
+    onSelect(newDate);
+    onClose();
+  };
 
   return (
     <>
@@ -2363,40 +2679,397 @@ const CalendarSheet = ({ today, selectedDate, onClose, onSelect }) => {
       <div className="sheet-in" style={{position:'absolute',bottom:0,left:0,right:0,background:'#fafaf8',borderRadius:'22px 22px 0 0',zIndex:81,paddingBottom:24,boxShadow:'0 -10px 40px rgba(0,0,0,0.18)'}}>
         <div style={{width:36,height:4,borderRadius:2,background:'#e0dcd6',margin:'10px auto 0'}}/>
         <div style={{padding:'14px 20px 0'}}>
-          <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 4px'}}>Jump to a day</p>
-          <h3 style={{fontSize:18,fontWeight:800,color:'#1a1a1a',margin:'0 0 14px',letterSpacing:'-0.01em'}}>{MONTH_LABELS_SHORT[today.getMonth()]} {today.getFullYear()}</h3>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:5}}>
-            {dayLabels.map(l=>(
-              <div key={l} style={{fontSize:9,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',textAlign:'center',paddingBottom:5}}>{l}</div>
-            ))}
-            {weeks.flat().map((d,i)=>(
-              <button key={i} disabled={d.isFuture} onClick={()=>{ onSelect(d.date); onClose(); }} style={{
-                aspectRatio:'1',
-                background: d.isToday ? '#778a62' : d.isSelected ? '#778a6218' : 'transparent',
-                color: d.isToday ? '#fff' : d.isFuture ? '#d6d3d1' : '#3a3a38',
-                border: d.isSelected && !d.isToday ? '1.5px solid #778a62' : '1.5px solid transparent',
-                borderRadius:11,
-                fontSize:13,
-                fontWeight: d.isToday ? 800 : 600,
-                fontFamily:'inherit',
-                cursor: d.isFuture ? 'default' : 'pointer',
-                display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
-                padding:0,
-                transition:'all 0.15s',
-              }}>
-                <span>{d.date.getDate()}</span>
-                {d.hasData && !d.isFuture && <div style={{width:4,height:4,borderRadius:'50%',background:d.isToday?'#fff':'#778a62'}}/>}
-              </button>
-            ))}
+          <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 4px'}}>Pick a day</p>
+          <h3 style={{fontSize:18,fontWeight:800,color:'#1a1a1a',margin:'0 0 16px',letterSpacing:'-0.01em'}}>Jump to a date and time</h3>
+
+          <div style={{display:'flex',gap:8,marginBottom:12}}>
+            <div style={{flex:1.2}}>
+              <label style={{display:'block',fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#a8a29e',marginBottom:5}}>Month</label>
+              <input
+                type="text"
+                value={monthInput}
+                onChange={e=>setMonthInput(e.target.value)}
+                placeholder="May"
+                style={{width:'100%',padding:'10px 12px',background:'#fff',border:'1.5px solid #e8e5de',borderRadius:11,fontSize:14,fontWeight:600,color:'#1a1a1a',fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}
+              />
+            </div>
+            <div style={{flex:0.9}}>
+              <label style={{display:'block',fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#a8a29e',marginBottom:5}}>Date</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={dateInput}
+                onChange={e=>setDateInput(e.target.value.replace(/[^0-9]/g,''))}
+                placeholder="7"
+                style={{width:'100%',padding:'10px 12px',background:'#fff',border:'1.5px solid #e8e5de',borderRadius:11,fontSize:14,fontWeight:600,color:'#1a1a1a',fontFamily:'inherit',outline:'none',textAlign:'center',boxSizing:'border-box'}}
+              />
+            </div>
+            <div style={{flex:1.4}}>
+              <label style={{display:'block',fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#a8a29e',marginBottom:5}}>Time</label>
+              <input
+                type="text"
+                value={timeInput}
+                onChange={e=>setTimeInput(e.target.value)}
+                placeholder="7:14 AM"
+                style={{width:'100%',padding:'10px 12px',background:'#fff',border:'1.5px solid #e8e5de',borderRadius:11,fontSize:14,fontWeight:600,color:'#1a1a1a',fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}
+              />
+            </div>
           </div>
-          <p style={{fontSize:10.5,color:'#a8a29e',margin:'12px 0 0',textAlign:'center'}}>Dotted days have logged readings · 5-day streak below 125</p>
+
+          <p style={{fontSize:10.5,color:'#a8a29e',margin:'0 0 14px',lineHeight:1.5}}>Type a month name (e.g. May), date number (1–31), and time. Lemon will jump to that day's view.</p>
+
+          <button onClick={submit} style={{width:'100%',padding:'12px',borderRadius:13,background:'linear-gradient(135deg,#778a62,#5d6e4d)',color:'#fff',fontSize:14,fontWeight:700,border:'none',cursor:'pointer',fontFamily:'inherit',boxShadow:'0 6px 18px rgba(119,138,98,0.33)'}}>
+            Go to that day
+          </button>
         </div>
       </div>
     </>
   );
 };
 
-const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp, chatInitialStage = 'main' }) => {
+// ── LemonNav — Venmo-style 5-tab bottom nav with center Lemon-logo Ask button
+const LemonGlyph = ({ size = 22 }) => (
+  <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden="true">
+    <ellipse cx="16" cy="16" rx="10" ry="7.5" transform="rotate(-30 16 16)" fill="#fff"/>
+    <ellipse cx="22.5" cy="8" rx="2.6" ry="1.4" transform="rotate(-30 22.5 8)" fill="#5d6e4d"/>
+  </svg>
+);
+const LemonNav = ({ active = 'home', onSelect }) => {
+  const items = [
+    { id:'home',      label:'Home',      IC:I.Home },
+    { id:'meal',      label:'Meal prep', IC:I.MealPlan },
+    { id:'ask',       label:'Ask',       center:true },
+    { id:'stats',     label:'Stats',     IC:I.Chart },
+    { id:'community', label:'Community', IC:I.User },
+  ];
+  return (
+    <div className="nav" style={{position:'relative', paddingTop:14}}>
+      {items.map((it,i) => {
+        if (it.center) {
+          return (
+            <div key={i} style={{flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, position:'relative'}}>
+              <button type="button" onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); onSelect && onSelect(it.id); }} aria-label="Ask Lemon" style={{
+                width:50, height:50, borderRadius:'50%',
+                background:'linear-gradient(135deg,#fcd34d,#fbbf24)',
+                border:'4px solid #fafaf8',
+                boxShadow:'0 6px 18px rgba(251,191,36,0.42)',
+                color:'#1a1a1a',
+                cursor:'pointer', fontFamily:'inherit',
+                position:'absolute', top:-22,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                padding:0,
+                zIndex:10,
+                pointerEvents:'auto',
+              }}>
+                <span style={{pointerEvents:'none',display:'inline-flex'}}><LemonGlyph size={24}/></span>
+              </button>
+              <span style={{fontSize:10, fontWeight:600, color:'#778a62', marginTop:32, pointerEvents:'none'}}>{it.label}</span>
+            </div>
+          );
+        }
+        const on = active === it.id;
+        return (
+          <div key={i} onClick={()=>onSelect && onSelect(it.id)} style={{flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, cursor:'pointer'}}>
+            <div style={{color:on?'#778a62':'#b0a99e'}}><it.IC/></div>
+            <span style={{fontSize:10, fontWeight:on?600:500, color:on?'#778a62':'#b0a99e'}}>{it.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// ── StatsView — Maya's 360-degree health stats page ────────────────────────
+const STATE_COLOR = {
+  'Steady':'#4CAF7D', 'On track':'#4CAF7D', 'Good':'#4CAF7D',
+  'Monitor':'#F0A030', 'Fair':'#F0A030',
+  'Low':'#E05C5C',
+};
+const StatsView = ({ persona, onSwitchPersona }) => {
+  const p = persona;
+  const [tab, setTab] = useState('activity');
+  const tabs = [
+    { id:'activity',  label:'Activity'  },
+    { id:'sleep',     label:'Sleep'     },
+    { id:'readiness', label:'Readiness' },
+  ];
+  const rows = (p.statsTabs && p.statsTabs[tab]) || [];
+
+  return (
+    <>
+      <div className="screen" style={{padding:'0',background:'#fafaf8'}}>
+        <div style={{padding:'18px 18px 8px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
+          <div style={{flex:1,minWidth:0}}>
+            <h1 style={{fontSize:24,fontWeight:800,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.02em',lineHeight:1.1}}>Your stats</h1>
+            <p style={{fontSize:11.5,color:'#78716c',margin:0,lineHeight:1.5}}>A 360-degree view of your health, helping you track your progress every step of your health journey.</p>
+          </div>
+          <div style={{width:36,height:36,borderRadius:'50%',background:p.avatarGrad,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'#fff',flexShrink:0}}>{p.initial}</div>
+        </div>
+
+        {/* Lemon score card */}
+        <div style={{margin:'12px 14px',background:'#fff',borderRadius:20,border:'1px solid #efefed',boxShadow:'0 2px 10px rgba(0,0,0,0.04)',padding:'16px 16px 14px'}}>
+          <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 6px'}}>Lemon score</p>
+          <p style={{fontSize:13,fontWeight:700,color:'#4CAF7D',margin:'0 0 4px'}}>{p.lemonScore.state}</p>
+          <div style={{display:'flex',alignItems:'flex-end',gap:8,marginBottom:14}}>
+            <span style={{fontSize:64,fontWeight:900,color:'#1a1a1a',letterSpacing:'-0.03em',lineHeight:1}}>{p.lemonScore.value}</span>
+            <span style={{display:'inline-flex',alignItems:'center',gap:2,fontSize:12,fontWeight:700,color:'#4CAF7D',marginBottom:8}}>
+              {p.lemonScore.delta > 0 ? '+' : ''}{p.lemonScore.delta} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="11" height="11"><polyline points="18 15 12 9 6 15"/></svg>
+            </span>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:10,marginBottom:14}}>
+            {p.subScores.map((s,i) => (
+              <div key={i}>
+                <p style={{fontSize:10.5,color:'#78716c',margin:'0 0 4px',fontWeight:500}}>{s.label}</p>
+                <p style={{fontSize:18,fontWeight:800,color:'#1a1a1a',margin:'0 0 5px',lineHeight:1}}>{s.value}</p>
+                <div style={{height:3,borderRadius:2,background:'#efefed',overflow:'hidden'}}>
+                  <div style={{height:'100%',width:`${(s.value/10)*100}%`,background:s.color,borderRadius:2}}/>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{fontSize:12,color:'#57534e',margin:0,lineHeight:1.5}}>{p.scoreInsight}</p>
+        </div>
+
+        {/* Tab pills */}
+        <div style={{padding:'8px 14px 12px',display:'flex',gap:8}}>
+          {tabs.map(t => {
+            const active = t.id === tab;
+            return (
+              <button key={t.id} onClick={()=>setTab(t.id)} style={{
+                flex:1, padding:'8px 12px', borderRadius:20,
+                background: active ? '#1a1a1a' : '#fff',
+                color: active ? '#fff' : '#78716c',
+                border: active ? 'none' : '1px solid #e8e5de',
+                fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit',
+                transition:'all 0.15s',
+              }}>
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Detail rows */}
+        <div style={{padding:'0 14px 8px'}}>
+          {rows.map((r,i) => {
+            const c = STATE_COLOR[r.state] || '#a8a29e';
+            return (
+              <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',background:'#fff',borderRadius:14,border:'1px solid #efefed',marginBottom:6,cursor:'pointer'}}>
+                <span style={{flex:1,fontSize:13.5,fontWeight:600,color:'#1a1a1a'}}>{r.label}</span>
+                <span style={{fontSize:13,fontWeight:700,color:'#1a1a1a'}}>{r.value}</span>
+                <span style={{fontSize:11,fontWeight:700,color:c,whiteSpace:'nowrap'}}>· {r.state}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="13" height="13" style={{color:'#c4bfb8',flexShrink:0}}><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Attribution insight card — "the walking-to-BP signal" */}
+        {p.attribution && (
+          <div style={{margin:'8px 14px 12px',background:'linear-gradient(160deg,#fffcf5 0%,#fef9c3 100%)',border:'1px solid #fde047',borderRadius:18,padding:'14px 14px 13px',boxShadow:'0 2px 10px rgba(252,211,77,0.18)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+              <span style={{color:'#c9a227'}}><I.Sparkles/></span>
+              <span style={{fontSize:10,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#c9a227'}}>Cause &amp; effect</span>
+            </div>
+            <p style={{fontSize:13.5,fontWeight:700,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.01em',lineHeight:1.35}}>{p.attribution.headline}</p>
+            <p style={{fontSize:11.5,color:'#57534e',margin:0,lineHeight:1.5}}>{p.attribution.detail}</p>
+          </div>
+        )}
+
+        {/* See all your health metrics */}
+        <div style={{padding:'8px 14px 16px'}}>
+          <button style={{width:'100%',padding:'12px',borderRadius:24,background:'#fff',border:'1px solid #e8e5de',fontSize:13,fontWeight:600,color:'#3a3a38',cursor:'pointer',fontFamily:'inherit',display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}>
+            See all your health metrics <I.Forward/>
+          </button>
+        </div>
+
+        {/* Not seeing your data footer */}
+        <div style={{padding:'8px 18px 14px',textAlign:'center'}}>
+          <p style={{fontSize:13,fontWeight:700,color:'#3a3a38',margin:'0 0 4px'}}>Not seeing your data?</p>
+          <p style={{fontSize:11,color:'#78716c',margin:0,lineHeight:1.5}}>Sync your device to get a full picture of your health.</p>
+        </div>
+      </div>
+
+      <LemonNav active="stats" onSelect={(id)=>{
+        if (id==='home' && onSwitchPersona)      onSwitchPersona('mayaHomeV5');
+        if (id==='meal' && onSwitchPersona)      onSwitchPersona('mayaMealPrep');
+        if (id==='community' && onSwitchPersona) onSwitchPersona('mayaCommunity');
+      }}/>
+    </>
+  );
+};
+
+// ── CommunityView — Joined challenges grid ─────────────────────────────────
+const CommunityView = ({ persona, onSwitchPersona }) => {
+  const p = persona;
+  const challenges = p.challenges || [];
+  return (
+    <>
+      <div className="screen" style={{padding:0,background:'#fafaf8'}}>
+        <div style={{padding:'18px 18px 6px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
+          <div style={{flex:1,minWidth:0}}>
+            <h1 style={{fontSize:24,fontWeight:800,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.02em',lineHeight:1.1}}>Community</h1>
+            <p style={{fontSize:11.5,color:'#78716c',margin:0,lineHeight:1.5}}>Active challenges with friends. Streaks compound — show up on more days than you skip.</p>
+          </div>
+          <div style={{width:36,height:36,borderRadius:'50%',background:p.avatarGrad,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'#fff',flexShrink:0}}>{p.initial}</div>
+        </div>
+
+        <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#a8a29e',padding:'14px 18px 8px',margin:0}}>Joined challenges</p>
+
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,padding:'0 14px 18px'}}>
+          {challenges.map(c => (
+            <div key={c.id} style={{background:'#fff',borderRadius:14,border:'1px solid #efefed',padding:'10px',display:'flex',flexDirection:'column',gap:7}}>
+              <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
+                {c.pillar && <span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:8,background:c.pillarColor+'1a',color:c.pillarColor,letterSpacing:'0.04em',textTransform:'uppercase'}}>{c.pillar}</span>}
+                {c.bpImpact && <span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:8,background:'#fdf0f0',color:'#e05c5c',whiteSpace:'nowrap'}}>{c.bpImpact}</span>}
+              </div>
+              <p style={{fontSize:9,fontWeight:600,color:'#a8a29e',margin:0,letterSpacing:'-0.005em'}}>{c.daterange}</p>
+              <p style={{fontSize:13,fontWeight:800,color:'#1a1a1a',margin:0,letterSpacing:'-0.01em',lineHeight:1.25,minHeight:32}}>{c.title}</p>
+              <div style={{display:'flex',alignItems:'center',gap:5}}>
+                <div style={{width:18,height:18,borderRadius:'50%',background:c.authorGrad,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:9,fontWeight:800}}>{c.author.charAt(0)}</div>
+                <span style={{fontSize:10,fontWeight:600,color:'#78716c'}}>by {c.author}</span>
+              </div>
+              <div style={{aspectRatio:'1.25',background:`linear-gradient(135deg,${c.bgFrom},${c.bgTo})`,borderRadius:10,position:'relative',overflow:'hidden',marginTop:2}}>
+                <div style={{position:'absolute',top:-22,right:-22,width:78,height:78,background:'rgba(255,255,255,0.18)',borderRadius:'50%'}}/>
+                <div style={{position:'absolute',bottom:-30,left:-20,width:90,height:90,background:'rgba(0,0,0,0.08)',borderRadius:'50%'}}/>
+              </div>
+              <button style={{padding:'6px 8px',borderRadius:8,background:'#f5f5f4',border:'none',color:'#3a3a38',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit',marginTop:2}}>
+                {c.joined ? 'Joined' : 'Join'}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{padding:'0 18px 24px'}}>
+          <button style={{width:'100%',padding:'12px',borderRadius:24,background:'#fff',border:'1px solid #e8e5de',fontSize:13,fontWeight:600,color:'#3a3a38',cursor:'pointer',fontFamily:'inherit',display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}>
+            Browse more challenges <I.Forward/>
+          </button>
+        </div>
+      </div>
+
+      <LemonNav active="community" onSelect={(id)=>{
+        if (id==='home' && onSwitchPersona)  onSwitchPersona('mayaHomeV5');
+        if (id==='meal' && onSwitchPersona)  onSwitchPersona('mayaMealPrep');
+        if (id==='stats' && onSwitchPersona) onSwitchPersona('mayaStats');
+      }}/>
+    </>
+  );
+};
+
+// ── MealPrepView — Daily nutrition snapshot + suggested plans + today's swaps ──────────
+const HIGHLIGHT_STATES = {
+  green: { bg:'#dcfce7', color:'#166534' },
+  amber: { bg:'#fef3c7', color:'#92400e' },
+  red:   { bg:'#fee2e2', color:'#991b1b' },
+};
+const MealPrepView = ({ persona, onSwitchPersona }) => {
+  const p = persona;
+  const d = p.daily;
+  return (
+    <>
+      <div className="screen" style={{padding:0,background:'#fafaf8'}}>
+        {/* Header */}
+        <div style={{padding:'18px 18px 6px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
+          <div style={{flex:1,minWidth:0}}>
+            <h1 style={{fontSize:24,fontWeight:800,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.02em',lineHeight:1.1}}>Your nutrition plan</h1>
+            <p style={{fontSize:11.5,color:'#78716c',margin:0,lineHeight:1.5}}>Built from your goal — DASH-aligned meals to bring your BP into range and trim weight at the same time.</p>
+          </div>
+          <div style={{width:36,height:36,borderRadius:'50%',background:p.avatarGrad,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'#fff',flexShrink:0}}>{p.initial}</div>
+        </div>
+
+        {/* Daily snapshot — neutral framework: calories + macros + goal-pinned highlights */}
+        <div style={{margin:'14px 14px 12px',background:'#fff',borderRadius:18,border:'1px solid #efefed',padding:'14px 14px 12px',boxShadow:'0 2px 10px rgba(0,0,0,0.04)'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+            <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',margin:0,display:'inline-flex',alignItems:'center',gap:4}}>Daily snapshot <span style={{fontSize:9,color:'#c4bfb8'}}>ⓘ</span></p>
+            <p style={{fontSize:10.5,color:'#a8a29e',margin:0,fontWeight:600}}>{d.date}</p>
+          </div>
+          {/* Consumed / Target / Burned */}
+          <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:10,marginBottom:14}}>
+            <div style={{textAlign:'left'}}>
+              <p style={{fontSize:10,color:'#a8a29e',fontWeight:600,margin:'0 0 3px'}}>Consumed</p>
+              <p style={{fontSize:18,fontWeight:800,color:'#1a1a1a',margin:0,lineHeight:1}}>{d.consumed}</p>
+            </div>
+            <div style={{textAlign:'center',flex:1}}>
+              <p style={{fontSize:10,color:'#a8a29e',fontWeight:600,margin:'0 0 3px'}}>Daily Target</p>
+              <p style={{fontSize:36,fontWeight:900,color:'#1a1a1a',margin:0,letterSpacing:'-0.025em',lineHeight:1}}>{d.target}</p>
+              <p style={{fontSize:10,color:'#a8a29e',margin:'3px 0 0',letterSpacing:'0.04em'}}>kcal</p>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <p style={{fontSize:10,color:'#a8a29e',fontWeight:600,margin:'0 0 3px'}}>Burned</p>
+              <p style={{fontSize:18,fontWeight:800,color:'#1a1a1a',margin:0,lineHeight:1}}>{d.burned}</p>
+            </div>
+          </div>
+          {/* Macros chip strip */}
+          <div style={{display:'flex',gap:11,flexWrap:'wrap',marginBottom:11}}>
+            {d.macros.map((m,i)=>(
+              <div key={i} style={{display:'inline-flex',alignItems:'center',gap:4}}>
+                <div style={{width:8,height:8,borderRadius:'50%',background:m.color}}/>
+                <span style={{fontSize:10.5,fontWeight:600,color:'#3a3a38'}}>{m.label}<span style={{color:'#a8a29e',fontWeight:500}}> {m.value}g/{m.target}g</span></span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Suggested plans */}
+        <div style={{padding:'8px 18px 6px'}}>
+          <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 4px'}}>Suggested for you</p>
+          <p style={{fontSize:11.5,color:'#78716c',margin:'0 0 10px'}}>Meal plans curated for your goals.</p>
+        </div>
+        <div style={{display:'flex',gap:10,padding:'0 14px',overflowX:'auto'}} className="hide-scrollbar">
+          {p.plans.map(plan=>(
+            <div key={plan.id} style={{flexShrink:0,width:208,background:'#fff',borderRadius:14,border:'1px solid #efefed',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}>
+              <div style={{aspectRatio:'1',background:`linear-gradient(135deg,${plan.bgFrom},${plan.bgTo})`,position:'relative',overflow:'hidden'}}>
+                <div style={{position:'absolute',top:-30,right:-25,width:100,height:100,background:'rgba(255,255,255,0.18)',borderRadius:'50%'}}/>
+                <div style={{position:'absolute',bottom:-30,left:-22,width:110,height:110,background:'rgba(0,0,0,0.06)',borderRadius:'50%'}}/>
+                <div style={{position:'absolute',top:9,left:9,display:'flex',gap:4,flexWrap:'wrap',maxWidth:'calc(100% - 18px)'}}>
+                  <span style={{fontSize:8,fontWeight:800,padding:'3px 7px',borderRadius:6,background:'rgba(255,255,255,0.9)',color:'#1a1a1a',letterSpacing:'0.04em'}}>{plan.tag}</span>
+                  {plan.bpImpact && <span style={{fontSize:8,fontWeight:800,padding:'3px 7px',borderRadius:6,background:'rgba(255,255,255,0.9)',color:'#e05c5c',whiteSpace:'nowrap',letterSpacing:'0.02em'}}>{plan.bpImpact}</span>}
+                </div>
+                <span style={{position:'absolute',top:9,right:9,fontSize:8,fontWeight:800,padding:'3px 7px',borderRadius:6,background:'rgba(0,0,0,0.42)',color:'#fff',letterSpacing:'0.05em'}}>{plan.days} DAYS</span>
+              </div>
+              <div style={{padding:'12px 12px 11px'}}>
+                <p style={{fontSize:18,fontWeight:900,color:'#1a1a1a',margin:'0 0 5px',letterSpacing:'-0.02em',lineHeight:1.1}}>{plan.title}</p>
+                <p style={{fontSize:10.5,color:'#78716c',margin:'0 0 9px',lineHeight:1.4}}>{plan.calPerDay} cal/day · {plan.days * plan.mealsPerDay} meals</p>
+                <button style={{width:'100%',padding:'8px 9px',borderRadius:9,background:'#1a1a1a',border:'none',color:'#fff',fontSize:11.5,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                  Select All
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Today's swaps */}
+        <div style={{padding:'18px 18px 6px'}}>
+          <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 4px'}}>Today's swaps</p>
+          <p style={{fontSize:11.5,color:'#78716c',margin:'0 0 10px'}}>Quick wins for your sodium target.</p>
+        </div>
+        <div style={{padding:'0 14px 24px',display:'flex',flexDirection:'column',gap:8}}>
+          {p.swaps.map((s,i)=>(
+            <div key={i} style={{background:'#fff',borderRadius:13,border:'1px solid #efefed',padding:'11px 12px'}}>
+              <p style={{fontSize:12,fontWeight:600,color:'#a8a29e',margin:'0 0 4px',textDecoration:'line-through'}}>{s.from}</p>
+              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:7}}>
+                <span style={{color:'#94a47f'}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg></span>
+                <p style={{fontSize:13,fontWeight:800,color:'#1a1a1a',margin:0,letterSpacing:'-0.01em'}}>{s.to}</p>
+              </div>
+              <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                <span style={{fontSize:10,fontWeight:700,padding:'2px 7px',borderRadius:8,background:'#dcfce7',color:'#166534'}}>Saves {s.save}</span>
+                <span style={{fontSize:10,fontWeight:700,padding:'2px 7px',borderRadius:8,background:'#fdf0f0',color:'#e05c5c'}}>{s.impact}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <LemonNav active="meal" onSelect={(id)=>{
+        if (id==='home' && onSwitchPersona)      onSwitchPersona('mayaHomeV5');
+        if (id==='stats' && onSwitchPersona)     onSwitchPersona('mayaStats');
+        if (id==='community' && onSwitchPersona) onSwitchPersona('mayaCommunity');
+      }}/>
+    </>
+  );
+};
+
+const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp, chatInitialStage = 'main', chatInitialActivity, onOpenChat, onSwitchPersona }) => {
   const p = persona;
   // For v5 (router strip variant), homepage hosts a tab switch between home and chat.
   // View state is lifted to App when v5 props are passed (so the lock-screen notification can deep-link).
@@ -2409,8 +3082,8 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
   const [breathing, setBreathing]       = useState(null);
   const [doneSessions, setDoneSessions] = useState(0);
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  // BP logging state — drives Options 4 (tile) and 5 (ask). Variants start unlogged.
-  const [bpLogged, setBpLogged]   = useState(!p.bpLogVariant);
+  // BP logging state — drives Options 4 (tile) and 5 (ask) and metric empty states. Variants start unlogged.
+  const [bpLogged, setBpLogged]   = useState(!p.bpLogVariant && !p.routerStrip);
   const [bpValue, setBpValue]     = useState(null);
   const [bpPulse, setBpPulse]     = useState(null);
   const [bpNotes, setBpNotes]     = useState([]);
@@ -2456,20 +3129,13 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
   if (p.routerStrip && view === 'chat') {
     return (
       <>
-        <ChatLoggingView initialStage={chatInitialStage}/>
-        <div className="nav">
-          {[
-            { IC:I.Home,     l:'Home',      key:'home', on:false },
-            { IC:I.Chart,    l:'Stats',     key:'stats', on:false },
-            { IC:I.Chat,     l:'Chat',      key:'chat', on:true  },
-            { IC:I.MealPlan, l:'Meal plan', key:'meal', on:false },
-          ].map((n,i)=>(
-            <div key={i} onClick={()=>{ if(n.key==='home') setView('home'); }} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,cursor:n.key==='home'?'pointer':'default'}}>
-              <div style={{color:n.on?'#778a62':'#b0a99e'}}><n.IC/></div>
-              <span style={{fontSize:10,fontWeight:n.on?600:500,color:n.on?'#778a62':'#b0a99e'}}>{n.l}</span>
-            </div>
-          ))}
-        </div>
+        <ChatLoggingView initialStage={chatInitialStage} initialActivity={chatInitialActivity}/>
+        <LemonNav active="ask" onSelect={(id)=>{
+          if (id==='home') setView('home');
+          if (id==='meal' && onSwitchPersona)      onSwitchPersona('mayaMealPrep');
+          if (id==='stats' && onSwitchPersona)     onSwitchPersona('mayaStats');
+          if (id==='community' && onSwitchPersona) onSwitchPersona('mayaCommunity');
+        }}/>
       </>
     );
   }
@@ -2504,49 +3170,48 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
             </div>
             <p style={{fontSize:12.5,color:'#1a1a1a',fontWeight:400,margin:'0 0 13px',lineHeight:1.5,letterSpacing:'-0.005em'}}>{p.isWorking}</p>
             <MetricWidgets
-              initialWidgets={p.widgets}
+              initialWidgets={p.widgets.map(w => {
+                if (w.id !== 'actions') return w;
+                const base = parseInt(w.value, 10) || 0;
+                const val = base + doneSessions;
+                return {...w, value: String(val), sub: `of ${Math.max(val, 4)} today`};
+              })}
               extraMetrics={[]}
               bpLogPrompt={p.bpLogVariant === 'tile' && !bpLogged}
               onBPLog={() => setLogSheetOpen(true)}
               bpOverride={bpOverride}
               bpJustLogged={bpJustLogged}
+              metricsEmpty={p.routerStrip && !bpLogged}
+              onMetricLog={(id)=>onOpenChat && onOpenChat(id === 'bp' ? 'bp-input' : 'main')}
             />
           </div>
         </div>
 
         <div style={{padding:'12px 13px 28px',display:'flex',flexDirection:'column',gap:9}} key={animK}>
-          {/* Weekly report HERO — promoted variant (option 2). Renders FIRST so it dominates the scroll on top-of-week. */}
+          {/* Weekly report HERO — promoted variant. Compact, single-line title + tap-through. */}
           {p.weeklyReportPromoted && !bannerDismissed && onOpenReport && (
-            <div className="su" style={{
+            <div onClick={onOpenReport} className="su" style={{
               background:'linear-gradient(135deg, #5d6e4d 0%, #4a5a3c 100%)',
-              borderRadius:22, padding:'18px 18px 16px',
-              boxShadow:'0 12px 32px rgba(74,90,60,0.32)',
-              color:'#fff', position:'relative', overflow:'hidden',
+              borderRadius:14, padding:'9px 11px 9px',
+              boxShadow:'0 6px 16px rgba(74,90,60,0.22)',
+              color:'#fff', position:'relative', overflow:'hidden', cursor:'pointer',
+              display:'flex', alignItems:'center', gap:10,
             }}>
-              <div style={{position:'absolute',top:-40,right:-40,width:170,height:170,background:'rgba(255,255,255,0.06)',borderRadius:'50%',pointerEvents:'none'}}/>
-              <div style={{position:'absolute',bottom:-50,left:-30,width:140,height:140,background:'rgba(252,211,77,0.08)',borderRadius:'50%',pointerEvents:'none'}}/>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10,position:'relative'}}>
-                <div style={{width:32,height:32,borderRadius:10,background:'rgba(255,255,255,0.16)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><I.Document/></div>
-                <span style={{fontSize:10,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(255,255,255,0.72)'}}>Sunday · Week 4 in review</span>
+              <div style={{position:'absolute',top:-22,right:-22,width:78,height:78,background:'rgba(255,255,255,0.06)',borderRadius:'50%',pointerEvents:'none'}}/>
+              <div style={{width:32,height:32,borderRadius:9,background:'rgba(255,255,255,0.16)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative'}}><I.Document/></div>
+              <div style={{flex:1,minWidth:0,position:'relative',paddingRight:18}}>
+                <p style={{fontSize:8.5,fontWeight:700,letterSpacing:'0.09em',textTransform:'uppercase',color:'rgba(255,255,255,0.72)',margin:'0 0 1px'}}>Sunday · Week 4 in review</p>
+                <p style={{fontSize:12.5,fontWeight:800,color:'#fff',margin:'0 0 2px',letterSpacing:'-0.005em',lineHeight:1.25}}>Three Zone 2 walks cut systolic 4 points.</p>
+                <p style={{fontSize:10,color:'rgba(255,255,255,0.78)',margin:0,lineHeight:1.4}}>7-day avg <b style={{color:'#fff'}}>122/78</b> · below 130/80 goal</p>
               </div>
-              <p style={{fontSize:18,fontWeight:800,margin:'0 0 8px',letterSpacing:'-0.015em',lineHeight:1.25,position:'relative'}}>Three Zone 2 walks cut your systolic 4 points.</p>
-              <p style={{fontSize:12.5,color:'rgba(255,255,255,0.82)',margin:'0 0 14px',lineHeight:1.5,position:'relative'}}>18 of 26 actions done · weight down 0.3 kg · 5-day streak below 125.</p>
-              <button onClick={onOpenReport} style={{
-                padding:'10px 16px', borderRadius:13,
-                background:'#fff', color:'#4a5a3c',
-                fontSize:12.5, fontWeight:700, border:'none', cursor:'pointer',
-                fontFamily:'inherit', display:'inline-flex', alignItems:'center', gap:6,
-                position:'relative',
-              }}>
-                Open report <I.Forward/>
-              </button>
-              <button onClick={()=>setBannerDismissed(true)} aria-label="Dismiss" style={{
-                position:'absolute', top:10, right:10,
-                width:24, height:24, borderRadius:'50%',
-                background:'rgba(255,255,255,0.18)', border:'none', color:'#fff',
+              <div style={{position:'relative',color:'rgba(255,255,255,0.85)',flexShrink:0}}><I.Forward/></div>
+              <button onClick={(e)=>{ e.stopPropagation(); setBannerDismissed(true); }} aria-label="Dismiss" style={{
+                position:'absolute', top:6, right:6,
+                width:18, height:18, borderRadius:'50%',
+                background:'rgba(255,255,255,0.22)', border:'none', color:'#fff',
                 cursor:'pointer', padding:0, display:'flex', alignItems:'center', justifyContent:'center',
               }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="12" height="12"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="9" height="9"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
           )}
@@ -2564,24 +3229,17 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
           )}
           {!p.compactHeader && <HistoryStrip persona={p} selectedDay={selectedDay} onSelect={selectDay}/>}
           {p.cards.map((card,i)=>(
-            <div key={i} className={`su${i}`}><RecCard card={card} onDetail={openDetail} onActivityDone={onActivityDone} bpState={{ logged: bpLogged && !!bpValue, value: bpValue, pulse: bpPulse, notes: bpNotes, dismissed: bpDismissed, onDismiss: ()=>setBpDismissed(true), onUndoDismiss: ()=>setBpDismissed(false) }}/></div>
+            <div key={i} className={`su${i}`}><RecCard card={card} onDetail={openDetail} onActivityDone={onActivityDone} bpState={{ logged: bpLogged && !!bpValue, value: bpValue, pulse: bpPulse, notes: bpNotes, dismissed: bpDismissed, onDismiss: ()=>setBpDismissed(true), onUndoDismiss: ()=>setBpDismissed(false) }} onLogWorkout={(opt)=>onOpenChat && onOpenChat('workout-input', opt ? {label:opt.label, detail:opt.detail} : null)}/></div>
           ))}
         </div>
       </div>
 
-      <div className="nav">
-        {[
-          { IC:I.Home,     l:'Home',      key:'home', on:true  },
-          { IC:I.Chart,    l:'Stats',     key:'stats', on:false },
-          { IC:I.Chat,     l:'Chat',      key:'chat', on:false },
-          { IC:I.MealPlan, l:'Meal plan', key:'meal', on:false },
-        ].map((n,i)=>(
-          <div key={i} onClick={()=>{ if(p.routerStrip && n.key==='chat') setView('chat'); }} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,cursor:'pointer'}}>
-            <div style={{color:n.on?'#778a62':'#b0a99e'}}><n.IC/></div>
-            <span style={{fontSize:10,fontWeight:n.on?600:500,color:n.on?'#778a62':'#b0a99e'}}>{n.l}</span>
-          </div>
-        ))}
-      </div>
+      <LemonNav active="home" onSelect={(id)=>{
+        if (id==='ask' && p.routerStrip)         setView('chat');
+        if (id==='meal' && onSwitchPersona)      onSwitchPersona('mayaMealPrep');
+        if (id==='stats' && onSwitchPersona)     onSwitchPersona('mayaStats');
+        if (id==='community' && onSwitchPersona) onSwitchPersona('mayaCommunity');
+      }}/>
 
       {detail && !breathing && (
         <DetailSheet
@@ -2591,6 +3249,7 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
           onStartBreathing={()=>{ setBreathing({ option:detail.option, card:detail.card }); setDetail(null); }}
           onActivityDone={onActivityDone}
           onComplete={()=>{ detail.onComplete && detail.onComplete(); }}
+          onLogActivity={()=>{ detail.onLogActivity && detail.onLogActivity(); }}
           onBPSubmit={(data)=>handleLogBP(data)}
           bpYesterday={{sys:yesterdaySys, dia:yesterdayDia, pulse:yesterdayPulse}}
         />
@@ -2740,12 +3399,11 @@ const G_Composer = () => (
 const G_DRAWER_SECTIONS = [
   { id:'food',     label:'Food diary',           color:'#fbbf24' },
   { id:'workouts', label:'Workout diary',        color:'#778a62' },
-  { id:'prefs',    label:'Preferences',          color:'#5b7fa6' },
   { id:'weight',   label:'Weight diary',         color:'#c9a227' },
   { id:'bp',       label:'Blood pressure diary', color:'#e05c5c' },
 ];
 
-const G_Drawer = ({ onClose, defaultTab='BP' }) => {
+const G_Drawer = ({ onClose, defaultTab=null }) => {
   // Map old defaultTab values to new section ids; null = list view.
   const tabToSection = (t) => {
     if (!t) return null;
@@ -2900,11 +3558,11 @@ const G_Drawer = ({ onClose, defaultTab='BP' }) => {
               )}
 
               {/* Empty states */}
-              {(section === 'workouts' || section === 'weight' || section === 'prefs') && (
+              {(section === 'workouts' || section === 'weight') && (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{background:sectionDef.color+'18',color:sectionDef.color}}>{sectionIcon(section)}</div>
-                  <div className="text-[13px] font-semibold text-stone-500">No {sectionDef.label.toLowerCase().replace(' diary','').replace('preferences','preferences')} logged yet</div>
-                  <div className="text-[11px] text-stone-400 mt-1.5 max-w-[200px] leading-relaxed">Ask Lemon to log a {section === 'workouts' ? 'workout' : section === 'weight' ? 'weight reading' : 'preference'} to start.</div>
+                  <div className="text-[13px] font-semibold text-stone-500">No {sectionDef.label.toLowerCase().replace(' diary','')} logged yet</div>
+                  <div className="text-[11px] text-stone-400 mt-1.5 max-w-[200px] leading-relaxed">Ask Lemon to log a {section === 'workouts' ? 'workout' : 'weight reading'} to start.</div>
                 </div>
               )}
             </div>
@@ -2977,6 +3635,7 @@ const H_BPCard = ({ sys, dia, pulse, notes, deltaSys, confirmed, onConfirm, onEd
         </div>
         <div className="px-3.5 py-2.5 flex flex-col gap-1.5">
           <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full self-start" style={{background:dirColor+'18',color:dirColor}}>{dirText}</span>
+          <p className="text-[11px] text-stone-500 m-0">7-day avg: <b className="text-stone-700">122/78</b> · below your <b>130/80 goal</b></p>
           {noteChips.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {noteChips.map((id,i)=>(
@@ -3007,8 +3666,9 @@ const H_BPCard = ({ sys, dia, pulse, notes, deltaSys, confirmed, onConfirm, onEd
 
 // ChatLoggingView — H Refined: 4 main chips → Log a vital → 3 sub-chips → Log BP → input → confirmation → drawer entry
 // Accepts initialStage so notification "Adjust" can deep-link straight to bp-input.
-const ChatLoggingView = ({ initialStage = 'main' }) => {
-  // Stages: main → vital-picker → bp-input → bp-card → bp-logged
+// Accepts initialActivity so homepage Move card "Log this" can deep-link to a pre-filled workout entry.
+const ChatLoggingView = ({ initialStage = 'main', initialActivity = null }) => {
+  // Stages: main → vital-picker → bp-input → bp-card → bp-logged | workout-input → workout-confirmed
   const [stage, setStage]         = useState(initialStage);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sys, setSys]             = useState(122);
@@ -3016,6 +3676,18 @@ const ChatLoggingView = ({ initialStage = 'main' }) => {
   const [pulse, setPulse]         = useState(64);
   const [notes, setNotes]         = useState(['caffeine']);
   const [confirmed, setConfirmed] = useState(false);
+  const [workoutConfirmed, setWorkoutConfirmed] = useState(false);
+
+  const activity = initialActivity || { label:'30-min moderate walk', detail:'Zone 2 · 50–70% max HR' };
+  // Mock calorie estimate based on label keywords
+  const estimateCalories = (label) => {
+    const l = (label || '').toLowerCase();
+    if (l.includes('swim'))  return 220;
+    if (l.includes('cycle') || l.includes('bike')) return 240;
+    if (l.includes('walk'))  return 150;
+    return 180;
+  };
+  const estCal = estimateCalories(activity.label);
 
   const yesterdaySys = 124, yesterdayDia = 82, yesterdayPulse = 66;
   const deltaSys = sys ? (sys - yesterdaySys) : 0;
@@ -3032,9 +3704,11 @@ const ChatLoggingView = ({ initialStage = 'main' }) => {
       <div className="flex-1 px-4 pt-3 overflow-y-auto hide-scrollbar" style={{minHeight:0}}>
         <div className="text-center text-[11px] text-stone-400 font-semibold uppercase tracking-wide mb-3 fi">Today · 7:12 AM</div>
 
-        <G_Bubble role="lemon" animate>
-          Hi Maya — what would you like to log?
-        </G_Bubble>
+        {stage !== 'workout-input' && stage !== 'workout-confirmed' && (
+          <G_Bubble role="lemon" animate>
+            Hi Maya — what would you like to log?
+          </G_Bubble>
+        )}
 
         {stage === 'main' && (
           <div className="mt-3 ml-9 su1">
@@ -3101,7 +3775,7 @@ const ChatLoggingView = ({ initialStage = 'main' }) => {
         {stage === 'bp-logged' && (
           <>
             <G_Bubble role="lemon" animate>
-              That's your 5th morning below 125. The trend is real — see it on Stats.
+              That's your 5th morning below 125. <b>7-day average: 122/78</b> — below your 130/80 goal. The trend is real — see it on Stats.
             </G_Bubble>
             <div className="ml-9 mt-2 fi">
               <div className="bg-warm-100 border border-warm-300 rounded-xl px-3 py-2 text-[11px] text-stone-700 font-medium inline-flex items-center gap-1.5">
@@ -3111,11 +3785,70 @@ const ChatLoggingView = ({ initialStage = 'main' }) => {
             </div>
           </>
         )}
+
+        {/* Workout pre-fill flow — entered from homepage Move-card "Log this" */}
+        {(stage === 'workout-input' || stage === 'workout-confirmed') && (
+          <>
+            <G_Bubble role="user">
+              <span className="flex items-center gap-1.5"><span className="opacity-70">{G_I.flame}</span> Log workout</span>
+            </G_Bubble>
+            <G_Bubble role="lemon" animate>
+              Got it — I'll log <b>{activity.label}</b>. About <b>{estCal} calories</b> for you. Confirm to log it?
+            </G_Bubble>
+            <div className="flex justify-center mb-2.5 pi">
+              <div className="bg-white border border-stone-150 rounded-2xl shadow-sm overflow-hidden" style={{width:'100%',maxWidth:300}}>
+                <div className="bg-gradient-to-br from-warm-100 to-warm-200 px-3.5 py-3 border-b border-warm-300">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-sage-600 shadow-sm">{G_I.flame}</div>
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">Workout · 7:14 AM</div>
+                      <div className="text-sm font-bold text-stone-800 leading-tight">{activity.label}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 divide-x divide-stone-100 text-center">
+                  <div className="py-2.5"><div className="text-sm font-bold text-stone-800">{estCal}</div><div className="text-[9px] text-stone-500 uppercase tracking-wide font-semibold">Cal</div></div>
+                  <div className="py-2.5"><div className="text-sm font-bold text-stone-800">30 min</div><div className="text-[9px] text-stone-500 uppercase tracking-wide font-semibold">Duration</div></div>
+                  <div className="py-2.5"><div className="text-sm font-bold text-sage-600">Zone 2</div><div className="text-[9px] text-stone-500 uppercase tracking-wide font-semibold">Effort</div></div>
+                </div>
+                {activity.detail && (
+                  <div className="px-3.5 py-2 bg-stone-50 border-t border-stone-100 text-[11px] text-stone-600">
+                    {activity.detail}
+                  </div>
+                )}
+                {!workoutConfirmed ? (
+                  <div className="px-3.5 py-3 flex gap-2">
+                    <button onClick={() => setStage('workout-input')} className="flex-1 px-3 py-2 rounded-xl border border-stone-200 text-stone-600 text-xs font-semibold cursor-pointer" style={{background:'none',fontFamily:'inherit'}}>Edit</button>
+                    <button onClick={() => { setWorkoutConfirmed(true); setStage('workout-confirmed'); }} className="flex-1 px-3 py-2 rounded-xl bg-stone-800 text-white text-xs font-bold flex items-center justify-center gap-1 cursor-pointer" style={{border:'none',fontFamily:'inherit'}}>{G_I.check} Looks right</button>
+                  </div>
+                ) : (
+                  <div className="px-3.5 py-2.5 bg-sage-50 border-t border-sage-200 flex items-center gap-1.5">
+                    <span className="text-sage-600">{G_I.check}</span>
+                    <span className="text-xs font-semibold text-sage-700">Logged to your journal</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            {stage === 'workout-confirmed' && (
+              <>
+                <G_Bubble role="lemon" animate>
+                  Logged · {estCal} calories. That's session 4 this week — you're holding the streak.
+                </G_Bubble>
+                <div className="ml-9 mt-2 fi">
+                  <div className="bg-warm-100 border border-warm-300 rounded-xl px-3 py-2 text-[11px] text-stone-700 font-medium inline-flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-sage-500 pulse-dot"/>
+                    New entry in Journal — tap menu to view
+                  </div>
+                </div>
+              </>
+            )}
+          </>
+        )}
       </div>
 
       <G_Composer/>
 
-      {drawerOpen && <G_Drawer onClose={() => setDrawerOpen(false)} defaultTab={confirmed ? 'BP' : 'Food'}/>}
+      {drawerOpen && <G_Drawer onClose={() => setDrawerOpen(false)}/>}
     </div>
   );
 };
@@ -3134,6 +3867,7 @@ function App() {
   // v5 — controlled chat tab routing (so the lock-screen notification mock can deep-link into chat)
   const [v5View, setV5View] = useState('home');
   const [chatInitialStage, setChatInitialStage] = useState('main');
+  const [chatInitialActivity, setChatInitialActivity] = useState(null);
   // Lock-screen notification mock state: 'idle' | 'logged' | 'dismissed'
   const [notifState, setNotifState] = useState('idle');
   const handleNotifSame = () => {
@@ -3162,7 +3896,7 @@ function App() {
     setPk(key); setPage(newSeq[0]);
     setDirections({ move:null, sleep:null, nutrition:null, mind:null, logging:null });
     setContexts([]); setOtherNote(''); setSheet(null);
-    setV5View('home'); setChatInitialStage('main'); setNotifState('idle');
+    setV5View('home'); setChatInitialStage('main'); setChatInitialActivity(null); setNotifState('idle');
     setAnimKey(k=>k+1);
   };
 
@@ -3179,8 +3913,8 @@ function App() {
         <p style={{fontSize:13,color:'#78716c',margin:0,lineHeight:1.5}}>{p.isChatView ? 'Chat-logging MVP (Option G) — sodium-aware AI meal flow. Tap "Looks right" to log; the red dot pulses; tap the hamburger to see the journal slide in.' : p.routerStrip ? 'Homepage MVP option 3 — logging lives in chat. Notification (above the device) is the daily-ritual path; the in-app router strip routes to chat for catch-up. The homepage carries no logging UI.' : p.weeklyReportPromoted ? 'Homepage MVP option 2 — weekly report promoted to hero, Logging pillar removed, LemonAsksBP carries the full BP form (sys / dia / pulse / notes) plus an X dismiss.' : p.bpLogVariant === 'ask' ? 'Homepage Logging CTA MVP — LemonAsksBP at the top with the full BP form (sys / dia / pulse / notes), Logging pillar in the rec stack with a "Logged today" state.' : isHomeView ? 'Hypertension homepage — DASH-adjusted nutrition, BP-aware sleep + mind cards, fully interactive. Tap any recommendation for the full detail sheet.' : 'Weekly progress report — 3 pages. Confirm or Submit lands on a celebration screen with a Back to home button that routes to the homepage.'}</p>
       </div>
 
-      <div style={{width:'100%',maxWidth:620,overflowX:'auto'}} className="hide-scrollbar">
-        <div style={{display:'flex',gap:8,justifyContent:'center',padding:'0 4px',flexWrap:'wrap'}}>
+      <div style={{width:'100%',maxWidth:1100,overflowX:'auto'}} className="hide-scrollbar">
+        <div style={{display:'flex',gap:8,padding:'0 4px',flexWrap:'nowrap',justifyContent:'flex-start',minWidth:'max-content'}}>
           {PERSONA_LIST.map(pp=>{
             const active = pk===pp.key;
             return (
@@ -3267,6 +4001,12 @@ function App() {
 
         {p.isChatView ? (
           <ChatLoggingView/>
+        ) : p.isStatsView ? (
+          <StatsView persona={p} onSwitchPersona={switchPersona}/>
+        ) : p.isCommunityView ? (
+          <CommunityView persona={p} onSwitchPersona={switchPersona}/>
+        ) : p.isMealPrepView ? (
+          <MealPrepView persona={p} onSwitchPersona={switchPersona}/>
         ) : isHomeView ? (
           <HomeView
             persona={p}
@@ -3274,6 +4014,9 @@ function App() {
             view={p.routerStrip ? v5View : undefined}
             setView={p.routerStrip ? setV5View : undefined}
             chatInitialStage={chatInitialStage}
+            onOpenChat={p.routerStrip ? (stage, activity)=>{ setChatInitialStage(stage || 'main'); setChatInitialActivity(activity || null); setV5View('chat'); } : undefined}
+            chatInitialActivity={chatInitialActivity}
+            onSwitchPersona={switchPersona}
           />
         ) : (
         <>
