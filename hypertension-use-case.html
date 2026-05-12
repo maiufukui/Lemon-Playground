@@ -3566,15 +3566,38 @@ const G_MealCard = ({ confirmed, onConfirm }) => (
   </div>
 );
 
-const G_Composer = () => (
-  <div className="px-3 pt-2 pb-3 bg-stone-50 border-t border-stone-150 flex-shrink-0">
-    <div className="flex items-center gap-2 bg-white rounded-full border border-stone-200 pl-4 pr-1.5 py-1.5 shadow-sm">
-      <div className="flex-1 text-sm text-stone-400">Message Lemon…</div>
-      <button className="w-9 h-9 bg-stone-100 rounded-full flex items-center justify-center text-stone-500" style={{border:'none',fontFamily:'inherit'}}>{G_I.mic}</button>
-      <button className="w-9 h-9 bg-gradient-to-br from-sage-500 to-sage-600 rounded-full flex items-center justify-center text-white" style={{border:'none',fontFamily:'inherit'}}>{G_I.send}</button>
+const G_Composer = ({ value = '', onChange, onSubmit, placeholder = 'Message Lemon…', disabled = false }) => {
+  const handleSubmit = () => {
+    if (!value || !value.trim() || disabled) return;
+    onSubmit && onSubmit(value.trim());
+  };
+  return (
+    <div className="px-3 pt-2 pb-3 bg-stone-50 border-t border-stone-150 flex-shrink-0">
+      <div className="flex items-center gap-2 bg-white rounded-full border border-stone-200 pl-4 pr-1.5 py-1.5 shadow-sm">
+        <input
+          type="text"
+          value={value}
+          onChange={e => onChange && onChange(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="flex-1 text-sm bg-transparent outline-none border-none text-stone-700 placeholder:text-stone-400"
+          style={{fontFamily:'inherit'}}
+        />
+        <button className="w-9 h-9 bg-stone-100 rounded-full flex items-center justify-center text-stone-500 flex-shrink-0" style={{border:'none',fontFamily:'inherit'}}>{G_I.mic}</button>
+        <button onClick={handleSubmit} disabled={disabled || !value.trim()}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0"
+          style={{
+            border:'none',
+            fontFamily:'inherit',
+            background: (value.trim() && !disabled) ? 'linear-gradient(135deg,#778a62,#5d6e4d)' : '#d6d3d1',
+            cursor: (value.trim() && !disabled) ? 'pointer' : 'not-allowed',
+            transition:'background 0.15s',
+          }}>{G_I.send}</button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Drawer sections — vertical-stacked list with drill-in detail per section.
 const G_DRAWER_SECTIONS = [
@@ -3793,63 +3816,48 @@ const H_LESSONS = [
 ];
 
 const H_BPCard = ({ sys, dia, pulse, notes, deltaSys, confirmed, onConfirm, onEdit }) => {
-  const dirText = deltaSys === 0 ? 'same as yesterday'
-    : deltaSys < 0 ? `↓ ${Math.abs(deltaSys)} systolic vs yesterday`
-    : `↑ ${deltaSys} systolic vs yesterday`;
-  const dirColor = deltaSys <= 0 ? '#4CAF7D' : '#F0A030';
+  const dirSentence = deltaSys === 0 ? 'Same as yesterday.'
+    : deltaSys < 0 ? `Down ${Math.abs(deltaSys)} systolic from yesterday.`
+    : `Up ${deltaSys} systolic from yesterday.`;
   // Rotate micro-lesson per render
   const lesson = useMemo(() => H_LESSONS[Math.floor(Math.random() * H_LESSONS.length)], []);
   const noteChips = (notes || []).filter(Boolean);
+
   return (
-    <div className="flex justify-start mb-2.5 pi">
-      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-lemon-400 to-lemon-500 flex items-center justify-center text-stone-800 font-bold text-xs flex-shrink-0 mr-2 mt-1">L</div>
-      <div className="bg-white border border-stone-150 rounded-2xl shadow-sm overflow-hidden flex-1" style={{maxWidth:280}}>
-        <div className="bg-gradient-to-br from-warm-100 to-warm-200 px-3.5 py-3 border-b border-warm-300">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-red-500 shadow-sm">{G_I.heart}</div>
-            <div>
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">BP · 7:14 AM</div>
-              <div className="text-base font-bold text-stone-800 leading-tight">{sys}/{dia} <span className="text-stone-400 text-xs font-medium">mmHg</span></div>
-              {pulse ? <div className="text-[11px] font-semibold text-stone-500 mt-0.5">Pulse {pulse} bpm</div> : null}
-            </div>
-          </div>
+    <>
+      <G_Bubble role="lemon" animate>
+        <p className="m-0">Got it. {dirSentence} Your 7-day average is sitting at <b>122/78</b> — below your <b>130/80 goal</b>.</p>
+        <p className="m-0 mt-1.5">{lesson}</p>
+      </G_Bubble>
+
+      {noteChips.length > 0 && (
+        <div className="ml-9 -mt-1 mb-2 flex flex-wrap gap-1 fi">
+          {noteChips.map((id,i)=>(
+            <span key={i} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#fdf0f0',color:'#e05c5c',border:'1px solid #e05c5c33'}}>{BP_NOTE_LABEL(id)}</span>
+          ))}
         </div>
-        <div className="px-3.5 py-2.5 flex flex-col gap-1.5">
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full self-start" style={{background:dirColor+'18',color:dirColor}}>{dirText}</span>
-          <p className="text-[11px] text-stone-500 m-0">7-day avg: <b className="text-stone-700">122/78</b> · below your <b>130/80 goal</b></p>
-          {noteChips.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {noteChips.map((id,i)=>(
-                <span key={i} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#fdf0f0',color:'#e05c5c',border:'1px solid #e05c5c33'}}>{BP_NOTE_LABEL(id)}</span>
-              ))}
-            </div>
-          )}
+      )}
+
+      {!confirmed ? (
+        <div className="ml-9 mt-1 mb-3 flex gap-2 fi">
+          <button onClick={onEdit} className="px-3.5 py-1.5 rounded-full border border-stone-200 text-stone-600 text-xs font-semibold cursor-pointer" style={{background:'#fff',fontFamily:'inherit'}}>Edit</button>
+          <button onClick={onConfirm} className="px-3.5 py-1.5 rounded-full bg-stone-800 text-white text-xs font-bold inline-flex items-center justify-center gap-1 cursor-pointer" style={{border:'none',fontFamily:'inherit'}}>{G_I.check} Looks right</button>
         </div>
-        <div className="px-3.5 py-2.5 bg-stone-50 border-t border-stone-100 flex items-start gap-1.5">
-          <span className="text-lemon-500 mt-0.5 flex-shrink-0">{G_I.sparkle}</span>
-          <div className="text-[11px] text-stone-700 leading-relaxed">{lesson}</div>
+      ) : (
+        <div className="ml-9 mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sage-700 fi">
+          <span className="text-sage-600">{G_I.check}</span>
+          Logged to your journal
         </div>
-        {!confirmed ? (
-          <div className="px-3.5 py-3 flex gap-2">
-            <button onClick={onEdit} className="flex-1 px-3 py-2 rounded-xl border border-stone-200 text-stone-600 text-xs font-semibold cursor-pointer" style={{background:'none',fontFamily:'inherit'}}>Edit</button>
-            <button onClick={onConfirm} className="flex-1 px-3 py-2 rounded-xl bg-stone-800 text-white text-xs font-bold flex items-center justify-center gap-1 cursor-pointer" style={{border:'none',fontFamily:'inherit'}}>{G_I.check} Looks right</button>
-          </div>
-        ) : (
-          <div className="px-3.5 py-2.5 bg-sage-50 border-t border-sage-200 flex items-center gap-1.5">
-            <span className="text-sage-600">{G_I.check}</span>
-            <span className="text-xs font-semibold text-sage-700">Logged to your journal</span>
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
-// ChatLoggingView — H Refined: 4 main chips → Log a vital → 3 sub-chips → Log BP → input → confirmation → drawer entry
+// ChatLoggingView — H Refined: 4 main chips → vital / workout / meal / preference flows.
+// Pattern: input = template (picker chips or form). Response = natural prose chat bubble.
 // Accepts initialStage so notification "Adjust" can deep-link straight to bp-input.
 // Accepts initialActivity so homepage Move card "Log this" can deep-link to a pre-filled workout entry.
 const ChatLoggingView = ({ initialStage = 'main', initialActivity = null }) => {
-  // Stages: main → vital-picker → bp-input → bp-card → bp-logged | workout-input → workout-confirmed
   const [stage, setStage]         = useState(initialStage);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sys, setSys]             = useState(122);
@@ -3858,18 +3866,28 @@ const ChatLoggingView = ({ initialStage = 'main', initialActivity = null }) => {
   const [notes, setNotes]         = useState(['caffeine']);
   const [confirmed, setConfirmed] = useState(false);
   const [workoutConfirmed, setWorkoutConfirmed] = useState(false);
+  const [mealConfirmed,   setMealConfirmed]   = useState(false);
+  const [prefConfirmed,   setPrefConfirmed]   = useState(false);
 
-  const activity = initialActivity || { label:'30-min moderate walk', detail:'Zone 2 · 50–70% max HR' };
-  // Mock calorie estimate based on label keywords
+  // Workout / Meal / Preference — free-form text input
   const estimateCalories = (label) => {
     const l = (label || '').toLowerCase();
     if (l.includes('swim'))  return 220;
     if (l.includes('cycle') || l.includes('bike')) return 240;
     if (l.includes('walk'))  return 150;
+    if (l.includes('run'))   return 280;
+    if (l.includes('yoga'))  return 120;
+    if (l.includes('lift') || l.includes('strength')) return 280;
     return 180;
   };
-  const estCal = estimateCalories(activity.label);
+  const [workoutText, setWorkoutText] = useState(initialActivity?.label || '');
+  const [mealText,    setMealText]    = useState('');
+  const [prefText,    setPrefText]    = useState('');
 
+  // Composer state — pre-populated per stage to give a sensible placeholder
+  const [composerText, setComposerText] = useState('');
+
+  // ── Existing BP state ─────────────────────────────────────────────────
   const yesterdaySys = 124, yesterdayDia = 82, yesterdayPulse = 66;
   const deltaSys = sys ? (sys - yesterdaySys) : 0;
   const handleBPSubmit = (data) => {
@@ -3878,6 +3896,34 @@ const ChatLoggingView = ({ initialStage = 'main', initialActivity = null }) => {
     setStage('bp-card');
   };
 
+  // Transition pre-filled workouts (from homepage Move card "Log this") straight to the response card
+  useEffect(() => {
+    if (stage === 'workout-input' && workoutText) {
+      setStage('workout-card');
+    }
+  }, [stage, workoutText]);
+
+  // Composer handler — dispatches based on current stage
+  const handleComposerSubmit = (text) => {
+    if (stage === 'workout-ask') {
+      setWorkoutText(text);
+      setStage('workout-card');
+    } else if (stage === 'meal-ask') {
+      setMealText(text);
+      setStage('meal-card');
+    } else if (stage === 'pref-ask') {
+      setPrefText(text);
+      setStage('pref-card');
+    }
+    setComposerText('');
+  };
+  // Composer placeholder + disabled state
+  const composerPlaceholder = stage === 'workout-ask' ? 'Tell Lemon what you did…'
+    : stage === 'meal-ask' ? 'Tell Lemon what you ate…'
+    : stage === 'pref-ask' ? 'Tell Lemon your preference…'
+    : 'Message Lemon…';
+  const composerActive = stage === 'workout-ask' || stage === 'meal-ask' || stage === 'pref-ask';
+
   return (
     <div style={{flex:1, display:'flex', flexDirection:'column', position:'relative', background:'#fafaf9', overflow:'hidden', minHeight:0}}>
       <G_ChatHeader hasNotif={confirmed} onMenu={() => setDrawerOpen(true)}/>
@@ -3885,23 +3931,22 @@ const ChatLoggingView = ({ initialStage = 'main', initialActivity = null }) => {
       <div className="flex-1 px-4 pt-3 overflow-y-auto hide-scrollbar" style={{minHeight:0}}>
         <div className="text-center text-[11px] text-stone-400 font-semibold uppercase tracking-wide mb-3 fi">Today · 7:12 AM</div>
 
-        {stage !== 'workout-input' && stage !== 'workout-confirmed' && (
-          <G_Bubble role="lemon" animate>
-            Hi Maya — what would you like to log?
-          </G_Bubble>
-        )}
+        <G_Bubble role="lemon" animate>
+          Hi Maya — what would you like to log?
+        </G_Bubble>
 
         {stage === 'main' && (
           <div className="mt-3 ml-9 su1">
             <div className="flex gap-2 flex-wrap">
-              <G_Chip icon={G_I.heart} label="Log a vital"      accent="border-red-200 hover:bg-red-50"   onClick={() => setStage('vital-picker')}/>
-              <G_Chip icon={G_I.flame} label="Log a workout"    accent="border-sage-300 hover:bg-sage-50"/>
-              <G_Chip icon={G_I.meal}  label="Log a meal"       accent="border-lemon-400 hover:bg-lemon-50"/>
-              <G_Chip icon={H_I.prefs} label="Log a preference" accent="border-stone-200 hover:bg-stone-50"/>
+              <G_Chip icon={G_I.heart} label="Log a vital"      accent="border-red-200 hover:bg-red-50"     onClick={() => setStage('vital-picker')}/>
+              <G_Chip icon={G_I.flame} label="Log a workout"    accent="border-sage-300 hover:bg-sage-50"   onClick={() => setStage('workout-ask')}/>
+              <G_Chip icon={G_I.meal}  label="Log a meal"       accent="border-lemon-400 hover:bg-lemon-50" onClick={() => setStage('meal-ask')}/>
+              <G_Chip icon={H_I.prefs} label="Log a preference" accent="border-stone-200 hover:bg-stone-50" onClick={() => setStage('pref-ask')}/>
             </div>
           </div>
         )}
 
+        {/* ─── VITAL → BP flow ───────────────────────────────────────── */}
         {(stage === 'vital-picker' || stage === 'bp-input' || stage === 'bp-card' || stage === 'bp-logged') && (
           <>
             <G_Bubble role="user">
@@ -3967,67 +4012,164 @@ const ChatLoggingView = ({ initialStage = 'main', initialActivity = null }) => {
           </>
         )}
 
-        {/* Workout pre-fill flow — entered from homepage Move-card "Log this" */}
-        {(stage === 'workout-input' || stage === 'workout-confirmed') && (
+        {/* ─── WORKOUT flow ──────────────────────────────────────────── */}
+        {(stage === 'workout-ask' || stage === 'workout-input' || stage === 'workout-card' || stage === 'workout-confirmed') && (
           <>
             <G_Bubble role="user">
-              <span className="flex items-center gap-1.5"><span className="opacity-70">{G_I.flame}</span> Log workout</span>
+              <span className="flex items-center gap-1.5"><span className="opacity-70">{G_I.flame}</span> Log a workout</span>
             </G_Bubble>
             <G_Bubble role="lemon" animate>
-              Got it — I'll log <b>{activity.label}</b>. About <b>{estCal} calories</b> for you. Confirm to log it?
+              Got it. What did you do?
             </G_Bubble>
-            <div className="flex justify-center mb-2.5 pi">
-              <div className="bg-white border border-stone-150 rounded-2xl shadow-sm overflow-hidden" style={{width:'100%',maxWidth:300}}>
-                <div className="bg-gradient-to-br from-warm-100 to-warm-200 px-3.5 py-3 border-b border-warm-300">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-sage-600 shadow-sm">{G_I.flame}</div>
-                    <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">Workout · 7:14 AM</div>
-                      <div className="text-sm font-bold text-stone-800 leading-tight">{activity.label}</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 divide-x divide-stone-100 text-center">
-                  <div className="py-2.5"><div className="text-sm font-bold text-stone-800">{estCal}</div><div className="text-[9px] text-stone-500 uppercase tracking-wide font-semibold">Cal</div></div>
-                  <div className="py-2.5"><div className="text-sm font-bold text-stone-800">30 min</div><div className="text-[9px] text-stone-500 uppercase tracking-wide font-semibold">Duration</div></div>
-                  <div className="py-2.5"><div className="text-sm font-bold text-sage-600">Zone 2</div><div className="text-[9px] text-stone-500 uppercase tracking-wide font-semibold">Effort</div></div>
-                </div>
-                {activity.detail && (
-                  <div className="px-3.5 py-2 bg-stone-50 border-t border-stone-100 text-[11px] text-stone-600">
-                    {activity.detail}
-                  </div>
-                )}
-                {!workoutConfirmed ? (
-                  <div className="px-3.5 py-3 flex gap-2">
-                    <button onClick={() => setStage('workout-input')} className="flex-1 px-3 py-2 rounded-xl border border-stone-200 text-stone-600 text-xs font-semibold cursor-pointer" style={{background:'none',fontFamily:'inherit'}}>Edit</button>
-                    <button onClick={() => { setWorkoutConfirmed(true); setStage('workout-confirmed'); }} className="flex-1 px-3 py-2 rounded-xl bg-stone-800 text-white text-xs font-bold flex items-center justify-center gap-1 cursor-pointer" style={{border:'none',fontFamily:'inherit'}}>{G_I.check} Looks right</button>
-                  </div>
-                ) : (
-                  <div className="px-3.5 py-2.5 bg-sage-50 border-t border-sage-200 flex items-center gap-1.5">
-                    <span className="text-sage-600">{G_I.check}</span>
-                    <span className="text-xs font-semibold text-sage-700">Logged to your journal</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            {stage === 'workout-confirmed' && (
-              <>
-                <G_Bubble role="lemon" animate>
-                  Logged · {estCal} calories. That's session 4 this week — you're holding the streak.
-                </G_Bubble>
-                <div className="ml-9 mt-2 fi">
-                  <div className="bg-warm-100 border border-warm-300 rounded-xl px-3 py-2 text-[11px] text-stone-700 font-medium inline-flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-sage-500 pulse-dot"/>
-                    New entry in Journal — tap menu to view
-                  </div>
-                </div>
-              </>
-            )}
           </>
         )}
+
+        {(stage === 'workout-card' || stage === 'workout-confirmed' || stage === 'workout-input') && workoutText && (() => {
+          const cal = estimateCalories(workoutText);
+          const lower = workoutText.toLowerCase();
+          const isLift  = lower.includes('lift') || lower.includes('strength') || lower.includes('weights');
+          const isYoga  = lower.includes('yoga') || lower.includes('stretch');
+          const insight = isLift  ? 'Low-Valsalva lifting keeps your BP safer — well-chosen.'
+                        : isYoga  ? 'Calming movement helps your nocturnal BP dip kick in tonight.'
+                        : 'That makes 4 sessions this week — you\'re holding the Zone 2 streak.';
+          return (
+            <>
+              <G_Bubble role="user">{workoutText}</G_Bubble>
+              <G_Bubble role="lemon" animate>
+                <p className="m-0">Got it — that's about <b>{cal} calories</b> at a moderate effort.</p>
+                <p className="m-0 mt-1.5">{insight}</p>
+              </G_Bubble>
+              {!workoutConfirmed ? (
+                <div className="ml-9 mt-1 mb-3 flex gap-2 fi">
+                  <button onClick={() => { setWorkoutText(''); setStage('workout-ask'); }} className="px-3.5 py-1.5 rounded-full border border-stone-200 text-stone-600 text-xs font-semibold cursor-pointer" style={{background:'#fff',fontFamily:'inherit'}}>Edit</button>
+                  <button onClick={() => { setWorkoutConfirmed(true); setStage('workout-confirmed'); }} className="px-3.5 py-1.5 rounded-full bg-stone-800 text-white text-xs font-bold inline-flex items-center justify-center gap-1 cursor-pointer" style={{border:'none',fontFamily:'inherit'}}>{G_I.check} Looks right</button>
+                </div>
+              ) : (
+                <div className="ml-9 mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sage-700 fi">
+                  <span className="text-sage-600">{G_I.check}</span>
+                  Logged to your journal
+                </div>
+              )}
+              {stage === 'workout-confirmed' && (
+                <G_Bubble role="lemon" animate>
+                  Movement logged. Three Zone 2 sessions this week — your BP is responding.
+                </G_Bubble>
+              )}
+            </>
+          );
+        })()}
+
+        {/* ─── MEAL flow ─────────────────────────────────────────────── */}
+        {(stage === 'meal-ask' || stage === 'meal-card' || stage === 'meal-logged') && (
+          <>
+            <G_Bubble role="user">
+              <span className="flex items-center gap-1.5"><span className="opacity-70">{G_I.meal}</span> Log a meal</span>
+            </G_Bubble>
+            <G_Bubble role="lemon" animate>
+              Sure — what did you eat?
+            </G_Bubble>
+          </>
+        )}
+
+        {(stage === 'meal-card' || stage === 'meal-logged') && mealText && (() => {
+          // Heuristic analysis: if mealText mentions known high-sodium foods, flag it; else if low-sodium DASH foods, flag dash.
+          const t = mealText.toLowerCase();
+          const isHighNa = /caesar|deli|soup|pizza|fries|burger|takeout|fried|soy|teriyaki|bacon|sausage|cheese/.test(t);
+          const isDash   = /salmon|spinach|kale|broccoli|berries|oats|salad(?! caesar)|tofu|lentil(?! soup)/.test(t);
+          // Mock numbers — same range as the existing suggestions, varies with classification
+          const cal    = isHighNa ? 480 : isDash ? 430 : 380;
+          const protein= isHighNa ? '32g' : isDash ? '34g' : '22g';
+          const sodium = isHighNa ? 720 : isDash ? 180 : 320;
+          const dailySodium = 1240 + sodium;
+          return (
+            <>
+              <G_Bubble role="user">{mealText}</G_Bubble>
+              <G_Bubble role="lemon" animate>
+                <p className="m-0">Got it. About <b>{cal} calories</b>, <b>{protein} protein</b>, and <b>{sodium}mg sodium</b>.</p>
+                <p className="m-0 mt-1.5">
+                  {isHighNa
+                    ? <>That's roughly <b>{Math.round(sodium/1500*100)}% of your DASH sodium cap</b> in one meal — worth balancing tonight with something lower-salt.</>
+                    : isDash
+                    ? <>Solid DASH-aligned choice — exactly what your BP wants.</>
+                    : <>Lands easily within your day's targets.</>}
+                </p>
+              </G_Bubble>
+              {!mealConfirmed ? (
+                <div className="ml-9 mt-1 mb-3 flex gap-2 fi">
+                  <button onClick={() => { setMealText(''); setStage('meal-ask'); }} className="px-3.5 py-1.5 rounded-full border border-stone-200 text-stone-600 text-xs font-semibold cursor-pointer" style={{background:'#fff',fontFamily:'inherit'}}>Edit</button>
+                  <button onClick={() => { setMealConfirmed(true); setStage('meal-logged'); }} className="px-3.5 py-1.5 rounded-full bg-stone-800 text-white text-xs font-bold inline-flex items-center justify-center gap-1 cursor-pointer" style={{border:'none',fontFamily:'inherit'}}>{G_I.check} Looks right</button>
+                </div>
+              ) : (
+                <div className="ml-9 mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sage-700 fi">
+                  <span className="text-sage-600">{G_I.check}</span>
+                  Logged to your journal
+                </div>
+              )}
+              {stage === 'meal-logged' && (
+                <G_Bubble role="lemon" animate>
+                  Sodium today: <b>{dailySodium} of 1,500mg</b>. {dailySodium < 1500 ? 'You\'re still on track.' : 'A bit over — keep dinner light on salt.'}
+                </G_Bubble>
+              )}
+            </>
+          );
+        })()}
+
+        {/* ─── PREFERENCE flow ───────────────────────────────────────── */}
+        {(stage === 'pref-ask' || stage === 'pref-card' || stage === 'pref-logged') && (
+          <>
+            <G_Bubble role="user">
+              <span className="flex items-center gap-1.5"><span className="opacity-70">{H_I.prefs}</span> Log a preference</span>
+            </G_Bubble>
+            <G_Bubble role="lemon" animate>
+              Of course — what would you like me to remember?
+            </G_Bubble>
+          </>
+        )}
+
+        {(stage === 'pref-card' || stage === 'pref-logged') && prefText && (() => {
+          const t = prefText.toLowerCase();
+          const isDietary  = /eat|food|meal|fish|dairy|sodium|sugar|cook|vegetar|vegan|salt/.test(t);
+          const isActivity = /walk|run|workout|exercise|gym|cycle|yoga|stretch|impact/.test(t);
+          const isReminder = /remind|notif|nudge|morning|evening|weekly|daily|alarm|sunday/.test(t);
+          const followup = isDietary  ? 'Future meal picks will reflect this.'
+                         : isActivity ? 'Movement recommendations will steer toward this.'
+                         : isReminder ? 'Your notification cadence updates from tomorrow.'
+                         : 'I\'ll factor it into what I suggest going forward.';
+          return (
+            <>
+              <G_Bubble role="user">{prefText}</G_Bubble>
+              <G_Bubble role="lemon" animate>
+                <p className="m-0">Got it. I'll keep this in mind when I suggest things — meals, workouts, and check-in timing all adapt.</p>
+                <p className="m-0 mt-1.5">{followup}</p>
+              </G_Bubble>
+              {!prefConfirmed ? (
+                <div className="ml-9 mt-1 mb-3 flex gap-2 fi">
+                  <button onClick={() => { setPrefText(''); setStage('pref-ask'); }} className="px-3.5 py-1.5 rounded-full border border-stone-200 text-stone-600 text-xs font-semibold cursor-pointer" style={{background:'#fff',fontFamily:'inherit'}}>Edit</button>
+                  <button onClick={() => { setPrefConfirmed(true); setStage('pref-logged'); }} className="px-3.5 py-1.5 rounded-full bg-stone-800 text-white text-xs font-bold inline-flex items-center justify-center gap-1 cursor-pointer" style={{border:'none',fontFamily:'inherit'}}>{G_I.check} Looks right</button>
+                </div>
+              ) : (
+                <div className="ml-9 mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sage-700 fi">
+                  <span className="text-sage-600">{G_I.check}</span>
+                  Saved to your profile
+                </div>
+              )}
+              {stage === 'pref-logged' && (
+                <G_Bubble role="lemon" animate>
+                  Saved. The plan will reflect this from now on.
+                </G_Bubble>
+              )}
+            </>
+          );
+        })()}
       </div>
 
-      <G_Composer/>
+      <G_Composer
+        value={composerText}
+        onChange={setComposerText}
+        onSubmit={handleComposerSubmit}
+        placeholder={composerPlaceholder}
+        disabled={!composerActive}
+      />
 
       {drawerOpen && <G_Drawer onClose={() => setDrawerOpen(false)}/>}
     </div>
