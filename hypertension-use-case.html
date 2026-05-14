@@ -244,11 +244,11 @@ const PERSONAS = {
         { kind:'action',   text:'On pace for -1.2 kg this month at current trend.' },
       ],
     },
-    actions:{ done:18, target:26, deltaText:'+2 vs last week',
-      series:[2,3,2,4,3,2,2,3,4,2,3,2,4,3],
+    actions:{ done:26, target:33, deltaText:'+2 vs last week',
+      series:[3,4,3,5,4,3,3,4,5,3,4,3,5,4],
       insights:[
-        { kind:'headline', text:'18 of 26 actions done — your highest week in 4.' },
-        { kind:'pattern',  text:'Move 5/7 and Sleep 6/7 are your strongest pillars.' },
+        { kind:'headline', text:'26 of 33 actions done — your highest week in 4.' },
+        { kind:'pattern',  text:'Logging 7/7 and Sleep 6/7 are your strongest pillars.' },
         { kind:'timing',   text:'Mind is your work area — only 3 of 7 mindful pauses.' },
         { kind:'action',   text:'Days you complete morning actions averaged sleep score 86.' },
       ],
@@ -258,14 +258,15 @@ const PERSONAS = {
       detail:'5 of 7 days you cleared 8,000 steps. Sleep score on those days averaged 86 — 13 points higher than lower-step days. The walking-to-sleep loop is your strongest signal.',
       pillar:'Move + Sleep',
     },
-    pillarKeys:['move','sleep','nutrition','mind'],
+    pillarKeys:['move','sleep','nutrition','mind','logging'],
     pillars:{
       move:      { value:'5 / 7', label:'walks ≥ 30 min',       state:'on',   delta:'same as last wk' },
       sleep:     { value:'6 / 7', label:'nights ≥ 7 hours',     state:'on',   delta:'+1 vs prior wk'  },
       nutrition: { value:'5 / 7', label:'home-cooked dinners',  state:'up',   delta:'+2 vs prior wk'  },
       mind:      { value:'3 / 7', label:'mindful pauses',       state:'work', delta:'try +1 this wk'  },
+      logging:   { value:'7 / 7', label:'morning BP logs',      state:'on',   delta:'all 7 days'      },
     },
-    suggestions:{ move:'maintain', sleep:'maintain', nutrition:'maintain', mind:'push' },
+    suggestions:{ move:'maintain', sleep:'maintain', nutrition:'maintain', mind:'push', logging:'maintain' },
     plan:{ week:'Week 5' },
     weeklyPlan:{
       greeting:'Great job on your progress so far.',
@@ -466,10 +467,20 @@ const PERSONAS = {
             description:'Avoid all added salt and processed foods for the day. For example, the American College of Cardiology states that choosing a grain bowl instead of a deli sandwich saves ~1,100mg of sodium.',
             why:'One high-sodium meal can raise systolic BP by up to 6 points within 1–2 hours.',
             tips:['Processed foods account for ~70% of dietary sodium — cooking fresh removes this automatically','Herbs, spices, citrus, and vinegar are all flavour substitutes that improve BP'],
+            isSwapSuggestion:true,
             recipes:[
-              { name:'Herb-roasted chicken + sweet potato', protein:'38g', cal:'450', time:'35 min', tag:'Low Na'    },
-              { name:'Lemon & herb white fish + veg',       protein:'30g', cal:'330', time:'18 min', tag:'Salt-free' },
-              { name:'Chickpea & tomato stew (no salt)',    protein:'16g', cal:'340', time:'25 min', tag:'Plant-based'},
+              { name:'Herb-roasted chicken + sweet potato', protein:'38g', cal:'450', time:'35 min', tag:'Low Na',
+                description:'Pan-roasted chicken thigh with herbs (thyme, rosemary, garlic) and sweet potato wedges — no added salt. ~280 mg sodium total vs ~1,400 mg for a deli equivalent.',
+                why:'Sweet potato is potassium-rich, which counteracts sodium. Cooking fresh removes the ~70% of dietary sodium that comes from processed foods.',
+                ingredients:['2 chicken thighs, skin on','1 medium sweet potato','Fresh thyme, rosemary, 2 garlic cloves','Olive oil, black pepper, lemon zest'] },
+              { name:'Lemon & herb white fish + veg', protein:'30g', cal:'330', time:'18 min', tag:'Salt-free',
+                description:'White fish baked with lemon, parsley, and seasonal vegetables. Bright acid + herbs replace salt entirely. ~190 mg sodium total.',
+                why:'Citrus and fresh herbs activate the same flavour receptors as salt. Magnesium-rich greens compound the BP benefit.',
+                ingredients:['White fish fillet (cod or haddock)','1 lemon','Parsley, dill, capers','Courgette, fennel, asparagus'] },
+              { name:'Chickpea & tomato stew (no salt)', protein:'16g', cal:'340', time:'25 min', tag:'Plant-based',
+                description:'Slow-simmered chickpeas in tomato with cumin, paprika, and bay. No-salt-added tomatoes carry the dish. ~210 mg sodium total.',
+                why:'High-fibre legumes blunt BP spikes and improve potassium-to-sodium ratio. Tomato lycopene adds vascular benefit.',
+                ingredients:['1 can chickpeas, rinsed','1 can no-salt-added tomatoes','Cumin, smoked paprika, bay leaf','Onion, garlic, baby spinach'] },
             ] },
           { IC:I.Apple, label:'Beetroot or berry smoothie', detail:'Natural nitrates · vasodilator', bpImpact:'~5–6 mmHg',
             description:'A smoothie with beetroot, mixed berries, and leafy greens.',
@@ -538,15 +549,27 @@ const PERSONAS = {
   },
 };
 
-// Maya Meal Prep MVP — daily nutrition snapshot (neutral framework, goal-pinned highlights).
-// Daily snapshot: calories + macros (universal), then "Today's highlights" pinned to user goal.
-// HTN highlights = Sodium, Potassium, Na:K ratio. Same component supports weight loss / diabetes / sleep / cholesterol by swapping highlights.
+// Maya Intelligent Nutrition MVP — evolves the meal-prep page with two new surfaces:
+// (1) Body-signal translator at the top — reads steps + sleep + active/resting cal, outputs
+//     a short food-coded statement. No BP/HRV predictions in MVP (data isn't reliable enough).
+// (2) One-tap Ask Lemon CTA placed directly under the personalized plan cards.
+// Plans and recipe categories are personalized from Maya's logged goals + preferences.
 PERSONAS.mayaMealPrep = {
-  key:'mayaMealPrep', name:'Maya', age:31, label:'Meal prep MVP',
+  key:'mayaMealPrep', name:'Maya', age:31, label:'Intelligent Nutrition MVP',
   initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', accent:'#c9a227',
   goalLabel:'Lose weight · Hypertension',
   isMealPrepView:true,
   avatarGrad:'linear-gradient(135deg,#fcd34d,#c9a227)',
+  // Header — personalized line reflecting Maya's logged goals (BP + weight + fish-forward)
+  headerSubtitle:'Lower-sodium, fish-forward meals to support your BP goal.',
+  // Today's read — soft, friendly, single conversational sentence.
+  // PRODUCT RULE: render the card ONLY when there's a meaningful signal worth surfacing.
+  //   If `message` is empty/null, the card hides entirely. We don't fill quiet days with filler.
+  // Construction: light observation (qual or quant or both) + the lever folded in as "consider…".
+  // Reads as a friend talking, not a clinic chart.
+  bodySignal:{
+    message:'You mentioned feeling off this morning and slept a little short last night — consider magnesium, potassium, and steady fluids today to keep recovery on track without pushing your sodium.',
+  },
   daily:{
     date:'April 28, 2026',
     consumed:0, target:1500, burned:1100,
@@ -555,25 +578,59 @@ PERSONAS.mayaMealPrep = {
       { label:'Protein', value:0, target:138, color:'#94a47f' },
       { label:'Fat',     value:0, target:138, color:'#3d9e9e' },
     ],
-    // Goal-pinned (HTN). Swap this list to support other goals — same component renders.
     highlights:[
       { id:'sodium',    label:'Sodium',       value:'1,240', target:'1,500 mg', state:'amber' },
       { id:'potassium', label:'Potassium',    value:'2,100', target:'3,500 mg', state:'green' },
       { id:'naK',       label:'Na : K ratio', value:'0.59',  state:'green' },
     ],
   },
+  // Personalized plans — titles and copy reflect Maya's logged goals, not generic frameworks
   plans:[
-    { id:1, title:'DASH starter', days:5, mealsPerDay:3, calPerDay:1400,
-      tag:'CLEAN EATING', bpImpact:'~5–8 mmHg',
+    { id:1, title:'Lower-sodium reset', days:5, mealsPerDay:3, calPerDay:1400,
+      tag:'BP FOCUS', bpImpact:'~5–8 mmHg',
       bgFrom:'#fde047', bgTo:'#fbbf24' },
-    { id:2, title:'Sodium swap', days:3, mealsPerDay:3, calPerDay:1450,
-      tag:'EASY START', bpImpact:'~3 mmHg',
+    { id:2, title:'Fish-forward 5', days:5, mealsPerDay:3, calPerDay:1450,
+      tag:'YOUR PREFERENCE', bpImpact:'~3–5 mmHg',
       bgFrom:'#94a47f', bgTo:'#5d6e4d' },
   ],
-  swaps:[
-    { from:'Caesar salad w/ chicken',  to:'Sea bass + roasted beets',         save:'~600mg Na',   impact:'~1–2 mmHg' },
-    { from:'Deli turkey sandwich',     to:'Grain bowl with tuna',             save:'~1,100mg Na', impact:'~2–3 mmHg' },
-    { from:'Soy-glazed chicken wings', to:'Lemon-herb chicken thighs',        save:'~800mg Na',   impact:'~2 mmHg' },
+  // Ask Lemon CTA — placed under plan cards. Rotating tagline shows what Lemon can answer.
+  askLemon:{
+    preview:[
+      'What should I make for dinner?',
+      'Restaurant tonight — what should I order?',
+      'Quick post-workout snack?',
+      'Craving something salty — what fits?',
+    ],
+  },
+  // Personalized recipe categories — labels reflect Maya's logged preferences and goals
+  recipeCategories:[
+    {
+      title:'Low-sodium lunches',
+      subtitle:'From your BP goal',
+      recipes:[
+        { name:'Grain bowl + tuna',         cal:520, protein:34, img:'#fde047' },
+        { name:'Mediterranean salad',       cal:480, protein:28, img:'#94a47f' },
+        { name:'Lemon-herb chicken wrap',   cal:460, protein:32, img:'#fbbf24' },
+      ],
+    },
+    {
+      title:'Fish-forward dinners',
+      subtitle:'From your preference',
+      recipes:[
+        { name:'Baked salmon + spinach',    cal:430, protein:36, img:'#3d9e9e' },
+        { name:'Sea bass + roasted beets',  cal:380, protein:30, img:'#5b7fa6' },
+        { name:'Mackerel + kale',           cal:390, protein:32, img:'#94a47f' },
+      ],
+    },
+    {
+      title:'High-potassium meals',
+      subtitle:'BP-protective',
+      recipes:[
+        { name:'Sweet potato + tofu bowl',  cal:480, protein:24, img:'#c9a227' },
+        { name:'Spinach lentil stew',       cal:420, protein:22, img:'#5d6e4d' },
+        { name:'Beetroot + walnut salad',   cal:340, protein:14, img:'#8b6daa' },
+      ],
+    },
   ],
 };
 
@@ -861,15 +918,6 @@ const Page1 = ({ p }) => {
         </div>
       </div>
 
-      {sparseBP && p.bp.partialReadings && (
-        <div className="mt-3 bg-stone-50 rounded-xl border border-stone-150 p-3 flex items-center gap-2 flex-wrap su1">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">BP logged so far:</span>
-          {p.bp.partialReadings.map((r,i)=>(
-            <span key={i} className="text-[11px] font-semibold text-stone-500 px-2 py-0.5 rounded-full bg-white border border-stone-200">{r}</span>
-          ))}
-        </div>
-      )}
-
       <div className="mt-5 su2">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 mb-2.5">Pillars this week</p>
         <div className="space-y-2">
@@ -1012,6 +1060,8 @@ const Page3 = ({ p, directions, setDirections, contexts, setContexts, otherNote,
   const toggleCtx = (id) => setContexts(prev => prev.includes(id) ? prev.filter(c=>c!==id) : [...prev, id]);
   const useReview = !!p.useReviewPage3;
   const canContinue = useReview ? true : allSet;
+  const [planMode, setPlanMode] = useState('review');
+  const [adjustText, setAdjustText] = useState('');
 
   return (
     <div className="px-5 pt-6 pb-8 bg-gradient-to-b from-white via-warm-50 to-white min-h-full">
@@ -1023,7 +1073,37 @@ const Page3 = ({ p, directions, setDirections, contexts, setContexts, otherNote,
 
       {useReview ? (
         <div className="mt-5 su1">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Your {p.plan.week} plan</p>
+            {planMode === 'review' && (
+              <button onClick={()=>setPlanMode('adjusting')}
+                className="text-[11.5px] font-semibold inline-flex items-center gap-1" style={{color:p.accent}}>
+                <I.Edit/>Adjust
+              </button>
+            )}
+          </div>
           <WeeklyPlanChat p={p} accent={p.accent}/>
+          {planMode === 'adjusting' && (
+            <div className="mt-3 fi">
+              <textarea
+                value={adjustText}
+                onChange={e=>setAdjustText(e.target.value)}
+                placeholder="Tell Lemon what to change — softer targets, swap activities, anything..."
+                rows={3}
+                className="adjust-area"/>
+              <div className="flex gap-2 mt-2 justify-end">
+                <button onClick={()=>{ setPlanMode('review'); setAdjustText(''); }}
+                  className="px-4 py-2 rounded-xl text-[12.5px] font-semibold bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={()=>setPlanMode('review')}
+                  className="px-4 py-2 rounded-xl text-[12.5px] font-semibold"
+                  style={{background:p.accent,color:'#fff'}}>
+                  Save changes
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="mt-5 space-y-2.5 su1">
@@ -1524,28 +1604,6 @@ const Page5 = ({ p, directions, openSheet, onBackToHome }) => {
         <h1 className="text-2xl font-bold text-stone-600 leading-tight mt-1">Lock in your week</h1>
       </div>
 
-      {/* Commitment card — shown for all */}
-      <div className="mt-5 rounded-3xl p-5 su1" style={{background:`linear-gradient(160deg, ${p.accent}1a 0%, ${p.accent}06 100%)`,border:`1.5px solid ${p.accent}33`}}>
-        <p className="text-[10px] font-bold uppercase tracking-wider" style={{color:p.accent}}>Your commitment</p>
-        <p className="text-[17px] font-semibold text-stone-600 mt-2 leading-snug">"{p.commit.headline}"</p>
-
-        <div className="mt-3 pt-3 border-t border-stone-150/60">
-          <p className="text-[10px] font-semibold uppercase tracking-wide" style={{color:p.accent,opacity:0.75}}>How this was built</p>
-          <p className="text-[11.5px] text-stone-500 mt-1 leading-relaxed">
-            {isMaya
-              ? <>Lemon assembled this from your <span className="font-semibold text-stone-600">top wins this week</span> and the strongest signal in your data. Edit the plan below to make it yours.</>
-              : <>Lemon assembles your weekly commitment from <span className="font-semibold text-stone-600">three things</span>: the directions you set on the previous page, your top pillar wins this week, and your most-moved-needle insight.</>
-            }
-          </p>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {hasAnyDir && pushed.length>0 && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:p.accent+'18',color:p.accent}}>Push: {pushed.join(', ')}</span>}
-            {hasAnyDir && maintained.length>0 && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stone-100 text-stone-500">Hold: {maintained.join(', ')}</span>}
-            {hasAnyDir && lighter.length>0 && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Lighter: {lighter.join(', ')}</span>}
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stone-100 text-stone-500">Lever: {p.causeEffect.pillar}</span>
-          </div>
-        </div>
-      </div>
-
       {/* MAYA branch — read-only plan + Confirm/Adjust */}
       {isMaya && (
         <>
@@ -1593,39 +1651,10 @@ const Page5 = ({ p, directions, openSheet, onBackToHome }) => {
       {/* NON-MAYA branch */}
       {!isMaya && (
         <>
-          {/* Editable plan — Lemon-drafted, with Adjust affordance */}
+          {/* Read-only plan summary — adjust UI lives on Page 3 */}
           <div className="mt-4 su2">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Your {p.plan.week} plan</p>
-              {planMode === 'review' && (
-                <button onClick={()=>setPlanMode('adjusting')}
-                  className="text-[11.5px] font-semibold inline-flex items-center gap-1" style={{color:p.accent}}>
-                  <I.Edit/>Adjust
-                </button>
-              )}
-            </div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 mb-2">Your {p.plan.week} plan</p>
             <WeeklyPlanChat p={p} accent={p.accent}/>
-            {planMode === 'adjusting' && (
-              <div className="mt-3 fi">
-                <textarea
-                  value={adjustText}
-                  onChange={e=>setAdjustText(e.target.value)}
-                  placeholder="Tell Lemon what to change — softer targets, swap activities, anything..."
-                  rows={3}
-                  className="adjust-area"/>
-                <div className="flex gap-2 mt-2 justify-end">
-                  <button onClick={()=>{ setPlanMode('review'); setAdjustText(''); }}
-                    className="px-4 py-2 rounded-xl text-[12.5px] font-semibold bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors">
-                    Cancel
-                  </button>
-                  <button onClick={()=>setPlanMode('review')}
-                    className="px-4 py-2 rounded-xl text-[12.5px] font-semibold"
-                    style={{background:p.accent,color:'#fff'}}>
-                    Save changes
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Physician summary — moved from Page 3 */}
@@ -1758,24 +1787,6 @@ const Page5 = ({ p, directions, openSheet, onBackToHome }) => {
                   <p className="text-[13px] font-semibold text-stone-600">Weekly check-in</p>
                   <p className="text-[11.5px] text-stone-400 leading-snug mt-0.5">Sunday evening — your 7-day average and next week’s direction prompt.</p>
                 </div>
-              </div>
-              <div className="pt-3 border-t border-stone-150">
-                <button onClick={()=> p.canExport && openSheet('export')} disabled={!p.canExport}
-                  className="w-full flex items-center gap-3 text-left">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{background:(p.canExport?p.accent:'#a8a29e')+'18',color:p.canExport?p.accent:'#a8a29e'}}><I.Document/></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[13px] font-semibold text-stone-600">Export 28-day BP report</p>
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{background:'#1a1a1a',color:'#fff'}}>PDF</span>
-                    </div>
-                    <p className="text-[11.5px] text-stone-400 leading-snug mt-0.5">
-                      {p.canExport
-                        ? 'A one-page document of your BP trend, pillar patterns, and the strongest signal in the data.'
-                        : p.exportLockReason}
-                    </p>
-                  </div>
-                  {p.canExport && <span className="text-stone-400"><I.Right/></span>}
-                </button>
               </div>
             </div>
           </div>
@@ -2130,6 +2141,8 @@ const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreat
   const [activeSound, setActiveSound] = useState(null);
   const [doneMark, setDoneMark]     = useState(false);
   const [bpLogged, setBpLogged]     = useState(false);
+  const [detailsIdx, setDetailsIdx] = useState(null);
+  const [tried, setTried]           = useState({});
   // Protocol education degrades after 5 logs. Mockup default: 0 (always shown).
   const logCount = 0;
   const [protocolOpen, setProtocolOpen] = useState(logCount < 5);
@@ -2285,29 +2298,70 @@ const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreat
           {isNutrition && hasRecipes && (
             <div style={{marginBottom:8}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:9}}>
-                <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:0}}>Add to meal plan</p>
+                <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:0}}>{option.isSwapSuggestion ? 'Suggested healthy swaps' : 'Add to meal plan'}</p>
                 <div style={{display:'flex',alignItems:'center',gap:4,background:'#f0ede8',borderRadius:20,padding:'3px 8px',color:'#94a47f'}}>
                   <I.Chef/><span style={{fontSize:10,fontWeight:600,color:'#94a47f'}}>Meal Prep</span><I.Arrow/>
                 </div>
               </div>
               {option.recipes.map((r,i) => {
                 const isAdded = added[i];
+                const isOpen  = detailsIdx === i;
+                const isTried = tried[i];
                 return (
-                  <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:'#fff',borderRadius:14,border:`1.5px solid ${isAdded?'#4CAF7D33':'#efefed'}`,marginBottom:6,transition:'border-color 0.2s'}}>
-                    <div style={{width:38,height:38,borderRadius:11,background:card.bg,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',color:card.color}}><I.Apple/></div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px',lineHeight:1.3}}>{r.name}</p>
-                      <p style={{fontSize:10,color:'#a8a29e',margin:0}}>{r.protein} protein · {r.cal} cal · {r.time}</p>
+                  <div key={i} style={{marginBottom:6}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:'#fff',borderRadius:isOpen?'14px 14px 0 0':14,border:`1.5px solid ${(isOpen||isAdded||isTried)?(isTried?'#4CAF7D33':card.color+'40'):'#efefed'}`,borderBottom:isOpen?'none':undefined,transition:'border-color 0.2s'}}>
+                      <div style={{width:38,height:38,borderRadius:11,background:card.bg,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',color:card.color}}><I.Apple/></div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px',lineHeight:1.3}}>{r.name}</p>
+                        <p style={{fontSize:10,color:'#a8a29e',margin:0}}>{r.protein} protein · {r.cal} cal · {r.time}</p>
+                      </div>
+                      {option.isSwapSuggestion ? (
+                        <button onClick={()=>setDetailsIdx(isOpen ? null : i)} style={{padding:'5px 12px',borderRadius:20,flexShrink:0,border:`1.5px solid ${card.color}`,background:isOpen?card.color:'transparent',color:isOpen?'#fff':card.color,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',transition:'all 0.2s'}}>
+                          {isOpen ? 'Close' : 'See details'}
+                        </button>
+                      ) : (
+                        <button onClick={()=>setAdded(a=>({...a,[i]:true}))} style={{padding:'5px 12px',borderRadius:20,flexShrink:0,border:`1.5px solid ${isAdded?'#4CAF7D':card.color}`,background:isAdded?'#4CAF7D':'transparent',color:isAdded?'#fff':card.color,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',transition:'all 0.2s',display:'inline-flex',alignItems:'center',gap:4}}>
+                          {isAdded ? <><I.Check/> Added</> : '+ Add'}
+                        </button>
+                      )}
                     </div>
-                    <button onClick={()=>setAdded(a=>({...a,[i]:true}))} style={{padding:'5px 12px',borderRadius:20,flexShrink:0,border:`1.5px solid ${isAdded?'#4CAF7D':card.color}`,background:isAdded?'#4CAF7D':'transparent',color:isAdded?'#fff':card.color,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',transition:'all 0.2s',display:'inline-flex',alignItems:'center',gap:4}}>
-                      {isAdded ? <><I.Check/> Added</> : '+ Add'}
-                    </button>
+                    {option.isSwapSuggestion && isOpen && (
+                      <div className="fi" style={{padding:'12px 13px 13px',background:'#fff',borderRadius:'0 0 14px 14px',border:`1.5px solid ${card.color}40`,borderTop:'1px dashed #efefed'}}>
+                        {r.description && (
+                          <p style={{fontSize:11.5,color:'#3a3a38',margin:'0 0 9px',lineHeight:1.55}}>{r.description}</p>
+                        )}
+                        {r.why && (
+                          <div style={{background:'#f2f0eb',borderRadius:11,padding:'9px 11px',marginBottom:9}}>
+                            <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:card.color,margin:'0 0 3px'}}>Why it works</p>
+                            <p style={{fontSize:11,color:'#3a3a38',margin:0,lineHeight:1.55}}>{r.why}</p>
+                          </div>
+                        )}
+                        {r.ingredients && r.ingredients.length > 0 && (
+                          <div style={{marginBottom:11}}>
+                            <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:'0 0 5px'}}>Ingredients</p>
+                            {r.ingredients.map((ing,ix)=>(
+                              <div key={ix} style={{display:'flex',gap:7,marginBottom:3,alignItems:'flex-start'}}>
+                                <div style={{width:4,height:4,borderRadius:'50%',background:card.color,marginTop:6,flexShrink:0,opacity:0.7}}/>
+                                <p style={{fontSize:11,color:'#57534e',margin:0,lineHeight:1.5}}>{ing}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div style={{display:'flex',gap:7}}>
+                          <button onClick={()=>{ setTried(t=>({...t,[i]:true})); setDetailsIdx(null); }} style={{flex:1,padding:'10px 12px',borderRadius:12,background:isTried?'#4CAF7D':card.color,border:'none',color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit',display:'inline-flex',alignItems:'center',justifyContent:'center',gap:5,boxShadow:`0 4px 12px ${(isTried?'#4CAF7D':card.color)}40`}}>
+                            {isTried ? <><I.Check/> Tried</> : 'Try this'}
+                          </button>
+                          <button style={{flex:1,padding:'10px 12px',borderRadius:12,background:'#fff',border:`1.5px solid ${card.color}`,color:card.color,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                            Order
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
           )}
-          {!isLoggingAction && <CalendarSchedule card={card} option={option}/>}
           {isLoggingAction && (
             bpLogged ? (
               <div style={{width:'100%',padding:'13px',borderRadius:14,marginTop:4,background:'#f0faf4',border:'1.5px solid #4CAF7D33',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:6,color:'#4CAF7D'}}>
@@ -2352,6 +2406,35 @@ const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreat
     </>
   );
 };
+
+// ConfettiBurst — celebration sprinkle used for ANY done-state (primary, alt, or log-your-own).
+// Reason: completing an action is a win regardless of which slot it lived in. Celebrate equally.
+// Origin (top/left) is relative to the parent's position:relative container — typically the center of the check tile.
+const CONFETTI_PIECES = [
+  { cx:-44, cy:-32, cr:-220, c:'#fcd34d' },
+  { cx:-26, cy:-46, cr:160,  c:'#94a47f' },
+  { cx:0,   cy:-52, cr:-90,  c:'#3d9e9e' },
+  { cx:24,  cy:-46, cr:140,  c:'#e05c5c' },
+  { cx:46,  cy:-30, cr:-180, c:'#5b7fa6' },
+  { cx:-50, cy:-12, cr:90,   c:'#fbbf24' },
+  { cx:52,  cy:-10, cr:-100, c:'#778a62' },
+  { cx:-36, cy:18,  cr:200,  c:'#c9a227' },
+  { cx:34,  cy:22,  cr:-150, c:'#fcd34d' },
+  { cx:-14, cy:-58, cr:80,   c:'#3d9e9e' },
+  { cx:14,  cy:-58, cr:-80,  c:'#e05c5c' },
+  { cx:-58, cy:6,   cr:240,  c:'#94a47f' },
+];
+const ConfettiBurst = ({ top = 21, left = 32, scale = 1 }) => (
+  <div style={{position:'absolute',top,left,width:0,height:0,pointerEvents:'none',zIndex:3}}>
+    {CONFETTI_PIECES.map((p,i)=>(
+      <div key={i} className="confetti-piece" style={{
+        '--cx':`${p.cx*scale}px`, '--cy':`${p.cy*scale}px`, '--cr':`${p.cr}deg`,
+        background:p.c,
+        animationDelay:`${i*0.018}s`,
+      }}/>
+    ))}
+  </div>
+);
 
 const RecCard = ({ card, onDetail, onActivityDone, bpState, onLogWorkout }) => {
   const [sel, setSel]         = useState(0);
@@ -2434,28 +2517,7 @@ const RecCard = ({ card, onDetail, onActivityDone, bpState, onLogWorkout }) => {
           <div className="fi" style={{position:'relative',display:'flex',gap:10,alignItems:'center',marginBottom:9,background:'#f0faf4',borderRadius:14,padding:'10px 11px',border:'1.5px solid #4CAF7D33',overflow:'visible'}}>
             <div style={{width:42,height:42,borderRadius:13,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',position:'relative',zIndex:2}}><I.Check/></div>
             {/* Confetti burst — emanates from the check tile */}
-            <div style={{position:'absolute',top:21,left:32,width:0,height:0,pointerEvents:'none',zIndex:3}}>
-              {[
-                { cx:-44, cy:-32, cr:-220, c:'#fcd34d' },
-                { cx:-26, cy:-46, cr:160,  c:'#94a47f' },
-                { cx:0,   cy:-52, cr:-90,  c:'#3d9e9e' },
-                { cx:24,  cy:-46, cr:140,  c:'#e05c5c' },
-                { cx:46,  cy:-30, cr:-180, c:'#5b7fa6' },
-                { cx:-50, cy:-12, cr:90,   c:'#fbbf24' },
-                { cx:52,  cy:-10, cr:-100, c:'#778a62' },
-                { cx:-36, cy:18,  cr:200,  c:'#c9a227' },
-                { cx:34,  cy:22,  cr:-150, c:'#fcd34d' },
-                { cx:-14, cy:-58, cr:80,   c:'#3d9e9e' },
-                { cx:14,  cy:-58, cr:-80,  c:'#e05c5c' },
-                { cx:-58, cy:6,   cr:240,  c:'#94a47f' },
-              ].map((p,i)=>(
-                <div key={i} className="confetti-piece" style={{
-                  '--cx':`${p.cx}px`, '--cy':`${p.cy}px`, '--cr':`${p.cr}deg`,
-                  background:p.c,
-                  animationDelay:`${i*0.018}s`,
-                }}/>
-              ))}
-            </div>
+            <ConfettiBurst top={21} left={32} scale={1}/>
             <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
               <p style={{fontSize:14,fontWeight:800,color:'#78716c',margin:'0 0 2px',letterSpacing:'-0.02em',lineHeight:1.2,textDecoration:'line-through'}}>{chosen.label}</p>
               <p style={{fontSize:11,color:'#4CAF7D',fontWeight:700,margin:0}}>Done · arc updated</p>
@@ -2482,35 +2544,36 @@ const RecCard = ({ card, onDetail, onActivityDone, bpState, onLogWorkout }) => {
         )}
         {others.length > 0 && (
           <div>
-            <p style={{fontSize:9,fontWeight:600,letterSpacing:'0.05em',textTransform:'uppercase',color:'#c4bfb8',margin:'0 0 4px'}}>Or try</p>
+            <p style={{fontSize:9,fontWeight:600,letterSpacing:'0.05em',textTransform:'uppercase',color:'#c4bfb8',margin:'0 0 5px'}}>Or try</p>
             {others.map((opt,i) => {
               const origIdx = card.options.indexOf(opt);
               const altDone = isOptCompleted(origIdx);
               return altDone ? (
-                <div key={i} className="fi" style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:11,background:'#f0faf4',marginBottom:3,border:'1.5px solid #4CAF7D33'}}>
-                  <div style={{width:26,height:26,borderRadius:9,background:'#4CAF7D',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><I.Check/></div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <p style={{fontSize:12,fontWeight:600,color:'#78716c',margin:0,lineHeight:1.2,textDecoration:'line-through'}}>{opt.label}</p>
-                    <p style={{fontSize:10,color:'#4CAF7D',fontWeight:700,margin:'1px 0 0'}}>Done · arc updated</p>
+                <div key={i} className="fi" style={{position:'relative',display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:12,background:'#f0faf4',marginBottom:5,border:'1.5px solid #4CAF7D33',overflow:'visible'}}>
+                  <div style={{width:32,height:32,borderRadius:10,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',position:'relative',zIndex:2}}><I.Check/></div>
+                  <ConfettiBurst top={24} left={26} scale={0.75}/>
+                  <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
+                    <p style={{fontSize:13,fontWeight:700,color:'#78716c',margin:0,lineHeight:1.2,textDecoration:'line-through',letterSpacing:'-0.01em'}}>{opt.label}</p>
+                    <p style={{fontSize:10.5,color:'#4CAF7D',fontWeight:700,margin:'2px 0 0'}}>Done · arc updated</p>
                   </div>
-                  <button onClick={()=>unmarkOptCompleted(origIdx)} style={{padding:'3px 8px',borderRadius:9,background:'transparent',border:'1.5px solid #4CAF7D33',color:'#4CAF7D',fontSize:9.5,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',flexShrink:0}}>Undo</button>
+                  <button onClick={()=>unmarkOptCompleted(origIdx)} style={{padding:'4px 9px',borderRadius:9,background:'transparent',border:'1.5px solid #4CAF7D33',color:'#4CAF7D',fontSize:10,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',flexShrink:0,position:'relative',zIndex:2}}>Undo</button>
                 </div>
               ) : (
-                <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:11,background:'#f8f7f3',marginBottom:3}}>
-                  <div onClick={()=>setSel(origIdx)} style={{width:26,height:26,borderRadius:9,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,cursor:'pointer'}}><opt.IC/></div>
-                  <div onClick={()=>openAltDetail(opt, origIdx)} style={{flex:1,minWidth:0,cursor:'pointer'}}>
-                    <p style={{fontSize:12,fontWeight:600,color:'#3a3a38',margin:0,lineHeight:1.2}}>{opt.label}</p>
+                <div key={i} onClick={()=>openAltDetail(opt, origIdx)} style={{display:'flex',gap:9,alignItems:'center',cursor:'pointer',background:card.bg,borderRadius:12,padding:'8px 10px',border:`1.5px solid ${card.color}22`,marginBottom:5}}>
+                  <div style={{width:32,height:32,borderRadius:10,background:'#fff',color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 2px 5px ${card.color}1a`}}><opt.IC/></div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <p style={{fontSize:13,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px',letterSpacing:'-0.01em',lineHeight:1.2}}>{opt.label}</p>
+                    <p style={{fontSize:10,color:card.color,fontWeight:600,margin:0,lineHeight:1.35,opacity:0.78,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(opt.why || '').split('.')[0]}.</p>
                   </div>
-                  <div style={{color:'#c4bfb8',flexShrink:0}}><I.Arrow/></div>
                 </div>
               );
             })}
             {!ownDone && !ownOpen && (
-              <div onClick={()=>setOwnOpen(true)} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:11,border:`1.5px dashed ${card.color}40`,background:'transparent',marginBottom:0,cursor:'pointer'}}>
-                <div style={{width:26,height:26,borderRadius:9,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:18,fontWeight:300,lineHeight:1}}>+</div>
-                <div style={{flex:1}}>
-                  <p style={{fontSize:12,fontWeight:600,color:card.color,margin:0,opacity:0.75}}>My own activity</p>
-                  <p style={{fontSize:10,color:'#a8a29e',margin:'1px 0 0'}}>Log something different</p>
+              <div onClick={()=>setOwnOpen(true)} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:12,border:`1.5px dashed ${card.color}40`,background:'transparent',marginBottom:0,cursor:'pointer'}}>
+                <div style={{width:32,height:32,borderRadius:10,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:20,fontWeight:300,lineHeight:1}}>+</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:13,fontWeight:700,color:card.color,margin:'0 0 2px',letterSpacing:'-0.01em',lineHeight:1.2}}>Log your own</p>
+                  <p style={{fontSize:10,color:'#a8a29e',margin:0,lineHeight:1.35}}>Something else counts too.</p>
                 </div>
               </div>
             )}
@@ -2532,11 +2595,12 @@ const RecCard = ({ card, onDetail, onActivityDone, bpState, onLogWorkout }) => {
               </div>
             )}
             {ownDone && (
-              <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:11,background:'#f0faf4',border:'1.5px solid #4CAF7D33'}}>
-                <div style={{width:26,height:26,borderRadius:9,background:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'#fff'}}><I.Check/></div>
-                <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:0,lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ownText}</p>
-                  <p style={{fontSize:10,color:'#4CAF7D',fontWeight:600,margin:'1px 0 0'}}>Logged · arc updated</p>
+              <div className="fi" style={{position:'relative',display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:12,background:'#f0faf4',border:'1.5px solid #4CAF7D33',overflow:'visible'}}>
+                <div style={{width:32,height:32,borderRadius:10,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',position:'relative',zIndex:2}}><I.Check/></div>
+                <ConfettiBurst top={24} left={26} scale={0.75}/>
+                <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
+                  <p style={{fontSize:13,fontWeight:700,color:'#1a1a1a',margin:0,lineHeight:1.3,letterSpacing:'-0.01em',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ownText}</p>
+                  <p style={{fontSize:10.5,color:'#4CAF7D',fontWeight:700,margin:'2px 0 0'}}>Logged · arc updated</p>
                 </div>
               </div>
             )}
@@ -2903,13 +2967,13 @@ const LemonGlyph = ({ size = 22 }) => (
     <ellipse cx="22.5" cy="8" rx="2.6" ry="1.4" transform="rotate(-30 22.5 8)" fill="#5d6e4d"/>
   </svg>
 );
-const LemonNav = ({ active = 'home', onSelect }) => {
+const LemonNav = ({ active = 'home', onSelect, labels = {} }) => {
   const items = [
-    { id:'home',      label:'Home',      IC:I.Home },
-    { id:'meal',      label:'Meal prep', IC:I.MealPlan },
-    { id:'ask',       label:'Ask',       center:true },
-    { id:'stats',     label:'Stats',     IC:I.Chart },
-    { id:'community', label:'Community', IC:I.User },
+    { id:'home',      label: labels.home      || 'Home',      IC:I.Home },
+    { id:'meal',      label: labels.meal      || 'Meal prep', IC:I.MealPlan },
+    { id:'ask',       label: labels.ask       || 'Ask',       center:true },
+    { id:'stats',     label: labels.stats     || 'Stats',     IC:I.Chart },
+    { id:'community', label: labels.community || 'Community', IC:I.User },
   ];
   return (
     <div className="nav" style={{position:'relative', paddingTop:14}}>
@@ -3134,6 +3198,15 @@ const HIGHLIGHT_STATES = {
 const MealPrepView = ({ persona, onSwitchPersona }) => {
   const p = persona;
   const d = p.daily;
+  const bs = p.bodySignal;
+  const al = p.askLemon;
+  const [askPreviewIdx, setAskPreviewIdx] = useState(0);
+  const [askOpen, setAskOpen] = useState(false);
+  useEffect(() => {
+    if (!al || !al.preview || al.preview.length <= 1) return;
+    const t = setInterval(() => setAskPreviewIdx(i => (i + 1) % al.preview.length), 3500);
+    return () => clearInterval(t);
+  }, [al]);
   return (
     <>
       <div className="screen" style={{padding:0,background:'#fafaf8'}}>
@@ -3141,10 +3214,27 @@ const MealPrepView = ({ persona, onSwitchPersona }) => {
         <div style={{padding:'18px 18px 6px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
           <div style={{flex:1,minWidth:0}}>
             <h1 style={{fontSize:24,fontWeight:800,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.02em',lineHeight:1.1}}>Your nutrition plan</h1>
-            <p style={{fontSize:11.5,color:'#78716c',margin:0,lineHeight:1.5}}>Built from your goal — DASH-aligned meals to bring your BP into range and trim weight at the same time.</p>
+            <p style={{fontSize:11.5,color:'#78716c',margin:0,lineHeight:1.5}}>{p.headerSubtitle || 'Built from your goal — DASH-aligned meals to bring your BP into range and trim weight at the same time.'}</p>
           </div>
           <div style={{width:36,height:36,borderRadius:'50%',background:p.avatarGrad,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'#fff',flexShrink:0}}>{p.initial}</div>
         </div>
+
+        {/* Today's read — soft, friendly, single sentence.
+            PRODUCT RULE: render ONLY when there's a meaningful signal (bs.message).
+            No data, no card. Quiet days are healthy days. */}
+        {bs && bs.message && (
+          <div className="su" style={{margin:'12px 14px 4px',background:'#fff',borderRadius:18,border:'1px solid #efefed',padding:'13px 14px 14px',boxShadow:'0 1px 3px rgba(0,0,0,0.03)'}}>
+            <div style={{display:'flex',alignItems:'flex-start',gap:10}}>
+              <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:22,height:22,borderRadius:7,background:'#fef3c7',color:'#c9a227',marginTop:1,flexShrink:0}} aria-label="Try this today">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" width="13" height="13"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </span>
+              <div style={{flex:1,minWidth:0}}>
+                <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',color:'#c9a227',margin:'0 0 3px'}}>Try this today</p>
+                <p style={{fontSize:13,color:'#3a3a38',margin:0,lineHeight:1.55,letterSpacing:'-0.005em',fontWeight:500}}>{bs.message}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Daily snapshot — neutral framework: calories + macros + goal-pinned highlights */}
         <div style={{margin:'14px 14px 12px',background:'#fff',borderRadius:18,border:'1px solid #efefed',padding:'14px 14px 12px',boxShadow:'0 2px 10px rgba(0,0,0,0.04)'}}>
@@ -3179,6 +3269,31 @@ const MealPrepView = ({ persona, onSwitchPersona }) => {
           </div>
         </div>
 
+        {/* One-tap Ask Lemon — placed below the daily snapshot as the decision surface */}
+        {al && (
+          <div style={{padding:'4px 14px 4px'}}>
+            <button onClick={()=>setAskOpen(true)} className="su1" style={{
+              width:'100%',
+              background:'linear-gradient(135deg,#fcd34d 0%,#fbbf24 100%)',
+              border:'none', borderRadius:16, padding:'12px 14px',
+              cursor:'pointer', fontFamily:'inherit', textAlign:'left',
+              boxShadow:'0 6px 18px rgba(251,191,36,0.28), 0 0 0 1px rgba(201,162,39,0.18)',
+              display:'flex', alignItems:'center', gap:11,
+            }}>
+              <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.9)',color:'#1a1a1a',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 8px rgba(0,0,0,0.08)'}}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <p style={{fontSize:13.5,fontWeight:800,color:'#1a1a1a',margin:'0 0 1px',letterSpacing:'-0.01em'}}>Ask Lemon what to eat</p>
+                <p key={askPreviewIdx} className="fi" style={{fontSize:11,color:'rgba(26,26,26,0.62)',margin:0,fontStyle:'italic',lineHeight:1.3}}>"{al.preview[askPreviewIdx]}"</p>
+              </div>
+              <span style={{color:'#1a1a1a',opacity:0.5,display:'inline-flex',alignItems:'center'}}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+              </span>
+            </button>
+          </div>
+        )}
+
         {/* Suggested plans */}
         <div style={{padding:'8px 18px 6px'}}>
           <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 4px'}}>Suggested for you</p>
@@ -3207,36 +3322,171 @@ const MealPrepView = ({ persona, onSwitchPersona }) => {
           ))}
         </div>
 
-        {/* Today's swaps */}
-        <div style={{padding:'18px 18px 6px'}}>
-          <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 4px'}}>Today's swaps</p>
-          <p style={{fontSize:11.5,color:'#78716c',margin:'0 0 10px'}}>Quick wins for your sodium target.</p>
-        </div>
-        <div style={{padding:'0 14px 24px',display:'flex',flexDirection:'column',gap:8}}>
-          {p.swaps.map((s,i)=>(
-            <div key={i} style={{background:'#fff',borderRadius:13,border:'1px solid #efefed',padding:'11px 12px'}}>
-              <p style={{fontSize:12,fontWeight:600,color:'#a8a29e',margin:'0 0 4px',textDecoration:'line-through'}}>{s.from}</p>
-              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:7}}>
-                <span style={{color:'#94a47f'}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg></span>
-                <p style={{fontSize:13,fontWeight:800,color:'#1a1a1a',margin:0,letterSpacing:'-0.01em'}}>{s.to}</p>
+        {/* Personalized recipe categories — labels reflect Maya's logged preferences and goals */}
+        {p.recipeCategories && p.recipeCategories.map((cat,ci) => (
+          <div key={ci}>
+            <div style={{padding:'18px 18px 8px',display:'flex',alignItems:'baseline',justifyContent:'space-between',gap:8}}>
+              <div style={{minWidth:0}}>
+                <p style={{fontSize:13.5,fontWeight:800,color:'#1a1a1a',margin:'0 0 2px',letterSpacing:'-0.01em'}}>{cat.title}</p>
+                <p style={{fontSize:10.5,color:'#a8a29e',margin:0,fontStyle:'italic',letterSpacing:'0.01em'}}>{cat.subtitle}</p>
               </div>
-              <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-                <span style={{fontSize:10,fontWeight:700,padding:'2px 7px',borderRadius:8,background:'#dcfce7',color:'#166534'}}>Saves {s.save}</span>
-                <span style={{fontSize:10,fontWeight:700,padding:'2px 7px',borderRadius:8,background:'#fdf0f0',color:'#e05c5c'}}>{s.impact}</span>
-              </div>
+              <button style={{background:'none',border:'none',color:'#778a62',fontSize:11.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit',padding:0,flexShrink:0}}>See all</button>
             </div>
-          ))}
-        </div>
+            <div style={{display:'flex',gap:9,padding:'0 14px',overflowX:'auto'}} className="hide-scrollbar">
+              {cat.recipes.map((r,ri) => (
+                <div key={ri} style={{flexShrink:0,width:128,background:'#fff',borderRadius:13,border:'1px solid #efefed',overflow:'hidden',boxShadow:'0 2px 6px rgba(0,0,0,0.03)'}}>
+                  <div style={{aspectRatio:'1',background:`linear-gradient(135deg, ${r.img} 0%, ${r.img}88 100%)`,position:'relative'}}>
+                    <button style={{position:'absolute',top:6,right:6,width:22,height:22,borderRadius:'50%',background:'#fff',border:'none',color:'#1a1a1a',cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',padding:0,boxShadow:'0 2px 6px rgba(0,0,0,0.12)'}} aria-label="Add to plan">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                  </div>
+                  <div style={{padding:'8px 9px 9px'}}>
+                    <p style={{fontSize:11,fontWeight:700,color:'#1a1a1a',margin:'0 0 3px',lineHeight:1.25,letterSpacing:'-0.005em',minHeight:26}}>{r.name}</p>
+                    <p style={{fontSize:9.5,color:'#78716c',margin:0,fontWeight:500}}>{r.cal} kcal · {r.protein}g protein</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div style={{height:24}}/>
       </div>
 
-      <LemonNav active="meal" onSelect={(id)=>{
+      <LemonNav active="meal" labels={{ meal:'Nutrition' }} onSelect={(id)=>{
         if (id==='home' && onSwitchPersona)      onSwitchPersona('mayaHomeV5');
         if (id==='stats' && onSwitchPersona)     onSwitchPersona('mayaStats');
         if (id==='community' && onSwitchPersona) onSwitchPersona('mayaCommunity');
       }}/>
+
+      {askOpen && <AskLemonNutritionSheet onClose={()=>setAskOpen(false)}/>}
     </>
   );
 };
+
+// ── AskLemonNutritionSheet — the one-tap chat experience ──────────────────
+// PRODUCT RULES baked in:
+//   • Always conversational — never expose "what I see" pills or mode toggles.
+//     Lemon's awareness of context should show in WHAT it says, not in scaffolding around it.
+//   • Open with a friendly question, not a pre-baked recommendation.
+//   • No suggestion chips — the user types. Real conversation, not a chooser.
+const AskLemonNutritionSheet = ({ onClose }) => {
+  const [draft, setDraft]         = useState('');
+  const [userMessage, setUserMsg] = useState(null);
+  const [stage, setStage]         = useState('opening'); // opening | replied | added
+  const [addedRecipe, setAddedRecipe] = useState(null);
+
+  const recipe = {
+    id:'salmon',
+    name:'Baked salmon + wilted spinach',
+    cal:430, protein:36, sodium:180,
+    why:'Top potassium · lowest sodium · magnesium to support recovery',
+  };
+
+  const handleSubmit = (text) => {
+    if (!text || !text.trim()) return;
+    setUserMsg(text.trim());
+    setStage('replied');
+    setDraft('');
+  };
+
+  const handleAdd = () => { setAddedRecipe(recipe); setStage('added'); };
+
+  return (
+    <div className="sheet-in" style={{
+      position:'absolute', top:28, left:0, right:0, bottom:0, zIndex:60,
+      background:'#fafaf9', display:'flex', flexDirection:'column',
+      overflow:'hidden',
+    }}>
+      {/* Header — minimal: back, avatar, title. No mode toggle, no context strip. */}
+      <div style={{padding:'12px 14px 11px',background:'#fff',borderBottom:'1px solid #efefed',flexShrink:0,display:'flex',alignItems:'center',gap:10}}>
+        <button onClick={onClose} aria-label="Close" style={{width:32,height:32,borderRadius:10,background:'#f5f5f4',border:'none',color:'#3a3a38',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontFamily:'inherit',padding:0,flexShrink:0}}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div style={{flex:1,minWidth:0,display:'flex',alignItems:'center',gap:8}}>
+          <div style={{width:30,height:30,borderRadius:'50%',background:'linear-gradient(135deg,#fcd34d,#fbbf24)',display:'flex',alignItems:'center',justifyContent:'center',color:'#1a1a1a',fontWeight:800,fontSize:13,flexShrink:0}}>L</div>
+          <div style={{flex:1,minWidth:0}}>
+            <p style={{fontSize:13.5,fontWeight:800,color:'#1a1a1a',margin:0,letterSpacing:'-0.01em'}}>Lemon</p>
+            <p style={{fontSize:10,color:'#94a47f',margin:'1px 0 0',fontWeight:600,display:'flex',alignItems:'center',gap:4}}>
+              <span style={{width:5,height:5,borderRadius:'50%',background:'#94a47f',display:'inline-block'}}/>
+              Online
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Chat thread — conversation only */}
+      <div className="hide-scrollbar" style={{flex:1,overflowY:'auto',padding:'16px 14px 8px',minHeight:0}}>
+        <G_Bubble role="lemon" animate>
+          <p style={{margin:0}}>Hi Maya — what are you feeling like today?</p>
+        </G_Bubble>
+
+        {(stage === 'replied' || stage === 'added') && userMessage && (
+          <>
+            <G_Bubble role="user">{userMessage}</G_Bubble>
+            <G_Bubble role="lemon" animate>
+              <p style={{margin:0}}>Thanks for telling me. Given how the day's been — short sleep last night and you've got about <b>260 mg of sodium left</b> on your cap — I'd lean toward something lighter and potassium-forward tonight.</p>
+              <p style={{margin:'6px 0 0'}}>Here's a dinner that fits:</p>
+            </G_Bubble>
+            <div className="ml-9 fi" style={{marginBottom:10}}>
+              <RecipeOptionCard recipe={recipe} top={true} mode="loaded" addedId={addedRecipe?.id} onAdd={handleAdd}/>
+            </div>
+          </>
+        )}
+
+        {stage === 'added' && (
+          <G_Bubble role="lemon" animate>
+            <p style={{margin:0}}>Added — that brings dinner to <b>{1240 + recipe.sodium} mg sodium</b>, still under cap. The magnesium and potassium should help with how you're feeling.</p>
+            <p style={{margin:'6px 0 0',color:'#5d6e4d',fontWeight:600}}>I'll check in tomorrow morning to see how you slept.</p>
+          </G_Bubble>
+        )}
+      </div>
+
+      {/* Composer — active, focused. Free text. No chips. */}
+      <G_Composer
+        value={draft}
+        onChange={setDraft}
+        onSubmit={handleSubmit}
+        placeholder="Tell Lemon how you're feeling…"
+      />
+    </div>
+  );
+};
+
+// Inline recipe option card — used inside Ask Lemon chat thread
+const RecipeOptionCard = ({ recipe, top, mode, addedId, onAdd }) => {
+  const isAdded = addedId === recipe.id;
+  return (
+    <div style={{
+      background:'#fff', border:`1.5px solid ${top?'#c9a22744':'#efefed'}`,
+      borderRadius:14, padding:'10px 11px 10px',
+      boxShadow: top ? '0 4px 12px rgba(201,162,39,0.10)' : '0 1px 3px rgba(0,0,0,0.04)',
+      position:'relative',
+    }}>
+      {top && (
+        <span style={{position:'absolute',top:-8,left:10,fontSize:9,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',color:'#7a5d10',background:'#fef9c3',padding:'2px 7px',borderRadius:6,border:'1px solid #c9a22744'}}>Top pick</span>
+      )}
+      <p style={{fontSize:13,fontWeight:800,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.01em',lineHeight:1.25}}>{recipe.name}</p>
+      <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:6}}>
+        <span style={{fontSize:10.5,fontWeight:600,color:'#78716c'}}>{recipe.cal} cal</span>
+        <span style={{fontSize:10.5,fontWeight:600,color:'#78716c'}}>·</span>
+        <span style={{fontSize:10.5,fontWeight:600,color:'#78716c'}}>{recipe.protein}g protein</span>
+        <span style={{fontSize:10.5,fontWeight:600,color:'#78716c'}}>·</span>
+        <span style={{fontSize:10.5,fontWeight:700,color:'#9a3a3a'}}>{recipe.sodium} mg sodium</span>
+      </div>
+      <p style={{fontSize:11,color:'#5d6e4d',fontWeight:600,margin:'0 0 9px',lineHeight:1.35}}>{recipe.why}</p>
+      {isAdded ? (
+        <div style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:9,background:'#f0faf4',color:'#4CAF7D',fontSize:11,fontWeight:700,border:'1.5px solid #4CAF7D33'}}>
+          <I.Check/> Added to today
+        </div>
+      ) : (
+        <button onClick={onAdd} style={{padding:'6px 12px',borderRadius:9,background:'#1a1a1a',border:'none',color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+          Add to today
+        </button>
+      )}
+    </div>
+  );
+};
+
 
 const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp, chatInitialStage = 'main', chatInitialActivity, onOpenChat, onSwitchPersona }) => {
   const p = persona;
@@ -4357,19 +4607,6 @@ function App() {
             <button className="w-7 h-7 flex items-center justify-center text-stone-400"><I.Share/></button>
           </div>
         </div>
-
-        {pk !== 'maya' && (
-          <div style={{padding:'10px 18px 8px',background:'#fff',borderBottom:'1px solid #efefed',flexShrink:0}}>
-            <div className="flex items-center gap-2.5">
-              <div style={{width:30,height:30,borderRadius:'50%',background:p.grad,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>{p.initial}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-stone-600 leading-none">{p.name}, {p.age}</p>
-                <p className="text-[10px] text-stone-400 mt-0.5 leading-none">Goal · {p.goalLabel}</p>
-              </div>
-              <span className="lemon-text" style={{fontWeight:800,fontSize:14,letterSpacing:'-0.02em'}}>lemon</span>
-            </div>
-          </div>
-        )}
 
         <div className="screen fi" key={`${pk}-${page}`} style={{position:'relative'}}>
           {page===1 && <Page1 p={p}/>}
