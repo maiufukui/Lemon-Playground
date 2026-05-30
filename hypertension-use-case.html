@@ -27,7 +27,7 @@
   body {
     font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,sans-serif;
     margin:0; padding:48px 24px 80px; background:#e5e2dc;
-    display:flex; flex-direction:column; align-items:center; gap:28px; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; min-height:100vh;
   }
   .device {
     width:375px; height:812px; border-radius:50px; position:relative;
@@ -40,6 +40,7 @@
   .nav    { display:flex; justify-content:space-around; align-items:center; padding:8px 0 16px; background:rgba(248,247,243,0.97); border-top:1px solid #e8e5de; flex-shrink:0; }
   .hide-scrollbar::-webkit-scrollbar { display:none; }
   .hide-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+  #root { display:flex; flex-direction:column; align-items:center; width:100%; gap:28px; }
   .lemon-text { background:linear-gradient(135deg,#c9a227,#e8b820); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
   .doc-shadow { box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04); }
 
@@ -111,7 +112,7 @@
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useMemo, useEffect } = React;
+const { useState, useMemo, useEffect, useRef } = React;
 
 // Breathing-session constants (from NEW Lemon main.html)
 const BPHASES = ['Inhale','Hold','Exhale','Hold'];
@@ -268,9 +269,14 @@ const PERSONAS = {
     },
     suggestions:{ move:'maintain', sleep:'maintain', nutrition:'maintain', mind:'push', logging:'maintain' },
     plan:{ week:'Week 5' },
+    useReviewPage3:true,
     weeklyPlan:{
       greeting:'Great job on your progress so far.',
       intro:'For this week, here are the areas we can focus on:',
+      // Top-of-plan summary. Only renders when defined.
+      // Captures what's holding steady + names any meaningful change. If nothing changed, omit.
+      // No-shame language: "bumping slightly" not "you fell short".
+      whyThisPlan:'Most pillars are holding steady — bumping mindful pauses slightly this week since they dipped to 3 of 7 last week.',
       categories:[
         { key:'nutrition', label:'Nutrition', items:[
           'Aim for home-cooked dinners 5 nights a week',
@@ -281,7 +287,13 @@ const PERSONAS = {
           'Add light stretching after workouts',
         ]},
         { key:'mental', label:'Mental wellbeing', items:[
-          'Take one mindful pause every weekday',
+          // Item with a change. Inline highlight is TEXT ONLY — no buttons.
+          // Change kinds: 'eased' | 'building' | 'new'
+          {
+            text:'Take one mindful pause every weekday',
+            change:'building',
+            reason:'Mindful pauses dipped to 3 of 7 last week — trying a small bump to bring the rhythm back.',
+          },
           'Wind down 30 minutes before bed',
         ]},
         { key:'sleep', label:'Sleep', items:[
@@ -289,14 +301,14 @@ const PERSONAS = {
           'Keep a consistent bedtime within 30 minutes',
         ]},
       ],
-      closing:'I will continue to adapt this plan as I learn more about you and your preferences. Does this direction feel right to start?',
+      closing:'I\'ll keep adapting this as I learn more about you. Does this direction feel right to start? Note, if you provide feedback on recommendations, that can help me provide better options next time.',
     },
     commit:{
       headline:'Five walks, six nights of sleep, and a mindful pause every weekday.',
       partner:null,
     },
     canExport:false,
-    pageSequence:[1,2,5],
+    pageSequence:[1,2,3,5],
   },
 
   // Sam — pre-hypertension. Insufficient BP data (building baseline). Full 5-page progress report flow with doctor-share + commit partner.
@@ -420,7 +432,7 @@ const PERSONAS = {
     condition:'Hypertension', conditionColor:'#e05c5c', conditionBg:'#fdf0f0',
     slotsTotal:26, slotsDone:18,
     greeting:'Good morning, Maya',
-    isWorking:'18 of 26 actions done — three Zone 2 walks and DASH dinners cut morning systolic 4 points, and weight is down 0.3 kg this week.',
+    isWorking:'3 of 4 actions done · 122/78 mmHg ↓4 pts · 0.3 kg lost this week',
     widgets:[
       { id:'actions', label:'Actions done',   value:'3',      sub:'of 4 today',      trend:'on track',        color:'#778a62' },
       { id:'bp',      label:'Blood pressure', value:'122/78', sub:'mmHg · morning',  trend:'↓ 4 systolic',    color:'#3d9e9e' },
@@ -435,6 +447,7 @@ const PERSONAS = {
     ],
     cards:[
       { pillar:'Move', color:'#3d9e9e', bg:'#e8f6f6', conditionTag:null, conditionTagColor:null,
+        trigger:'Three Zone 2 walks cut your systolic 4 pts this week. This is your clearest signal — keep the streak.',
         options:[
           { IC:I.Walk, label:'30-min moderate walk', detail:'Zone 2 · 50–70% max HR', bpImpact:'~4–7 mmHg',
             modeLabel:'Zone 2', sessionProgress:'Session 3 of 4 this week',
@@ -453,6 +466,7 @@ const PERSONAS = {
             tips:['Avoid sprint intervals — they push you into zones that transiently raise BP','Upright bike posture preferred for BP management'] },
         ]},
       { pillar:'Nutrition', color:'#c9a227', bg:'#fef9e7', conditionTag:'adjusted: DASH diet', conditionTagColor:'#e05c5c', adjustedNote:'Recommendations follow the DASH dietary pattern — the most clinically validated approach for reducing blood pressure. Prioritises potassium-rich foods, omega-3s, and low sodium.',
+        trigger:'You\'ve had home-cooked dinners 5 nights this week. That\'s the sodium gap that moved your BP.',
         options:[
           { IC:I.Apple, label:'Leafy greens + fish dinner', detail:'DASH pattern · high K, low Na', bpImpact:'~5–11 mmHg',
             description:'A dinner built around leafy greens (high potassium) and oily fish (omega-3s).',
@@ -493,6 +507,7 @@ const PERSONAS = {
             ] },
         ]},
       { pillar:'Sleep', color:'#5b7fa6', bg:'#edf2f8', conditionTag:'adjusted: BP management', conditionTagColor:'#e05c5c', adjustedNote:'Your BP drops 10–20% during deep sleep (the nocturnal dip). Poor sleep raises next-day systolic by 5+ points. Sleep timing directly determines how much BP-lowering benefit you get overnight.',
+        trigger:'Nights you sleep 7+ hours your morning BP averages 119/76. On shorter nights it\'s 125/80. Protect tonight.',
         sleepForecast:{ now:81, later:72 },
         options:[
           { IC:I.Moon, label:'10:00pm bedtime', detail:'BP resets in deep sleep', bpImpact:'Protects ~5 mmHg',
@@ -509,6 +524,7 @@ const PERSONAS = {
             tips:['Magnesium glycinate is the most bioavailable form','Take 30–60 min before bed for maximum sleep benefit'] },
         ]},
       { pillar:'Mind', color:'#8b6daa', bg:'#f5f0fb', conditionTag:'adjusted: BP management', conditionTagColor:'#e05c5c', adjustedNote:'Chronic stress raises cortisol, which constricts arteries and drives BP up. Breathing and relaxation techniques reduce systolic by 3–8 points — this is a direct treatment mechanism.',
+        trigger:'Your BP tends higher on weekday mornings. A 2-min reset shifts the cortisol pattern before it compounds.',
         options:[
           { IC:I.Breathe, label:'10-min box breathing', detail:'4-4-4-4 · twice daily', bpImpact:'~5/3 mmHg', isBreathing:true,
             description:'Structured breathing: inhale 4 counts, hold 4, exhale 4, hold 4.',
@@ -702,33 +718,514 @@ PERSONAS.mayaStats = {
 // Homepage Weekly Progress MVP — weekly report hero + 4 pillar cards. Logging lives in chat (notification primary, chat tab backup).
 PERSONAS.mayaHomeV5 = {
   ...PERSONAS.mayaHTN,
-  key:'mayaHomeV5', label:'Homepage Weekly Progress MVP',
+  key:'mayaHomeV5', label:'Main Page MVP',
   weeklyReportPromoted:true,
   routerStrip:true,
   showLockNotif:true,
   compactHeader:true,
+  hideLogOwn:true,
+  isWorking:null,
   cards: PERSONAS.mayaHTN.cards.filter(c => c.pillar !== 'Logging'),
 };
 
-// Homepage MVP — same as Weekly Progress but without the Sunday hero card (any-day-of-week default).
-PERSONAS.mayaHomeV6 = {
+// Main Page Trigger Line — Main Page MVP with a data-grounded trigger on each card.
+PERSONAS.mayaHomeTrigger = {
+  ...PERSONAS.mayaHomeV5,
+  key:'mayaHomeTrigger', label:'Main Page · Trigger Line',
+  cards: PERSONAS.mayaHomeV5.cards.map(c => {
+    if (c.pillar === 'Move')      return { ...c, trigger: 'Systolic up 6 points this morning. Movement resets it.' };
+    if (c.pillar === 'Nutrition') return { ...c, trigger: '3 high-sodium days in a row. This dinner matters.' };
+    if (c.pillar === 'Sleep')     return { ...c, trigger: '1h 40m sleep debt built up. Earlier tonight helps.' };
+    if (c.pillar === 'Mind')      return { ...c, trigger: 'HRV 12% below baseline. Cortisol needs a reset.' };
+    return c;
+  }),
+};
+
+// Main Page + Log Your Own — same as Main Page MVP but with "log your own" enabled.
+PERSONAS.mayaHomeLogOwn = {
+  ...PERSONAS.mayaHomeV5,
+  key:'mayaHomeLogOwn', label:'Main Page · Log Your Own',
+  hideLogOwn:false,
+};
+
+// ── Engine · Recovery Day ──────────────────────────────────────────────────
+// Low-readiness state: HRV 12% below baseline, 1h40m sleep debt, systolic spiked to 142 this morning.
+// Card order inverted: Sleep → Mind → Nutrition → Move (each pillar ranked by signal urgency).
+// Primary option on Move swapped to gentler 15-min easy walk — effort adapted to readiness.
+// Demonstrates Layer 1 (card ordering), Layer 2 (option ranking), Layer 3 (trigger framing).
+PERSONAS.mayaRecoveryDay = {
+  ...PERSONAS.mayaHomeV5,
+  key:'mayaRecoveryDay', label:'Engine · Recovery Day',
+  greeting:'Good morning, Maya',
+  slotsTotal:26, slotsDone:14,
+  widgets:[
+    { id:'actions', label:'Actions done',   value:'0',      sub:'of 4 today',     trend:'day starting',    color:'#778a62' },
+    { id:'bp',      label:'Blood pressure', value:'142/91', sub:'mmHg · morning', trend:'↑ 8 systolic',    color:'#e05c5c' },
+    { id:'hrv',     label:'HRV',            value:'31 ms',  sub:'this morning',   trend:'↓ 12% vs avg',    color:'#8b6daa' },
+  ],
+  historicalDays:[
+    { label:'Mon', m:1, n:1, s:0, mi:0 },
+    { label:'Tue', m:0, n:1, s:1, mi:0 },
+    { label:'Wed', m:1, n:0, s:0, mi:1 },
+    { label:'Thu', m:0, n:1, s:0, mi:0 },
+    { label:'Fri', m:0, n:0, s:0, mi:0 },
+  ],
+  cards: [
+    // Sleep first — highest-priority signal (1h40m debt + BP impact)
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Sleep'),
+      trigger: 'Sleep debt at 1h 40m. Tonight\'s bedtime is the highest-leverage action.',
+      options: [
+        { IC:I.Moon, label:'9:30pm bedtime tonight', detail:'Recover sleep debt · BP overnight reset', bpImpact:'Protects ~5 mmHg', effort:'Tonight',
+          description:'With 1h 40m accumulated sleep debt, an earlier bedtime directly recovers BP-protective deep sleep. The nocturnal BP dip starts 1–2 hours after sleep onset.',
+          why:'Poor sleep raises next-day systolic by 5+ points. Recovering debt tonight resets your baseline for tomorrow.',
+          tips:['Wind down by 9pm — low lights, no screens','Even 30 minutes earlier than your usual time makes a measurable difference to your nocturnal dip'] },
+        { IC:I.Moon, label:'Screens off at 9:00', detail:'Blue light spikes cortisol', bpImpact:'Protects ~3 mmHg',
+          description:'Cortisol from blue light exposure suppresses melatonin and raises baseline sympathetic tone.',
+          why:'Blue light delays the BP drop that happens during deep sleep.',
+          tips:['Keep the bedroom screen-free tonight','Read something physical or listen to low-stimulation audio'] },
+        { IC:I.Apple, label:'Magnesium supplement', detail:'Vasodilator + sleep aid', bpImpact:'~5–8 mmHg',
+          description:'Magnesium relaxes vascular smooth muscle (lowering BP) and improves sleep depth simultaneously.',
+          why:'Studies show 5–8 systolic point reduction with consistent supplementation.',
+          tips:['Magnesium glycinate is the most bioavailable form','Take 30–60 min before bed for maximum sleep benefit'] },
+      ],
+    },
+    // Mind second — HRV signal (12% below baseline = cortisol load)
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Mind'),
+      trigger: 'HRV 12% below baseline. A short reset now prevents cortisol from compounding.',
+      options: [
+        { IC:I.Breathe, label:'4-7-8 breathing · 2 min', detail:'Quick cortisol reset', bpImpact:'~3/2 mmHg', isBreathing:true, effort:'2 min',
+          description:'Inhale 4 counts, hold 7, exhale 8. Even 2 minutes activates the parasympathetic system and begins lowering cortisol.',
+          why:'On low-HRV days, short breathing resets are more effective than long sessions — the nervous system is already taxed.',
+          tips:['Do it seated before you start your day','Focus only on the breath count — let everything else go'] },
+        { IC:I.Breathe, label:'10-min box breathing', detail:'4-4-4-4 · twice daily', bpImpact:'~5/3 mmHg', isBreathing:true,
+          description:'Structured breathing: inhale 4 counts, hold 4, exhale 4, hold 4.',
+          why:'Deep breathing lowers systolic by 3–5 pts within minutes via parasympathetic activation.',
+          tips:['Morning breathing reduces the cortisol spike that causes the morning BP surge','Evening breathing ensures the nocturnal BP dip occurs fully'] },
+        { IC:I.Mind, label:'10-min guided meditation', detail:'Reduces cortisol · lowers BP directly', bpImpact:'~5/2 mmHg', isBreathing:true,
+          description:'Per the American College of Cardiology, consistent meditation practice reduces systolic by avg 4.7 pts over 8 weeks.',
+          why:'10 min daily builds the parasympathetic resilience that buffers high-cortisol days.',
+          tips:['Start with body-scan meditations — more accessible when already stressed','Consistency matters more than session length'] },
+      ],
+    },
+    // Nutrition third — 3 high-sodium days = compounding signal
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Nutrition'),
+      trigger: '3 high-sodium days this week. One clean dinner resets the trend.',
+    },
+    // Move last — gentle variant promoted; hard effort will spike already-high BP
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Move'),
+      trigger: 'Systolic at 142 this morning. Keep movement easy — hard effort will push it higher.',
+      options: [
+        { IC:I.Walk, label:'15-min easy walk', detail:'Recovery pace · Zone 1', bpImpact:'~2–3 mmHg', effort:'15 min',
+          description:'A slow, genuinely easy walk at fully conversational pace. On low-readiness days, gentle movement improves circulation and lowers cortisol without stressing the cardiovascular system.',
+          why:'Zone 1 movement reduces cortisol and improves peripheral circulation without the BP spike that higher-intensity exercise causes when systolic is already elevated.',
+          tips:['Keep it genuinely easy — hold a full conversation throughout','10 minutes outside beats 30 minutes deciding whether to exercise'] },
+        ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Move').options,
+      ],
+    },
+  ],
+};
+
+// ── Engine · Momentum Day ──────────────────────────────────────────────────
+// High-readiness state: HRV 8% above baseline, sleep debt clear, BP trending down 6 pts this week.
+// Card order: Move → Nutrition → Sleep → Mind (highest-signal pillar first, quietest last).
+// Move and Nutrition cards show streak chips — identity reinforcement for consistent users.
+// Demonstrates Layer 1 (signal-driven ordering), Layer 3 (momentum framing), identity reinforcement.
+PERSONAS.mayaMomentumDay = {
+  ...PERSONAS.mayaHomeV5,
+  key:'mayaMomentumDay', label:'Engine · Momentum Day',
+  greeting:'Good morning, Maya',
+  slotsTotal:26, slotsDone:21,
+  widgets:[
+    { id:'actions', label:'Actions done',   value:'0',      sub:'of 4 today',     trend:'day starting',    color:'#778a62' },
+    { id:'bp',      label:'Blood pressure', value:'118/76', sub:'mmHg · morning', trend:'↓ 6 systolic',    color:'#4CAF7D' },
+    { id:'hrv',     label:'HRV',            value:'52 ms',  sub:'this morning',   trend:'↑ 8% vs avg',     color:'#3d9e9e' },
+  ],
+  historicalDays:[
+    { label:'Mon', m:1, n:1, s:1, mi:1 },
+    { label:'Tue', m:1, n:1, s:1, mi:1 },
+    { label:'Wed', m:1, n:1, s:1, mi:0 },
+    { label:'Thu', m:1, n:1, s:1, mi:1 },
+    { label:'Fri', m:0, n:0, s:0, mi:0 },
+  ],
+  cards: [
+    // Move first — green HRV + BP trending down = body is ready for effort
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Move'),
+      trigger: 'BP down 6 points this week. HRV says your body is ready.',
+      streak: 7,
+    },
+    // Nutrition second — 4 DASH days this week = near completion of weekly target
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Nutrition'),
+      trigger: '4 DASH dinners this week already. One more closes the set.',
+      streak: 4,
+    },
+    // Sleep third — debt clear, routine holding; lower urgency
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Sleep'),
+      trigger: 'Sleep debt clear. Protect tonight and the streak holds.',
+    },
+    // Mind last — HRV is high, so least urgent; gentle reinforcement
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Mind'),
+      trigger: 'HRV 8% above baseline. A short reset today compounds the week.',
+    },
+  ],
+};
+
+// Sleep Idea 2 — Sleep Debt Strip: shows cumulative debt + adjustable bedtime stepper.
+PERSONAS.mayaHomeSleep2 = {
   ...PERSONAS.mayaHTN,
-  key:'mayaHomeV6', label:'Homepage MVP',
-  weeklyReportPromoted:false,
+  key:'mayaHomeSleep2', label:'Sleep · Debt Strip',
+  weeklyReportPromoted:true,
   routerStrip:true,
   showLockNotif:true,
   compactHeader:true,
-  cards: PERSONAS.mayaHTN.cards.filter(c => c.pillar !== 'Logging'),
+  cards: PERSONAS.mayaHTN.cards.filter(c => c.pillar !== 'Logging').map(c =>
+    c.pillar === 'Sleep' ? {...c, sleepMode:'debtStrip'} : c
+  ),
+};
+
+// Sleep Idea 3 — Bedtime Anchor Setter: 5-night consistency dots + anchor time stepper.
+PERSONAS.mayaHomeSleep3 = {
+  ...PERSONAS.mayaHTN,
+  key:'mayaHomeSleep3', label:'Sleep · Anchor',
+  weeklyReportPromoted:true,
+  routerStrip:true,
+  showLockNotif:true,
+  compactHeader:true,
+  cards: PERSONAS.mayaHTN.cards.filter(c => c.pillar !== 'Logging').map(c =>
+    c.pillar === 'Sleep' ? {...c, sleepMode:'anchor'} : c
+  ),
+};
+
+// (archived) Scenario 8 — Alex, 32, weight loss focus. No condition. Effort+outcome framing throughout.
+PERSONAS.alexWeightLoss = {
+  key:'alexWeightLoss', name:'Alex', age:32, label:'Weight loss MVP',
+  initial:'A', grad:'linear-gradient(135deg,#f97316,#ea580c)', accent:'#f97316',
+  goalLabel:'Lose weight',
+  isHomeView:true,
+  avatarGrad:'linear-gradient(135deg,#f97316,#ea580c)',
+  goal:'Lose weight', goalColor:'#f97316', goalBg:'#fff7ed',
+  condition:null, conditionColor:null, conditionBg:null,
+  slotsTotal:24, slotsDone:16,
+  greeting:'Good morning, Alex',
+  isWorking:'16 of 24 actions done — steady progress this week. Your movement streak is holding.',
+  widgets:[
+    { id:'actions', label:'Actions done',  value:'3',    sub:'of 4 today',      trend:'on track',        color:'#f97316' },
+    { id:'weight',  label:'Weight',        value:'85.2', sub:'kg',              trend:'↓ 0.4 this week', color:'#ea580c' },
+    { id:'cal',     label:'Active cals',   value:'410',  sub:'kcal today',      trend:'↑ 60 vs avg',     color:'#fbbf24' },
+  ],
+  historicalDays:[
+    { label:'Sun', m:1, n:1, s:1, mi:0 },
+    { label:'Mon', m:1, n:1, s:1, mi:0 },
+    { label:'Tue', m:1, n:0, s:1, mi:1 },
+    { label:'Wed', m:1, n:1, s:0, mi:1 },
+    { label:'Thu', m:0, n:1, s:1, mi:1 },
+  ],
+  cards:[
+    { pillar:'Move', color:'#f97316', bg:'#fff7ed', conditionTag:null, conditionTagColor:null,
+      options:[
+        { IC:I.Run, label:'30-min brisk run', detail:'Zone 2–3 · 60–75% max HR', effort:'30 min', outcome:'~280 kcal',
+          modeLabel:'Cardio', sessionProgress:'Session 3 of 4 this week',
+          description:'A sustained run at a brisk but manageable pace — you should be able to speak in short sentences.',
+          why:'30-min aerobic sessions 4×/week burn ~1,100 extra kcal and preserve lean mass during fat loss.',
+          tips:['Keep pace conversational — chasing speed burns glycogen, not fat','Consistency across weeks matters more than any single session'] },
+        { IC:I.Bike, label:'45-min cycle', detail:'Steady state · low impact', effort:'45 min', outcome:'~240 kcal',
+          modeLabel:'Cross-train', sessionProgress:'Session 3 of 4 this week',
+          description:'Steady-state cycling — sustainable and joint-friendly.',
+          why:'Longer low-intensity sessions maximize fat oxidation for weight loss.',
+          tips:['Moderate resistance, upright posture — avoid sprint intervals early','Good recovery option on days after strength work'] },
+        { IC:I.Walk, label:'10,000-step day', detail:'Casual pace throughout the day', effort:'~60 min total', outcome:'~350 kcal',
+          modeLabel:'NEAT', sessionProgress:'Session 3 of 4 this week',
+          description:'Accumulated walking throughout the day — breaks, commute, errands.',
+          why:'NEAT (non-exercise activity) contributes 15–50% of daily calorie burn for most people.',
+          tips:['Park farther, take the stairs, walk during calls','You\'re on track — 6,200 steps logged today'] },
+      ]},
+    { pillar:'Nutrition', color:'#10b981', bg:'#f0fdf4', conditionTag:null, conditionTagColor:null,
+      options:[
+        { IC:I.Apple, label:'High-protein dinner', detail:'30g+ protein · calorie-controlled', effort:'25 min', outcome:'Preserves lean mass',
+          description:'A dinner built around lean protein (chicken, fish, legumes) with fibre-rich vegetables.',
+          why:'Protein at ~1.6g/kg/day preserves muscle during a calorie deficit — the key to sustainable fat loss.',
+          tips:['Aim for 30–40g protein per meal','Chicken thigh, salmon, Greek yoghurt, and lentils are the most accessible sources'],
+          recipes:[
+            { name:'Grilled chicken + roasted veg', protein:'38g', cal:'420', time:'25 min', tag:'High protein' },
+            { name:'Salmon + quinoa + greens',       protein:'36g', cal:'460', time:'20 min', tag:'Balanced'    },
+            { name:'Lentil + sweet potato bowl',     protein:'24g', cal:'440', time:'20 min', tag:'Plant-based' },
+          ] },
+        { IC:I.Apple, label:'Calorie-swap lunch', detail:'Under 500 kcal · filling', effort:'10 min', outcome:'~200 kcal saved',
+          description:'Swap a calorie-dense lunch for a high-volume, lower-calorie alternative.',
+          why:'Replacing one processed meal/day with whole food reduces weekly intake by 700–1,400 kcal without hunger.',
+          tips:['Volume matters more than restriction — eat the same weight of food, fewer calories','Soups, salads, and grain bowls are the most effective swaps'],
+          recipes:[
+            { name:'Big green salad + tuna',      protein:'32g', cal:'380', time:'10 min', tag:'Low cal'  },
+            { name:'Chicken soup + seeded bread', protein:'28g', cal:'410', time:'15 min', tag:'Filling'  },
+            { name:'Turkey + veg grain bowl',     protein:'30g', cal:'430', time:'12 min', tag:'Balanced' },
+          ] },
+        { IC:I.Apple, label:'Skip afternoon snack', detail:'3pm–6pm fast', effort:'Willpower', outcome:'~150 kcal saved',
+          description:'Skip the afternoon snack window — drink water or sparkling water instead.',
+          why:'Afternoon snacks account for 150–300 kcal/day in most people, often without true hunger.',
+          tips:['Replace with a 10-min walk — suppresses appetite and adds NEAT','Flavoured sparkling water works well for the 3pm urge'] },
+      ]},
+    { pillar:'Sleep', color:'#6366f1', bg:'#eef2ff', conditionTag:null, conditionTagColor:null,
+      options:[
+        { IC:I.Moon, label:'10:30pm bedtime', detail:'7–8 hour window', effort:'Tonight', outcome:'Protects lean mass',
+          description:'Sleep deprivation elevates cortisol and ghrelin — both promote fat storage and muscle breakdown.',
+          why:'Less than 6 hours sleep increases next-day calorie intake by ~300 kcal on average.',
+          tips:['Set a phone alarm at 10:00pm as a "start winding down" cue','One extra hour/night is clinically significant for weight loss'] },
+        { IC:I.Moon, label:'Screens off at 10:15', detail:'Wind down · no blue light', effort:'Tonight', outcome:'Better recovery',
+          description:'Blue light delays melatonin and keeps cortisol elevated — both impair fat metabolism.',
+          why:'Sleep quality determines the fat-to-lean ratio of what you lose.',
+          tips:['Use night mode after 9pm','Read or listen to audio in the last 30 minutes'] },
+        { IC:I.Apple, label:'Protein snack before bed', detail:'~20g casein', effort:'5 min', outcome:'Overnight muscle repair',
+          description:'A small casein-protein snack (Greek yoghurt, cottage cheese) supports overnight muscle protein synthesis.',
+          why:'Overnight protein synthesis preserves lean mass during fat loss — keeping metabolism from dropping.',
+          tips:['Greek yoghurt or cottage cheese are the most accessible casein sources','Keep it under 200 kcal to stay in the deficit'] },
+      ]},
+    { pillar:'Mind', color:'#8b5cf6', bg:'#f5f3ff', conditionTag:null, conditionTagColor:null,
+      options:[
+        { IC:I.Breathe, label:'5-min stress reset', detail:'4-4-4-4 · box breathing', effort:'5 min', outcome:'↓ cortisol spike', isBreathing:true,
+          description:'Structured box breathing for 5 minutes.',
+          why:'Cortisol is a direct fat-storage trigger — especially visceral fat. 5 minutes reliably reduces it.',
+          tips:['Use it the moment a craving hits — disrupts the cortisol-driven urge','Morning breathing reduces the cortisol peak that triggers early hunger'] },
+        { IC:I.Mind, label:'Mindful eating pause', detail:'2 min before meals', effort:'2 min', outcome:'Reduces overeating', isBreathing:true,
+          description:'Two minutes of slow breathing before a meal.',
+          why:'Eating while stressed doubles the caloric impact of the same meal. Parasympathetic state improves satiety signaling.',
+          tips:['Put your phone down completely before eating','Chew slowly — satiety signals take 20 min to reach the brain'] },
+        { IC:I.Breathe, label:'Evening wind-down', detail:'10 min · progressive relaxation', effort:'10 min', outcome:'↓ late-night snacking', isBreathing:true,
+          description:'Progressive muscle relaxation and slow breathing before bed.',
+          why:'Evening cortisol spikes are the primary driver of late-night snacking — relaxation suppresses them.',
+          tips:['Combine with your screen-off habit for a compound effect','Focus on shoulders, jaw, and stomach — common stress-holding sites'] },
+      ]},
+  ],
+  pillars:{
+    move:      { value:'3 / 4', label:'cardio sessions',     state:'on',   delta:'+1 vs prior wk'  },
+    sleep:     { value:'5 / 7', label:'nights ≥ 7 hours',    state:'on',   delta:'same as last wk' },
+    nutrition: { value:'4 / 7', label:'home-cooked dinners', state:'up',   delta:'+1 vs prior wk'  },
+    mind:      { value:'2 / 5', label:'stress resets',       state:'work', delta:'try +1 this wk'  },
+    logging:   { value:'5 / 7', label:'daily weigh-ins',     state:'on',   delta:'all 5 days'      },
+  },
+};
+
+// ── Engine · Full PRD — Layer 1–5 demonstration ───────────────────────────────
+// Demonstrates all 5 recommendation layers in one view:
+// Layer 1: Card selection — Move always, Sleep/Mind/Nutrition by signal urgency
+// Layer 2: Option ranking — Zone 2 walk primary (highest BP impact + likelihood)
+// Layer 3: Framing — trigger line with Maya's exact morning numbers
+// Layer 4: Timing — pre-warm context ("3rd Zone 2 walk this week = most impact")
+// Layer 5: Feedback — "Not today" skip CTA visible on card + detail sheet
+// Maya is mid-week, good readiness (HRV 47ms), systolic spiked slightly to 128 this morning.
+PERSONAS.mayaCardsFullPRD = {
+  ...PERSONAS.mayaHomeV5,
+  key:'mayaCardsFullPRD', label:'Engine · Cards PRD',
+  greeting:'Good morning, Maya',
+  slotsTotal:26, slotsDone:16,
+  widgets:[
+    { id:'actions', label:'Actions done',   value:'0',      sub:'of 4 today',     trend:'day starting',    color:'#778a62' },
+    { id:'bp',      label:'Blood pressure', value:'128/80', sub:'mmHg · morning', trend:'↑ 6 systolic',    color:'#e05c5c' },
+    { id:'hrv',     label:'HRV',            value:'47 ms',  sub:'this morning',   trend:'on baseline',     color:'#8b6daa' },
+  ],
+  historicalDays:[
+    { label:'Mon', m:1, n:1, s:1, mi:1 },
+    { label:'Tue', m:1, n:1, s:1, mi:0 },
+    { label:'Wed', m:1, n:0, s:0, mi:1 },
+    { label:'Thu', m:0, n:1, s:1, mi:0 },
+    { label:'Fri', m:0, n:0, s:0, mi:0 },
+  ],
+  // Layer 3 + 4: trigger lines grounded in Maya's actual numbers + week context
+  // Layer 2: card order = highest signal urgency first (Move always primary when HRV ok)
+  cards: [
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Move'),
+      // Layer 3: data hook with Maya's real BP
+      trigger: 'Systolic up 6 pts this morning — Zone 2 is your most direct lever.',
+      // Layer 4: timing signal — this is the high-leverage session
+      streak: 3,
+      options: [
+        {
+          // Layer 2: Zone 2 walk is primary — 40% weight on health impact (−4–7 mmHg), 35% on completion probability (familiar, low friction)
+          IC:I.Walk, label:'30-min Zone 2 walk', detail:'Zone 2 · conversational pace', bpImpact:'−4–7 mmHg',
+          effort:'30 min', modeLabel:'Zone 2', sessionProgress:'Session 4 of 5 this week — closes your target',
+          description:'A brisk walk at 50–70% max HR. You should be able to hold a full conversation. Per JACC, there is a dose response — the largest BP reduction comes at 150 minutes/week. You\'re on track.',
+          why:'3 Zone 2 sessions/week reduces resting systolic by 5–8 pts over 8 weeks. This is session 4 this week — the most impactful session because it pushes you past the 90-min weekly threshold.',
+          tips:['If you can sing but not hold a full conversation, slow down','Consistency across weeks matters more than any single session'],
+        },
+        ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Move').options.slice(1),
+      ],
+    },
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Nutrition'),
+      // Layer 3: 3 high-sodium days is a compounding signal
+      trigger: '3 high-sodium days this week — one clean DASH dinner resets the trend.',
+    },
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Mind'),
+      // Layer 3: HRV is normal — light reinforcement, not urgent
+      trigger: 'HRV on baseline at 47ms — a morning reset keeps cortisol flat.',
+      options: [
+        {
+          // Layer 2: Box breathing primary — 35% weight on completion (familiar to Maya), 40% health impact
+          IC:I.Breathe, label:'5-min box breathing', detail:'4-4-4-4 · cortisol reset', bpImpact:'−3–5 mmHg', isBreathing:true,
+          effort:'5 min',
+          description:'Structured breathing: inhale 4 counts, hold 4, exhale 4, hold 4. Morning cortisol peaks at 8am — this resets it before it compounds.',
+          why:'Box breathing activates the parasympathetic system within 90 seconds, lowering systolic by 3–5 pts. Morning session prevents the cortisol spike that causes BP\'s "morning surge."',
+          tips:['Sit quietly — same posture as your morning BP reading','5 minutes is enough to shift the nervous system state'],
+        },
+        ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Mind').options.slice(1),
+      ],
+    },
+    {
+      ...PERSONAS.mayaHTN.cards.find(c => c.pillar === 'Sleep'),
+      // Layer 1: Sleep shown last — no urgent signal (HRV ok, no debt)
+      trigger: 'Sleep debt clear this week — protect tonight and the trend holds.',
+    },
+  ],
+};
+
+// ── Engine · Standard Day v2 + Focus Mode personas ───────────────────────────
+// v2 adds: goal hero (teal gradient, BP spark, completion ring, streak), pill cards
+// (effort + outcome chips), date+avatar header, LemonNav.
+// Focus Mode: same view, isFocusMode:true → single primary card shown.
+// Both use EngineStdViewV2 component (defined before ChatLoggingView).
+// Personas defined AFTER mayaStandardDay so they can spread its cards.
+
+// ── Engine · Standard Day ─────────────────────────────────────────────────────
+// Standalone replica of lemon_engine_cards_standard_day.html — exact card content,
+// exact detail-sheet structure (Why today / How / Why it works / Tips / Alts / Progress / Sources).
+// Renders via EngineStdView, NOT HomeView. No condition-expansion panels, no recipes.
+PERSONAS.mayaStandardDay = {
+  key:'mayaStandardDay', label:'Engine · Standard Day', name:'Maya', age:31,
+  initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', accent:'#c9a227',
+  isEngineStdView: true,
+  greeting:'Good morning, Maya',
+  widgets:[
+    { label:'Actions done',   value:'3',      sub:'of 4 today',      trend:'on track',        trendColor:'#778a62' },
+    { label:'Blood pressure', value:'122/78', sub:'mmHg · morning',  trend:'↓ 4 systolic',    trendColor:'#3d9e9e' },
+    { label:'Weight',         value:'68.4',   sub:'kg',              trend:'↓ 0.3 this week', trendColor:'#c9a227' },
+  ],
+  cards:[
+    {
+      key:'move', pillar:'Move', color:'#3d9e9e', bg:'#e8f6f6', conditionTag:null,
+      effortChip:'Zone 2 · 30 min', effortChipStyle:null,
+      title:'30-min moderate walk',
+      triggerLine:"You're working toward lower blood pressure. Three Zone 2 sessions this week have already cut your systolic 4 points — keep the streak going.",
+      whyToday:"You're working toward lower blood pressure. Three Zone 2 sessions this week have already cut your systolic 4 points — keep the streak going.",
+      how:"Walk at a brisk but conversational pace for 30 minutes. You should be able to speak in full sentences — if you can't, slow down. Aim for five sessions a week. Starting with three is fine.",
+      why:"Regular aerobic exercise is a first-line intervention for blood pressure in the 2025 ACC/AHA High Blood Pressure Guideline. Consistent Zone 2 sessions improve blood vessel responsiveness and lower resting cardiac load — effects that build over 4–8 weeks.",
+      tips:["Talk test: if you can't speak in full sentences, ease off. If you feel no effort, pick up the pace."],
+      alts:[
+        {n:'20-min swim',c:'Aerobic · 20 min',
+         why:'Same Zone 2 cardiovascular benefit as walking. Water pressure mildly reduces vascular resistance, adding a small extra BP effect.',
+         how:'Freestyle or breaststroke at a moderate, sustainable pace — you should be able to speak in short sentences. 20 minutes is enough for full Zone 2 benefit.'},
+        {n:'30-min cycle',c:'Seated · 30 min',
+         why:'Any sustained Zone 2 aerobic movement accumulates toward the 150-min weekly threshold that drives systolic reduction.',
+         how:'Steady-state cycling at moderate resistance, upright posture. Avoid sprint intervals on a BP management day — sustained effort is what moves the number.'},
+      ],
+      streak:null, progress:'Session 3 of 4 this week — one more closes it.',
+      src:'2025 ACC/AHA High Blood Pressure Guideline §5.1 · SPRINT Research Group, NEJM 2015',
+      isBreathing:false,
+    },
+    {
+      key:'nutrition', pillar:'Nutrition', color:'#c9a227', bg:'#fef9e7', conditionTag:'DASH adjusted',
+      effortChip:'DASH · High K', effortChipStyle:{background:'#fef9e7',color:'#a37c1a'},
+      title:'Leafy greens + fish dinner',
+      triggerLine:"You've cooked at home 5 nights this week — that's the sodium gap that moved your blood pressure. One more consistent dinner keeps it going.",
+      whyToday:"You've cooked at home 5 nights this week — that's the sodium gap that moved your blood pressure. One more consistent dinner keeps the trend going.",
+      how:"Build dinner around leafy greens (spinach, kale, or rocket) and oily fish. Aim for high potassium, low sodium — season with lemon and herbs instead of salt. Takes 15–25 minutes.",
+      why:"Potassium counteracts sodium in the kidneys and relaxes arterial walls. Omega-3s from oily fish reduce arterial stiffness. Together, consistent DASH-pattern dinners are the most evidence-backed dietary intervention for blood pressure — cited in the 2025 ACC/AHA Guideline §5.1.",
+      tips:["Spinach, kale, and rocket are among the highest-potassium leafy greens.","Season with herbs and lemon instead of salt — the flavour profile is better anyway."],
+      alts:[
+        {n:'Sodium-swap meal',c:'No processed food',
+         why:"One high-sodium meal can spike systolic by up to 6 points within 1–2 hours. Processed foods account for ~70% of dietary sodium — cooking from scratch removes this automatically.",
+         how:"Cook from scratch today. No packaged food, no added salt. Season with herbs, lemon juice, and spices. Chicken, fish, vegetables, and legumes all work. The flavour with fresh herbs is better than salted food anyway."},
+        {n:'Beetroot smoothie',c:'Natural nitrates',
+         why:'Dietary nitrates from beetroot convert to nitric oxide — a direct vasodilator. Studies show 4–10 point systolic reduction within 2–3 hours of consumption.',
+         how:'Blend raw or cooked beetroot with mixed berries, spinach, and a small banana. Drink in the morning so vasodilation peaks during active hours. Skip mouthwash before and after — oral bacteria are required for the nitrate conversion.'},
+      ],
+      streak:5, progress:'5 home-cooked dinners this week — a personal best.',
+      src:'2025 ACC/AHA High Blood Pressure Guideline §5.1 · DASH Trial, NEJM 1997',
+      isBreathing:false,
+    },
+    {
+      key:'sleep', pillar:'Sleep', color:'#5b7fa6', bg:'#edf2f8', conditionTag:'BP adjusted',
+      effortChip:'Tonight', effortChipStyle:{background:'#edf2f8',color:'#3e6a96'},
+      title:'10:00pm bedtime tonight',
+      triggerLine:"You're managing blood pressure. On nights you sleep 7+ hours your morning BP averages 119/76 — on shorter nights, 125/80. Tonight's bedtime matters.",
+      whyToday:"On nights you sleep 7+ hours your morning BP averages 119/76 — on shorter nights, 125/80. Tonight's bedtime is a direct treatment mechanism.",
+      how:"Lights low by 9:30pm, screens off by 9:45, in bed by 10:00. The nocturnal BP dip starts 1–2 hours after sleep onset — an earlier bedtime protects the full overnight recovery window.",
+      why:"Blood pressure drops 10–20% during deep sleep. This is the nocturnal dip — and it only happens if you're asleep long enough to reach it. Poor sleep raises next-day systolic by 5+ points. The 2025 ACC/AHA Guideline §3.2.1 identifies short sleep as an independent BP risk factor.",
+      tips:["Set a bedtime alarm, not just a wake alarm — the wind-down cue is as important as the morning one."],
+      alts:[
+        {n:'Screens off at 9:45',c:'Blue light cortisol reset',
+         why:'Blue light from screens suppresses melatonin and keeps cortisol elevated — both prevent the nocturnal BP dip that happens in deep sleep.',
+         how:'Phone down and laptop closed at 9:45pm. Read a physical book or listen to low-stimulation audio. The bedroom should have no active screens.'},
+        {n:'Magnesium supplement',c:'Vasodilator + sleep aid',
+         why:'Magnesium relaxes vascular smooth muscle (directly lowering BP) and improves sleep depth simultaneously. Studies show 5–8 systolic point reduction with consistent use.',
+         how:'Magnesium glycinate is the most bioavailable form. Take 200–400mg 30–60 minutes before bed. Check with your doctor if you are on medication.'},
+      ],
+      streak:null, progress:"Protect tonight — you're in a good rhythm this week.",
+      src:"2025 ACC/AHA High Blood Pressure Guideline §3.2.1 · Life's Essential 8, Circulation 2022",
+      isBreathing:false,
+    },
+    {
+      key:'mind', pillar:'Mind', color:'#8b6daa', bg:'#f5f0fb', conditionTag:'BP adjusted',
+      effortChip:'4-4-4-4 · 10 min', effortChipStyle:{background:'#f5f0fb',color:'#7050a0'},
+      title:'10-min box breathing',
+      triggerLine:"Your blood pressure runs higher on weekday mornings. A short reset now shifts the cortisol pattern before it compounds through the day.",
+      whyToday:"Your blood pressure runs higher on weekday mornings. A short breathing reset now shifts the cortisol pattern before it compounds through the day.",
+      how:"Inhale for 4 counts, hold for 4, exhale for 4, hold for 4. Repeat for 10 minutes seated with eyes closed. After the first few sessions this becomes fully self-guided.",
+      why:"Structured breathing activates the parasympathetic nervous system — the same pathway that lowers heart rate and blood pressure after stress. The 2025 ACC/AHA Guideline §5.1 supports breathing-based practices for blood pressure management. Consistent daily practice improves HRV over weeks.",
+      tips:["Morning practice — before checking your phone — builds the habit fastest."],
+      alts:[
+        {n:'10-min guided meditation',c:'Reduces cortisol directly',
+         why:'Consistent meditation practice reduces systolic by an average of 4.7 points over 8 weeks, per the American College of Cardiology. Mechanism is parasympathetic activation — same as box breathing.',
+         how:'Use a guided app (Headspace, Calm, Insight Timer) for the first few weeks. 10 minutes is enough. Same time each day builds the habit fastest.'},
+        {n:'Progressive muscle relaxation',c:'5 min · tense and release',
+         why:'PMR interrupts chronic vascular and muscular tension — both of which raise BP. Even 5 minutes measurably reduces sympathetic nervous system activation.',
+         how:'Tense each muscle group for 5 seconds, then release. Start at your feet, work up to jaw and forehead. Focus on shoulders, jaw, and hands — the most common sites of held tension.'},
+      ],
+      streak:null, progress:'2 of 5 mind sessions this week — a short one today still counts.',
+      src:'2025 ACC/AHA High Blood Pressure Guideline §5.1 · AHA Meditation Statement, JAHA 2017',
+      isBreathing:true,
+    },
+  ],
+};
+
+// v2 — same card data as v1, adds bpImpact chip per card
+PERSONAS.mayaStandardDayV2 = {
+  ...PERSONAS.mayaStandardDay,
+  key:'mayaStandardDayV2', label:'Engine · Standard Day v2',
+  isEngineStdV2: true,
+  isFocusMode: false,
+  cards: PERSONAS.mayaStandardDay.cards.map(c => ({
+    ...c,
+    bpImpact: c.key==='move' ? '~4–7 mmHg' : c.key==='nutrition' ? '~5–11 mmHg' : c.key==='sleep' ? 'Protects ~5 mmHg' : '~3–5 mmHg',
+    tagline: c.key==='move'      ? '3 Zone 2 sessions already cut your BP 4 points this week'
+           : c.key==='nutrition' ? '5 home-cooked nights — that sodium gap is what moved your number'
+           : c.key==='sleep'     ? '7+ hour nights average 119/76. Shorter nights hit 125/80.'
+           : '10 minutes now prevents the weekday morning cortisol spike',
+    icon: c.key==='move' ? '🏃' : c.key==='nutrition' ? '🥗' : c.key==='sleep' ? '🌙' : '🧘',
+  })),
+};
+
+// Focus Mode — same as v2, single primary card shown
+PERSONAS.mayaFocusDay = {
+  ...PERSONAS.mayaStandardDayV2,
+  key:'mayaFocusDay', label:'Engine · Focus Mode',
+  isFocusMode: true,
 };
 
 const PERSONA_LIST = [
-  PERSONAS.maya,
   PERSONAS.sam,
+  PERSONAS.mayaChat,
   PERSONAS.mayaStats,
   PERSONAS.mayaMealPrep,
-  PERSONAS.mayaCommunity,
   PERSONAS.mayaHomeV5,
-  PERSONAS.mayaHomeV6,
+  PERSONAS.mayaStandardDayV2,
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1290,8 +1787,33 @@ const Page4 = ({ p, directions, contexts, onContinue }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // MAYA — read-only weekly plan card (chat-styled)
 // Editing happens through the Adjust textarea below it, not inline.
+//
+// Rationale surfacing (Maya only):
+//   • Top-level "Why this plan" — single summary, names key changes. If nothing changed, omit.
+//   • Per-item change highlight — TEXT ONLY, no buttons. Only on items that changed.
+//   • No-shame language: "trying a small bump" not "you fell short."
+//   • Closing reminds the user that thumbs up/down on their daily cards is what sharpens
+//     next week's plan — that signal already exists on the homepage, no new affordance here.
 // ─────────────────────────────────────────────────────────────────────────────
+const CHANGE_META = {
+  eased:    { icon:'↓', label:'Eased',    color:'#c97a1a' },
+  building: { icon:'↑', label:'Building', color:'#5d6e4d' },
+  new:      { icon:'+', label:'New',      color:'#3d7a9e' },
+};
+
+const PlanItemChange = ({ item }) => {
+  const meta = CHANGE_META[item.change];
+  if (!meta) return null;
+  return (
+    <p className="mt-0.5" style={{fontSize:11.5,color:'#78716c',margin:'2px 0 0',paddingLeft:14,lineHeight:1.45}}>
+      <span style={{fontWeight:700,color:meta.color,marginRight:4}}>{meta.icon} {meta.label} from last week —</span>
+      {item.reason}
+    </p>
+  );
+};
+
 const WeeklyPlanChat = ({ p, accent }) => {
+  const wp = p.weeklyPlan;
   return (
     <div className="rounded-2xl border border-sage-200 bg-sage-50/60 p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -1304,26 +1826,45 @@ const WeeklyPlanChat = ({ p, accent }) => {
         </div>
       </div>
 
-      <p className="text-[13px] text-stone-600 leading-relaxed">{p.weeklyPlan.greeting}</p>
-      <p className="text-[13px] text-stone-600 leading-relaxed mt-2">{p.weeklyPlan.intro}</p>
+      <p className="text-[13px] text-stone-600 leading-relaxed">{wp.greeting}</p>
+      <p className="text-[13px] text-stone-600 leading-relaxed mt-2">{wp.intro}</p>
+
+      {/* Option A — top-level "Why this plan" callout. Renders only when defined. */}
+      {wp.whyThisPlan && (
+        <div className="mt-3" style={{background:'#fff',border:`1px solid ${accent}33`,borderRadius:12,padding:'10px 12px',display:'flex',gap:8,alignItems:'flex-start'}}>
+          <span style={{color:accent,marginTop:1,flexShrink:0}}><I.Sparkles/></span>
+          <div style={{flex:1,minWidth:0}}>
+            <p style={{fontSize:9.5,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',color:accent,margin:'0 0 3px'}}>Why this plan</p>
+            <p style={{fontSize:12,color:'#3a3a38',margin:0,lineHeight:1.5}}>{wp.whyThisPlan}</p>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 space-y-3.5">
-        {p.weeklyPlan.categories.map(cat => (
+        {wp.categories.map(cat => (
           <div key={cat.key}>
             <p className="text-[12.5px] font-semibold text-stone-600 mb-1">{cat.label}:</p>
-            <ul className="space-y-1 pl-3">
-              {cat.items.map((b,i) => (
-                <li key={i} className="flex items-start gap-2 text-[12.5px] text-stone-600 leading-relaxed">
-                  <span className="mt-1.5" style={{color:accent,opacity:0.85}}>•</span>
-                  <span className="flex-1">{b}</span>
-                </li>
-              ))}
+            <ul className="space-y-1.5 pl-3">
+              {cat.items.map((b,i) => {
+                const isObj = typeof b === 'object' && b !== null;
+                const text  = isObj ? b.text : b;
+                return (
+                  <li key={i} className="text-[12.5px] text-stone-600 leading-relaxed">
+                    <div className="flex items-start gap-2">
+                      <span className="mt-1.5" style={{color:accent,opacity:0.85}}>•</span>
+                      <span className="flex-1">{text}</span>
+                    </div>
+                    {/* Option C — inline change callout only when an item changed from last week. */}
+                    {isObj && b.change && b.reason && <PlanItemChange item={b} accent={accent}/>}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ))}
       </div>
 
-      <p className="text-[13px] text-stone-600 leading-relaxed mt-4">{p.weeklyPlan.closing}</p>
+      <p className="text-[13px] text-stone-600 leading-relaxed mt-4">{wp.closing}</p>
     </div>
   );
 };
@@ -2251,24 +2792,14 @@ const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreat
           )}
           {isSleep && (
             <div style={{marginBottom:14}}>
-              {card.sleepForecast && (
-                <div style={{marginBottom:14}}>
-                  <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:'0 0 8px'}}>Sleep forecast</p>
-                  <div style={{display:'flex',gap:8}}>
-                    <div style={{flex:1,background:'#f0faf4',borderRadius:14,padding:'12px',textAlign:'center',border:'1.5px solid #4CAF7D33'}}>
-                      <p style={{fontSize:10,color:'#4CAF7D',fontWeight:700,margin:'0 0 4px'}}>Sleep now</p>
-                      <p style={{fontSize:28,fontWeight:900,color:'#1a1a1a',margin:'0 0 2px',lineHeight:1}}>{card.sleepForecast.now}</p>
-                      <p style={{fontSize:10,color:'#a8a29e',margin:0}}>Est. score</p>
-                    </div>
-                    <div style={{flex:1,background:'#fdf6f0',borderRadius:14,padding:'12px',textAlign:'center',border:'1.5px solid #e05c5c22'}}>
-                      <p style={{fontSize:10,color:'#e05c5c',fontWeight:700,margin:'0 0 4px'}}>+30 min</p>
-                      <p style={{fontSize:28,fontWeight:900,color:'#1a1a1a',margin:'0 0 2px',lineHeight:1}}>{card.sleepForecast.later}</p>
-                      <p style={{fontSize:10,color:'#a8a29e',margin:0}}>Est. score</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:'0 0 8px'}}>Wind-down sounds</p>
+              {/* Sleep debt strip — always shown for sleep cards */}
+              <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:'0 0 8px'}}>Sleep debt</p>
+              <SleepDebtStrip card={card} onDone={()=>{ onActivityDone && onActivityDone(); onComplete && onComplete(); }}/>
+              {/* Anchor setter — stacked below */}
+              <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:'12px 0 8px'}}>Bedtime anchor</p>
+              <SleepAnchorSetter card={card} onDone={()=>{ onActivityDone && onActivityDone(); onComplete && onComplete(); }}/>
+              {/* Wind-down sounds */}
+              <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#b0a99e',margin:'12px 0 8px'}}>Wind-down sounds</p>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7}}>
                 {SOUNDS.map(s => {
                   const isPlaying = activeSound === s.id;
@@ -2385,20 +2916,27 @@ const DetailSheet = ({ option, card, isSelected, onClose, onSelect, onStartBreat
             )
           )}
           {!isLoggingAction && (
-            <div style={{display:'flex',gap:8,marginTop:4}}>
-              <button onClick={()=>{
-                if (!isSelected) onSelect && onSelect();
-                onActivityDone && onActivityDone();
-                onComplete && onComplete();
-                onClose();
-              }} style={{flex:1,padding:'13px',borderRadius:14,background:`linear-gradient(135deg,${card.color},${card.color}cc)`,border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 4px 16px ${card.color}44`,display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}>
-                <I.Check/> I did this
-              </button>
-              {isMove && (
-                <button onClick={()=>{ onLogActivity && onLogActivity(); onClose(); }} style={{flex:1,padding:'13px',borderRadius:14,background:'#fff',border:`1.5px solid ${card.color}40`,color:card.color,fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
-                  Log this
+            <div style={{display:'flex',flexDirection:'column',gap:7,marginTop:4}}>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{
+                  if (!isSelected) onSelect && onSelect();
+                  onActivityDone && onActivityDone();
+                  onComplete && onComplete();
+                  onClose();
+                }} style={{flex:1,padding:'13px',borderRadius:14,background:`linear-gradient(135deg,${card.color},${card.color}cc)`,border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 4px 16px ${card.color}44`,display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                  <I.Check/> I did this
                 </button>
-              )}
+                {isMove && (
+                  <button onClick={()=>{ onLogActivity && onLogActivity(); onClose(); }} style={{flex:1,padding:'13px',borderRadius:14,background:'#fff',border:`1.5px solid ${card.color}40`,color:card.color,fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                    Log this
+                  </button>
+                )}
+              </div>
+              {/* Not today — skip from detail sheet, opens reason picker */}
+              <button onClick={()=>{ onClose(); }}
+                style={{width:'100%',padding:'9px',background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:11,fontWeight:600,color:'#a8a29e',letterSpacing:'0.01em'}}>
+                Not today
+              </button>
             </div>
           )}
         </div>
@@ -2436,52 +2974,475 @@ const ConfettiBurst = ({ top = 21, left = 32, scale = 1 }) => (
   </div>
 );
 
-const RecCard = ({ card, onDetail, onActivityDone, bpState, onLogWorkout }) => {
-  const [sel, setSel]         = useState(0);
-  const [ownOpen, setOwnOpen] = useState(false);
-  const [ownText, setOwnText] = useState('');
-  const [ownDone, setOwnDone] = useState(false);
-  // Per-option completion. Each option index can be marked done independently of focus.
+// ── Sleep Debt Strip ─────────────────────────────────────────────────────────
+const SleepDebtStrip = ({ card, onDone }) => {
+  const [adjust, setAdjust]       = useState(20);
+  const [confirmed, setConfirmed] = useState(false);
+  const DEBT = { hours:1, mins:40 };
+  const BASE_H = 22, BASE_M = 0;
+  const adjTotal = BASE_H * 60 + BASE_M - adjust;
+  const adjH = Math.floor(adjTotal / 60);
+  const adjM = adjTotal % 60;
+  const fmt = (h, m) => {
+    const h12 = h > 12 ? h - 12 : h;
+    return `${h12}:${m.toString().padStart(2,'0')}${h >= 12 ? 'pm' : 'am'}`;
+  };
+  const daysToClear = Math.ceil((DEBT.hours * 60 + DEBT.mins) / adjust);
+  const dayLabel = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const clearDay = dayLabel[(new Date().getDay() + daysToClear) % 7];
+  return (
+    <div style={{marginBottom:8}}>
+      {confirmed ? (
+        <div className="fi" style={{background:'#f0faf4',borderRadius:12,padding:'10px 12px',border:'1.5px solid #4CAF7D33',display:'flex',alignItems:'center',gap:9}}>
+          <div style={{width:30,height:30,borderRadius:9,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><I.Check/></div>
+          <div>
+            <p style={{fontSize:12,fontWeight:700,color:'#4CAF7D',margin:0}}>Bedtime set for {fmt(adjH, adjM)}</p>
+            <p style={{fontSize:10,color:'#78716c',margin:'1px 0 0'}}>Debt cleared by {clearDay}</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={{background:`${card.color}0a`,borderRadius:12,padding:'10px 12px',border:`1px solid ${card.color}22`,marginBottom:7}}>
+            <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:4}}>
+              <div style={{width:7,height:7,borderRadius:'50%',background:'#F0A030',flexShrink:0}}/>
+              <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:0,lineHeight:1.3}}>{DEBT.hours}h {DEBT.mins}m sleep debt from the last 4 nights.</p>
+            </div>
+            <p style={{fontSize:11,color:'#78716c',margin:0,lineHeight:1.4}}>Going to bed {adjust} min earlier clears it by {clearDay}.</p>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:10,background:'#fff',borderRadius:12,border:`1.5px solid ${card.color}28`,padding:'9px 12px',marginBottom:7}}>
+            <div style={{flex:1}}>
+              <p style={{fontSize:9,fontWeight:600,letterSpacing:'0.07em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 1px'}}>Tonight</p>
+              <p style={{fontSize:18,fontWeight:900,color:'#1a1a1a',margin:0,letterSpacing:'-0.02em'}}>{fmt(adjH,adjM)}</p>
+              <p style={{fontSize:10,color:card.color,fontWeight:600,margin:'1px 0 0'}}>{adjust} min earlier than usual</p>
+            </div>
+            <div style={{display:'flex',gap:5}}>
+              <button onClick={()=>setAdjust(a=>Math.max(5,a-5))} style={{width:32,height:32,borderRadius:9,background:`${card.color}10`,border:`1px solid ${card.color}28`,color:card.color,fontSize:18,fontWeight:700,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}>-</button>
+              <button onClick={()=>setAdjust(a=>Math.min(60,a+5))} style={{width:32,height:32,borderRadius:9,background:`${card.color}10`,border:`1px solid ${card.color}28`,color:card.color,fontSize:18,fontWeight:700,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}>+</button>
+            </div>
+          </div>
+          <button onClick={()=>{ setConfirmed(true); onDone && onDone(); }} style={{width:'100%',padding:'9px',borderRadius:12,border:'none',background:card.color,color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>Confirm bedtime</button>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ── Sleep Anchor Setter ───────────────────────────────────────────────────────
+const SleepAnchorSetter = ({ card, onDone }) => {
+  const [anchorH, setAnchorH] = useState(22);
+  const [anchorM, setAnchorM] = useState(0);
+  const [locked, setLocked]   = useState(false);
+  const nights = [
+    { label:'Mon', delta:+12 },
+    { label:'Tue', delta:-5  },
+    { label:'Wed', delta:+45 },
+    { label:'Thu', delta:+8  },
+    { label:'Fri', delta:+20 },
+  ];
+  const dotColor = d => Math.abs(d) <= 10 ? '#4CAF7D' : Math.abs(d) <= 20 ? '#F0A030' : '#E05C5C';
+  const adjustAnchor = (delta) => {
+    let t = anchorH * 60 + anchorM + delta;
+    if (t < 18*60) t = 18*60;
+    if (t > 24*60-1) t = 24*60-1;
+    setAnchorH(Math.floor(t/60));
+    setAnchorM(t%60);
+  };
+  const fmtAnchor = () => {
+    const h = anchorH > 12 ? anchorH - 12 : anchorH;
+    return `${h}:${anchorM.toString().padStart(2,'0')}${anchorH >= 12 ? 'pm' : 'am'}`;
+  };
+  return (
+    <div style={{marginBottom:8}}>
+      <div style={{background:`${card.color}08`,borderRadius:12,padding:'10px 12px',border:`1px solid ${card.color}20`,marginBottom:7}}>
+        <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 8px'}}>Last 5 nights vs 10:00pm target</p>
+        <div style={{display:'flex',gap:3}}>
+          {nights.map((n,i) => (
+            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+              <div style={{width:24,height:24,borderRadius:'50%',border:`2px solid ${dotColor(n.delta)}`,background:`${dotColor(n.delta)}18`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                {Math.abs(n.delta) <= 10
+                  ? <svg viewBox="0 0 24 24" fill="none" stroke={dotColor(n.delta)} strokeWidth="3" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>
+                  : <span style={{fontSize:8,fontWeight:800,color:dotColor(n.delta)}}>{n.delta > 0 ? '+' : ''}{n.delta}m</span>
+                }
+              </div>
+              <span style={{fontSize:8.5,fontWeight:600,color:'#a8a29e'}}>{n.label}</span>
+            </div>
+          ))}
+        </div>
+        <p style={{fontSize:10,color:'#78716c',margin:'7px 0 0',lineHeight:1.4}}>Avg drift <span style={{fontWeight:700,color:'#F0A030'}}>+16 min late</span> · 1 of 5 nights on target</p>
+      </div>
+      {locked ? (
+        <div className="fi" style={{background:'#f0faf4',borderRadius:12,padding:'10px 12px',border:'1.5px solid #4CAF7D33',display:'flex',alignItems:'center',gap:9}}>
+          <div style={{width:30,height:30,borderRadius:9,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><I.Check/></div>
+          <div>
+            <p style={{fontSize:12,fontWeight:700,color:'#4CAF7D',margin:0}}>Anchor locked · {fmtAnchor()}</p>
+            <p style={{fontSize:10,color:'#78716c',margin:'1px 0 0'}}>Tonight's dot updates automatically</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={{display:'flex',alignItems:'center',gap:10,background:'#fff',borderRadius:12,border:`1.5px solid ${card.color}28`,padding:'9px 12px',marginBottom:7}}>
+            <div style={{flex:1}}>
+              <p style={{fontSize:9,fontWeight:600,letterSpacing:'0.07em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 1px'}}>Tonight's anchor</p>
+              <p style={{fontSize:18,fontWeight:900,color:'#1a1a1a',margin:0,letterSpacing:'-0.02em'}}>{fmtAnchor()}</p>
+            </div>
+            <div style={{display:'flex',gap:5}}>
+              <button onClick={()=>adjustAnchor(-15)} style={{width:32,height:32,borderRadius:9,background:`${card.color}10`,border:`1px solid ${card.color}28`,color:card.color,fontSize:18,fontWeight:700,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}>-</button>
+              <button onClick={()=>adjustAnchor(+15)} style={{width:32,height:32,borderRadius:9,background:`${card.color}10`,border:`1px solid ${card.color}28`,color:card.color,fontSize:18,fontWeight:700,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}>+</button>
+            </div>
+          </div>
+          <button onClick={()=>{ setLocked(true); onDone && onDone(); }} style={{width:'100%',padding:'9px',borderRadius:12,border:'none',background:card.color,color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>Lock in tonight</button>
+        </>
+      )}
+    </div>
+  );
+};
+
+const CARD_BREATH_CYCLES = 3; // shorter in-card session vs. full detail-sheet session
+
+// ── Skip Sheet — "Not today" mechanic per recommendation cards PRD ────────────
+const SKIP_REASONS = [
+  { id:'tired',     label:'Too tired',           emoji:'😴', completion:false },
+  { id:'done',      label:'Already did this',    emoji:'✓',  completion:true  }, // Full completion signal — out-of-app behavior
+  { id:'notrel',    label:'Not relevant today',  emoji:'—',  completion:false },
+  { id:'busy',      label:'Too busy',            emoji:'⏱',  completion:false },
+];
+
+const SkipSheet = ({ card, onClose, onSkip }) => (
+  <>
+    <div onClick={onClose} className="fi" style={{position:'absolute',inset:0,background:'rgba(10,15,30,0.42)',zIndex:70}}/>
+    <div style={{position:'absolute',bottom:0,left:0,right:0,background:'#fafaf8',borderRadius:'22px 22px 0 0',zIndex:71,paddingBottom:28,animation:'sheet-up 0.26s cubic-bezier(0.32,0.72,0,1) both'}}>
+      <div style={{width:36,height:4,borderRadius:2,background:'#e0dcd6',margin:'10px auto 0'}}/>
+      <div style={{padding:'14px 18px 0'}}>
+        <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:card.color,margin:'0 0 4px'}}>{card.pillar}</p>
+        <p style={{fontSize:18,fontWeight:800,color:'#1a1a1a',margin:'0 0 14px',letterSpacing:'-0.02em',lineHeight:1.2}}>Not today — what's up?</p>
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {SKIP_REASONS.map(r => (
+            <button key={r.id} onClick={()=>onSkip(r)}
+              style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderRadius:14,
+                      background:r.completion?`${card.color}12`:'#fff',
+                      border:`1.5px solid ${r.completion?card.color+'50':'#e8e5de'}`,
+                      cursor:'pointer',fontFamily:'inherit',textAlign:'left',transition:'all 0.15s'}}>
+              <span style={{fontSize:18,width:24,textAlign:'center',flexShrink:0}}>{r.emoji}</span>
+              <div style={{flex:1}}>
+                <p style={{fontSize:14,fontWeight:700,color:r.completion?card.color:'#3a3a38',margin:'0 0 1px'}}>{r.label}</p>
+                {r.completion && <p style={{fontSize:10.5,color:card.color,fontWeight:600,margin:0}}>Counts as done — arc updated</p>}
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" stroke={r.completion?card.color:'#d6d3d1'} strokeWidth="2.5" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          ))}
+        </div>
+        <p style={{fontSize:10.5,color:'#a8a29e',margin:'14px 0 0',lineHeight:1.5,textAlign:'center'}}>Your feedback helps Lemon rank tomorrow's suggestions.</p>
+      </div>
+    </div>
+  </>
+);
+
+const RecCard = ({ card, onDetail, onActivityDone, bpState, onLogWorkout, progress, showLogOwn = true, onSkipOpen }) => {
   const [completedOpts, setCompletedOpts] = useState([]);
-  const isOptCompleted = (idx) => completedOpts.includes(idx);
-  const markOptCompleted = (idx) => setCompletedOpts(arr => arr.includes(idx) ? arr : [...arr, idx]);
-  const unmarkOptCompleted = (idx) => setCompletedOpts(arr => arr.filter(i => i !== idx));
-  const chosen = card.options[sel];
-  const focusIdx = sel;
-  const focusCompleted = isOptCompleted(focusIdx);
-  // Show only ONE alt + log option (focus + 1 alt + 1 log = 3 total per card)
-  const others = card.options.filter((_,i) => i !== sel).slice(0, 1);
+  const [ownOpen, setOwnOpen]             = useState(false);
+  const [ownText, setOwnText]             = useState('');
+  const [ownDone, setOwnDone]             = useState(false);
+  const [skipReason, setSkipReason]       = useState(null);
+  const [skipOpen, setSkipOpen]           = useState(false);
+  // Engine variant: which option index is currently shown as primary
+  const [activeIdx, setActiveIdx]         = useState(0);
+  // Engine variant: Not today dismiss + "already done elsewhere?" toast
+  const [dismissed, setDismissed]         = useState(false);
+  const [toastCounted, setToastCounted]   = useState(false);
+
+  const isEngineCard    = !!card.trigger;
   const isLoggingPillar = card.pillar === 'Logging';
-  const isBPPrimary = isLoggingPillar && chosen.isLoggingAction;
-  const showLoggedTile = isBPPrimary && bpState && bpState.logged;
-  const showDismissedTile = isBPPrimary && !showLoggedTile && bpState && bpState.dismissed;
-  const noteChips = (bpState && bpState.notes) || [];
+  const isBPPrimary     = isLoggingPillar && card.options[0] && card.options[0].isLoggingAction;
+  const showLoggedTile  = isBPPrimary && bpState && bpState.logged;
+  const showDismissed   = isBPPrimary && !showLoggedTile && bpState && bpState.dismissed;
+  const noteChips       = (bpState && bpState.notes) || [];
+
+  // Active option for engine variant (swappable)
+  const activeOpt  = card.options[activeIdx] || card.options[0];
+  const primaryOpt = card.options[0];
+  // Alt options = all options except the currently active one, capped at 2
+  const altOpts    = card.options.filter((_, i) => i !== activeIdx).slice(0, 2);
+  const isCompleted = completedOpts.includes(activeIdx);
+  const isPrimaryCompleted = completedOpts.includes(0);
+
+  const markDone = (idx = 0) => {
+    setCompletedOpts(arr => arr.includes(idx) ? arr : [...arr, idx]);
+    onActivityDone && onActivityDone();
+  };
+  const unmarkDone = (idx = 0) => setCompletedOpts(arr => arr.filter(i => i !== idx));
+
   const handleOwnSubmit = () => {
     if (!ownText.trim()) return;
     setOwnDone(true);
     onActivityDone && onActivityDone();
   };
-  const openFocusDetail = () => onDetail && onDetail({
-    option:chosen, card, isSelected:true, onSelect:null,
-    onComplete: () => markOptCompleted(focusIdx),
-    onLogActivity: () => onLogWorkout && onLogWorkout(chosen),
+
+  const handleSkip = (reason) => {
+    setSkipReason(reason);
+    setSkipOpen(false);
+    if (reason.completion) markDone(activeIdx);
+  };
+
+  const openDetail = (opt, idx = 0) => onDetail && onDetail({
+    option: opt || primaryOpt,
+    card, isSelected: true, onSelect: null,
+    onComplete: () => markDone(idx),
+    onLogActivity: () => onLogWorkout && onLogWorkout(opt || primaryOpt),
   });
-  // Alt detail — DO NOT auto-swap focus on completion. Each option tracks its own done state.
-  const openAltDetail = (opt, origIdx) => onDetail && onDetail({
-    option:opt, card, isSelected:true, onSelect:null,
-    onComplete: () => markOptCompleted(origIdx),
-    onLogActivity: () => onLogWorkout && onLogWorkout(opt),
-  });
+
+  // Parse progress tracker from progress prop
+  const progressDots = progress ? (() => {
+    const parts = progress.value.split('/');
+    const done = parseInt(parts[0], 10);
+    const total = parseInt(parts[1], 10);
+    return { done, total, label: progress.label, delta: progress.delta };
+  })() : null;
+
+  // ── ENGINE CARD VARIANT ──────────────────────────────────────────────────────
+  if (isEngineCard) {
+    const effortLabel   = activeOpt.effort || (activeOpt.detail ? activeOpt.detail.split('·')[0].trim() : null);
+    const durationLabel = activeOpt.detail ? activeOpt.detail.split('·').slice(1).join('·').trim() : null;
+    const triggerLine   = card.trigger; // already a single punchy line
+    const hasRecipes    = activeOpt.recipes && activeOpt.recipes.length > 0;
+    const isBreathOpt   = !!activeOpt.isBreathing;
+
+    // ── DISMISSED STATE ──────────────────────────────────────────────────────────
+    if (dismissed) return (
+      <div style={{background:'#fff',borderRadius:20,border:'1px solid #efefed',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,0.05)'}}>
+        <div style={{height:3,background:`linear-gradient(90deg,${card.color}40,${card.color}18)`}}/>
+        <div style={{padding:'12px 14px 13px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontSize:10,fontWeight:700,letterSpacing:'0.09em',textTransform:'uppercase',color:'#c4bfba'}}>{card.pillar}</span>
+            <span style={{fontSize:10,color:'#d6d3d1',fontWeight:500,flex:1}}>skipped today</span>
+            <button onClick={()=>setDismissed(false)} style={{padding:'3px 9px',borderRadius:8,background:'transparent',border:'1px solid #e8e5de',color:'#a8a29e',fontSize:10,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Undo</button>
+          </div>
+          {!toastCounted && (
+            <div style={{display:'flex',alignItems:'center',gap:10,marginTop:9,padding:'9px 11px',borderRadius:11,background:'#f9f8f6',border:'1px solid #ece9e3'}}>
+              <p style={{fontSize:11,color:'#78716c',margin:0,fontWeight:500,flex:1}}>Already done this elsewhere?</p>
+              <button onClick={()=>{ setToastCounted(true); markDone(activeIdx); setDismissed(false); }} style={{padding:'5px 11px',borderRadius:8,background:card.color,border:'none',color:'#fff',fontSize:10.5,fontWeight:700,cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap'}}>Count it</button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
+    // ── COMPLETED STATE ───────────────────────────────────────────────────────────
+    if (isCompleted) return (
+      <div className="fi" style={{position:'relative',background:'#f0faf4',borderRadius:20,border:'1.5px solid #4CAF7D28',overflow:'visible',boxShadow:'0 2px 8px rgba(76,175,125,0.08)'}}>
+        <div style={{height:3,background:'linear-gradient(90deg,#4CAF7D,#4CAF7D55)',borderRadius:'20px 20px 0 0'}}/>
+        <ConfettiBurst top={24} left={32} scale={1}/>
+        <div style={{padding:'12px 14px 14px',display:'flex',alignItems:'center',gap:11,position:'relative',zIndex:2}}>
+          <div style={{width:40,height:40,borderRadius:13,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 8px rgba(76,175,125,0.2)'}}><I.Check/></div>
+          <div style={{flex:1,minWidth:0}}>
+            <p style={{fontSize:10,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#4CAF7D',margin:'0 0 2px'}}>{card.pillar}</p>
+            <p style={{fontSize:14,fontWeight:800,color:'#57534e',margin:0,letterSpacing:'-0.01em',lineHeight:1.2,textDecoration:'line-through',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{activeOpt.label}</p>
+            <p style={{fontSize:10.5,color:'#4CAF7D',fontWeight:600,margin:'2px 0 0'}}>Done · arc updated</p>
+          </div>
+          <button onClick={()=>unmarkDone(activeIdx)} style={{padding:'5px 10px',borderRadius:10,background:'transparent',border:'1.5px solid #4CAF7D30',color:'#4CAF7D',fontSize:10,fontWeight:700,cursor:'pointer',fontFamily:'inherit',flexShrink:0}}>Undo</button>
+        </div>
+      </div>
+    );
+
+    // ── ACTIVE STATE ─────────────────────────────────────────────────────────────
+    return (
+      <div style={{background:'#fff',borderRadius:20,border:'1px solid #efefed',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,0.05)'}}>
+        {/* Accent bar */}
+        <div style={{height:3,background:`linear-gradient(90deg,${card.color},${card.color}55)`}}/>
+
+        {/* Header */}
+        <div style={{padding:'12px 14px 0'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom: progressDots ? 7 : 9}}>
+            <span style={{fontSize:10,fontWeight:700,letterSpacing:'0.09em',textTransform:'uppercase',color:card.color,flex:1}}>{card.pillar}</span>
+            {card.streak && (
+              <span style={{display:'inline-flex',alignItems:'center',gap:3,padding:'2px 8px',borderRadius:20,background:`${card.color}14`,color:card.color,fontSize:10,fontWeight:700,whiteSpace:'nowrap'}}>
+                <svg width="7" height="9" viewBox="0 0 8 9" fill={card.color}><path d="M4 0C4 0 5.5 2.2 5.5 3.5C5.5 3.5 6.3 3.1 6.3 3.1C6.3 3.1 8 4.9 7.2 6.7C6.5 8.1 5.3 9 4 9C2.7 9 1.5 8.1 0.8 6.7C0 4.9 1.7 3.1 1.7 3.1C1.7 3.1 2.5 3.5 2.5 3.5C2.5 2.2 4 0 4 0Z"/></svg>
+                {card.streak} streak
+              </span>
+            )}
+            {card.conditionTag && <AdjustedTag label={card.conditionTag} note={card.adjustedNote} color={card.conditionTagColor}/>}
+          </div>
+
+          {progressDots && (
+            <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:9}}>
+              <div style={{display:'flex',gap:3}}>
+                {Array.from({length:Math.min(progressDots.total,7)}).map((_,i)=>(
+                  <div key={i} style={{width:i<progressDots.done?14:5,height:5,borderRadius:2.5,background:i<progressDots.done?card.color:`${card.color}28`,transition:'all 0.25s'}}/>
+                ))}
+              </div>
+              <span style={{fontSize:10,fontWeight:600,color:'#a8a29e'}}>{progressDots.done}/{progressDots.total} {progressDots.label}</span>
+            </div>
+          )}
+
+          {/* Trigger line */}
+          <p style={{fontSize:13,fontWeight:600,color:'#2d2d2b',margin:'0 0 10px',lineHeight:1.45,letterSpacing:'-0.01em'}}>{triggerLine}</p>
+        </div>
+
+        {/* Body */}
+        <div style={{padding:'0 14px 14px'}}>
+
+          {/* Primary action tile */}
+          <div onClick={()=>openDetail(activeOpt, activeIdx)} style={{
+            display:'flex',alignItems:'center',gap:11,cursor:'pointer',
+            padding:'11px 12px',borderRadius:14,
+            background:card.bg,border:`1.5px solid ${card.color}28`,
+            transition:'border-color 0.15s',marginBottom:0,
+          }}>
+            <div style={{
+              width:40,height:40,borderRadius:12,flexShrink:0,
+              background:`linear-gradient(135deg,${card.color}22,${card.color}0a)`,
+              color:card.color,display:'flex',alignItems:'center',justifyContent:'center',
+              boxShadow:`0 2px 6px ${card.color}18`,
+            }}>
+              <activeOpt.IC/>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <p style={{fontSize:13.5,fontWeight:800,color:'#1a1a1a',margin:'0 0 3px',letterSpacing:'-0.01em',lineHeight:1.2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{activeOpt.label}</p>
+              <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                {effortLabel && <span style={{fontSize:9.5,fontWeight:600,padding:'2px 7px',borderRadius:20,background:'rgba(0,0,0,0.055)',color:'#57534e'}}>{effortLabel}</span>}
+                {durationLabel && <span style={{fontSize:9.5,fontWeight:600,padding:'2px 7px',borderRadius:20,background:`${card.color}16`,color:card.color}}>{durationLabel}</span>}
+              </div>
+            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke={card.color} strokeWidth="2.5" width="13" height="13" style={{flexShrink:0,opacity:0.35}}><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+
+          {/* In-card action — pillar-specific, below the primary tile */}
+          {card.pillar === 'Move' && (
+            <button onClick={()=>openDetail(activeOpt, activeIdx)} style={{
+              display:'flex',alignItems:'center',gap:10,width:'100%',
+              padding:'10px 12px',borderRadius:12,marginTop:6,
+              background:`linear-gradient(135deg,${card.color},${card.color}bb)`,
+              border:'none',cursor:'pointer',fontFamily:'inherit',
+            }}>
+              <div style={{width:30,height:30,borderRadius:9,background:'rgba(255,255,255,0.2)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><I.Play/></div>
+              <div style={{flex:1,textAlign:'left'}}>
+                <p style={{fontSize:12,fontWeight:700,color:'#fff',margin:'0 0 1px'}}>Start session guide</p>
+                <p style={{fontSize:9.5,color:'rgba(255,255,255,0.72)',margin:0,letterSpacing:'0.01em'}}>{activeOpt.modeLabel || 'Zone 2'} · warm-up → main set → cool-down</p>
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2.5" width="11" height="11" style={{flexShrink:0}}><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          )}
+
+          {card.pillar === 'Mind' && isBreathOpt && (
+            <button onClick={()=>openDetail(activeOpt, activeIdx)} style={{
+              display:'flex',alignItems:'center',gap:10,width:'100%',
+              padding:'10px 12px',borderRadius:12,marginTop:6,
+              background:`${card.color}10`,border:`1.5px solid ${card.color}22`,
+              cursor:'pointer',fontFamily:'inherit',
+            }}>
+              <div style={{width:30,height:30,borderRadius:'50%',background:card.color,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><I.Play/></div>
+              <div style={{flex:1,textAlign:'left'}}>
+                <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:'0 0 1px'}}>Start breathing session</p>
+                <p style={{fontSize:9.5,color:'#a8a29e',margin:0}}>5 min · 4-4-4-4 box breathing · guided</p>
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" stroke={card.color} strokeWidth="2.5" width="11" height="11" style={{flexShrink:0,opacity:0.4}}><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          )}
+
+          {card.pillar === 'Nutrition' && hasRecipes && (
+            <div style={{marginTop:8}}>
+              <p style={{fontSize:9,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#b0a99e',margin:'0 0 5px'}}>Recipe options</p>
+              <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                {activeOpt.recipes.slice(0,3).map((r,i)=>(
+                  <button key={i} onClick={()=>openDetail(activeOpt, activeIdx)} style={{
+                    display:'flex',alignItems:'center',gap:9,width:'100%',
+                    padding:'7px 10px',borderRadius:10,textAlign:'left',
+                    background:i===0?`${card.color}0d`:'#fafaf8',
+                    border:`1px solid ${i===0?card.color+'22':'#ece9e3'}`,
+                    cursor:'pointer',fontFamily:'inherit',
+                  }}>
+                    <span style={{fontSize:11.5,fontWeight:600,color:'#1a1a1a',flex:1,lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.name}</span>
+                    <span style={{fontSize:9,padding:'2px 6px',borderRadius:6,background:`${card.color}16`,color:card.color,fontWeight:700,flexShrink:0}}>{r.tag}</span>
+                    <span style={{fontSize:9,color:'#b0a99e',fontWeight:500,flexShrink:0,marginLeft:2}}>{r.time}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {card.pillar === 'Sleep' && (
+            <button onClick={()=>openDetail(activeOpt, activeIdx)} style={{
+              display:'flex',alignItems:'center',gap:10,width:'100%',
+              padding:'10px 12px',borderRadius:12,marginTop:6,
+              background:`${card.color}0d`,border:`1.5px solid ${card.color}22`,
+              cursor:'pointer',fontFamily:'inherit',
+            }}>
+              <div style={{width:30,height:30,borderRadius:9,background:card.color,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><I.Moon/></div>
+              <div style={{flex:1,textAlign:'left'}}>
+                <p style={{fontSize:12,fontWeight:700,color:'#1a1a1a',margin:'0 0 1px'}}>Set bedtime anchor</p>
+                <p style={{fontSize:9.5,color:'#a8a29e',margin:0}}>10:00 pm · protects the nocturnal BP dip</p>
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" stroke={card.color} strokeWidth="2.5" width="11" height="11" style={{flexShrink:0,opacity:0.4}}><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          )}
+
+          {/* Footer row: alternatives + not today */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:8}}>
+            {card.options.length > 1 ? (
+              <p onClick={()=>openDetail(activeOpt, activeIdx)} style={{fontSize:10.5,fontWeight:500,color:'#c4bfba',margin:0,cursor:'pointer',letterSpacing:'-0.005em'}}>
+                + {card.options.length-1} other option{card.options.length>2?'s':''} inside →
+              </p>
+            ) : <span/>}
+            <button onClick={()=>setDismissed(true)} style={{
+              padding:'3px 0',background:'transparent',border:'none',
+              cursor:'pointer',fontFamily:'inherit',fontSize:10.5,fontWeight:500,
+              color:'#c4bfba',letterSpacing:'0.01em',
+            }}>
+              Not today
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── LEGACY CARD VARIANT (no trigger — kept for non-engine personas) ──────────
+  const legacyPrimary = card.options[0];
+  const isLegacyCompleted = completedOpts.includes(0);
 
   return (
     <div style={{background:'#fff',borderRadius:20,border:'1px solid #efefed',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,0.05)'}}>
+      {/* Accent bar */}
       <div style={{height:3,background:`linear-gradient(90deg,${card.color},${card.color}55)`}}/>
-      <div style={{padding:'11px 13px 12px'}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8,gap:8}}>
+
+      {/* ── Header: pillar label + condition tag + progress tracker ── */}
+      <div style={{padding:'11px 13px 0'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:progressDots?5:9,gap:8}}>
           <span style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:card.color}}>{card.pillar}</span>
           {card.conditionTag && <AdjustedTag label={card.conditionTag} note={card.adjustedNote} color={card.conditionTagColor}/>}
         </div>
-        {showLoggedTile ? (
+
+        {/* Week progress dots */}
+        {progressDots && (
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:11}}>
+            <div style={{display:'flex',alignItems:'center',gap:7}}>
+              <div style={{display:'flex',gap:3,alignItems:'center'}}>
+                {Array.from({length: Math.min(progressDots.total, 7)}).map((_,i) => (
+                  <div key={i} style={{
+                    width: i < progressDots.done ? 16 : 6, height:6, borderRadius:3,
+                    background: i < progressDots.done ? card.color : `${card.color}28`,
+                    transition:'all 0.25s ease',
+                  }}/>
+                ))}
+              </div>
+              <span style={{fontSize:10,fontWeight:600,color:'#a8a29e',whiteSpace:'nowrap'}}>
+                {progressDots.done}/{progressDots.total} {progressDots.label}
+              </span>
+            </div>
+            {card.streak && (
+              <span style={{display:'inline-flex',alignItems:'center',gap:3,padding:'2px 8px',borderRadius:20,background:`${card.color}14`,color:card.color,fontSize:10,fontWeight:700,whiteSpace:'nowrap',flexShrink:0}}>
+                <svg width="8" height="9" viewBox="0 0 8 9" fill={card.color} style={{flexShrink:0}}><path d="M4 0C4 0 5.5 2.2 5.5 3.5C5.5 3.5 6.3 3.1 6.3 3.1C6.3 3.1 8 4.9 7.2 6.7C6.5 8.1 5.3 9 4 9C2.7 9 1.5 8.1 0.8 6.7C0 4.9 1.7 3.1 1.7 3.1C1.7 3.1 2.5 3.5 2.5 3.5C2.5 2.2 4 0 4 0Z"/></svg>
+                {card.streak} in a row
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Main tile area ── */}
+      <div style={{padding:'0 13px 13px'}}>
+
+        {/* ── BP LOGGED STATE ── */}
+        {showLoggedTile && (
           <div style={{display:'flex',gap:10,alignItems:'flex-start',marginBottom:9,background:'#f0faf4',borderRadius:14,padding:'10px 11px',border:'1.5px solid #4CAF7D33'}}>
             <div style={{width:42,height:42,borderRadius:13,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',marginTop:2}}><I.Check/></div>
             <div style={{flex:1,minWidth:0}}>
@@ -2492,118 +3453,150 @@ const RecCard = ({ card, onDetail, onActivityDone, bpState, onLogWorkout }) => {
               </p>
               {noteChips.length > 0 && (
                 <div style={{display:'flex',flexWrap:'wrap',gap:4,margin:'0 0 4px'}}>
-                  {noteChips.map((id,i)=>(
-                    <span key={i} style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:10,background:'#fdf0f0',color:'#e05c5c',border:'1px solid #e05c5c33'}}>{BP_NOTE_LABEL(id)}</span>
-                  ))}
+                  {noteChips.map((id,i)=>(<span key={i} style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:10,background:'#fdf0f0',color:'#e05c5c',border:'1px solid #e05c5c33'}}>{BP_NOTE_LABEL(id)}</span>))}
                 </div>
               )}
-              <button onClick={()=>onDetail && onDetail({option:chosen,card,isSelected:true,onSelect:null})} style={{padding:0,background:'transparent',border:'none',color:card.color,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',display:'inline-flex',alignItems:'center',gap:3}}>
+              <button onClick={()=>openDetail(legacyPrimary, 0)} style={{padding:0,background:'transparent',border:'none',color:card.color,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',display:'inline-flex',alignItems:'center',gap:3}}>
                 Log another reading <I.Arrow/>
               </button>
             </div>
           </div>
-        ) : showDismissedTile ? (
+        )}
+
+        {/* ── BP DISMISSED STATE ── */}
+        {!showLoggedTile && showDismissed && (
           <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:9,background:'#fafaf8',borderRadius:14,padding:'10px 11px',border:'1.5px dashed #d6d3d1'}}>
-            <div style={{width:32,height:32,borderRadius:10,background:'#fff',color:'#a8a29e',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,border:'1px solid #efefed'}}><chosen.IC/></div>
+            <div style={{width:32,height:32,borderRadius:10,background:'#fff',color:'#a8a29e',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,border:'1px solid #efefed'}}><legacyPrimary.IC/></div>
             <div style={{flex:1,minWidth:0}}>
               <p style={{fontSize:12,fontWeight:700,color:'#78716c',margin:0,lineHeight:1.3}}>BP — log later</p>
               <p style={{fontSize:10,color:'#a8a29e',margin:'1px 0 0'}}>Dismissed for now</p>
             </div>
-            <button onClick={()=>{ bpState && bpState.onUndoDismiss && bpState.onUndoDismiss(); }} style={{padding:'5px 10px',borderRadius:11,background:'transparent',border:`1.5px solid ${card.color}40`,color:card.color,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
-              Undo
-            </button>
-          </div>
-        ) : focusCompleted ? (
-          <div className="fi" style={{position:'relative',display:'flex',gap:10,alignItems:'center',marginBottom:9,background:'#f0faf4',borderRadius:14,padding:'10px 11px',border:'1.5px solid #4CAF7D33',overflow:'visible'}}>
-            <div style={{width:42,height:42,borderRadius:13,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',position:'relative',zIndex:2}}><I.Check/></div>
-            {/* Confetti burst — emanates from the check tile */}
-            <ConfettiBurst top={21} left={32} scale={1}/>
-            <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
-              <p style={{fontSize:14,fontWeight:800,color:'#78716c',margin:'0 0 2px',letterSpacing:'-0.02em',lineHeight:1.2,textDecoration:'line-through'}}>{chosen.label}</p>
-              <p style={{fontSize:11,color:'#4CAF7D',fontWeight:700,margin:0}}>Done · arc updated</p>
-            </div>
-            <button onClick={()=>unmarkOptCompleted(focusIdx)} style={{padding:'5px 9px',borderRadius:10,background:'transparent',border:'1.5px solid #4CAF7D33',color:'#4CAF7D',fontSize:10,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',position:'relative',zIndex:2}}>
-              Undo
-            </button>
-          </div>
-        ) : (
-          <div style={{position:'relative',marginBottom:9}}>
-            <div onClick={openFocusDetail} style={{display:'flex',gap:10,alignItems:'center',cursor:'pointer',background:card.bg,borderRadius:14,padding:'10px 11px',border:`1.5px solid ${card.color}28`}}>
-              <div style={{width:42,height:42,borderRadius:13,background:'#fff',color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 2px 6px ${card.color}22`}}><chosen.IC/></div>
-              <div style={{flex:1,minWidth:0,paddingRight:isBPPrimary?22:0}}>
-                <p style={{fontSize:14,fontWeight:800,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.02em',lineHeight:1.2}}>{chosen.label}</p>
-                <p style={{fontSize:10.5,color:card.color,fontWeight:600,margin:0,lineHeight:1.4,opacity:0.8}}>{chosen.why.split('.')[0]}.</p>
-              </div>
-            </div>
-            {isBPPrimary && bpState && bpState.onDismiss && (
-              <button onClick={(e)=>{ e.stopPropagation(); bpState.onDismiss(); }} aria-label="Dismiss for today" style={{position:'absolute',top:4,right:4,width:22,height:22,borderRadius:'50%',background:'rgba(255,255,255,0.92)',border:`1px solid ${card.color}30`,color:'#a8a29e',cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'inherit'}}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="11" height="11"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </button>
-            )}
+            <button onClick={()=>bpState && bpState.onUndoDismiss && bpState.onUndoDismiss()} style={{padding:'5px 10px',borderRadius:11,background:'transparent',border:`1.5px solid ${card.color}40`,color:card.color,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>Undo</button>
           </div>
         )}
-        {others.length > 0 && (
+
+        {/* ── COMPLETED STATE ── */}
+        {!showLoggedTile && !showDismissed && isLegacyCompleted && (
+          <div className="fi" style={{position:'relative',display:'flex',gap:10,alignItems:'center',marginBottom:9,background:'#f0faf4',borderRadius:14,padding:'10px 11px',border:'1.5px solid #4CAF7D33',overflow:'visible'}}>
+            <div style={{width:42,height:42,borderRadius:13,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',position:'relative',zIndex:2}}><I.Check/></div>
+            <ConfettiBurst top={21} left={32} scale={1}/>
+            <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
+              <p style={{fontSize:14,fontWeight:800,color:'#78716c',margin:'0 0 2px',letterSpacing:'-0.02em',lineHeight:1.2,textDecoration:'line-through'}}>{legacyPrimary.label}</p>
+              <p style={{fontSize:11,color:'#4CAF7D',fontWeight:700,margin:0}}>Done · arc updated</p>
+            </div>
+            <button onClick={()=>unmarkDone(0)} style={{padding:'5px 9px',borderRadius:10,background:'transparent',border:'1.5px solid #4CAF7D33',color:'#4CAF7D',fontSize:10,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',position:'relative',zIndex:2}}>Undo</button>
+          </div>
+        )}
+
+        {/* ── ACTIVE: 3 option rows, primary highlighted ── */}
+        {!showLoggedTile && !showDismissed && !isLegacyCompleted && (
           <div>
-            <p style={{fontSize:9,fontWeight:600,letterSpacing:'0.05em',textTransform:'uppercase',color:'#c4bfb8',margin:'0 0 5px'}}>Or try</p>
-            {others.map((opt,i) => {
-              const origIdx = card.options.indexOf(opt);
-              const altDone = isOptCompleted(origIdx);
-              return altDone ? (
-                <div key={i} className="fi" style={{position:'relative',display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:12,background:'#f0faf4',marginBottom:5,border:'1.5px solid #4CAF7D33',overflow:'visible'}}>
-                  <div style={{width:32,height:32,borderRadius:10,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',position:'relative',zIndex:2}}><I.Check/></div>
-                  <ConfettiBurst top={24} left={26} scale={0.75}/>
-                  <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
-                    <p style={{fontSize:13,fontWeight:700,color:'#78716c',margin:0,lineHeight:1.2,textDecoration:'line-through',letterSpacing:'-0.01em'}}>{opt.label}</p>
-                    <p style={{fontSize:10.5,color:'#4CAF7D',fontWeight:700,margin:'2px 0 0'}}>Done · arc updated</p>
-                  </div>
-                  <button onClick={()=>unmarkOptCompleted(origIdx)} style={{padding:'4px 9px',borderRadius:9,background:'transparent',border:'1.5px solid #4CAF7D33',color:'#4CAF7D',fontSize:10,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',flexShrink:0,position:'relative',zIndex:2}}>Undo</button>
-                </div>
-              ) : (
-                <div key={i} onClick={()=>openAltDetail(opt, origIdx)} style={{display:'flex',gap:9,alignItems:'center',cursor:'pointer',background:card.bg,borderRadius:12,padding:'8px 10px',border:`1.5px solid ${card.color}22`,marginBottom:5}}>
-                  <div style={{width:32,height:32,borderRadius:10,background:'#fff',color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 2px 5px ${card.color}1a`}}><opt.IC/></div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <p style={{fontSize:13,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px',letterSpacing:'-0.01em',lineHeight:1.2}}>{opt.label}</p>
-                    <p style={{fontSize:10,color:card.color,fontWeight:600,margin:0,lineHeight:1.35,opacity:0.78,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(opt.why || '').split('.')[0]}.</p>
+            {card.options.slice(0,3).map((opt, idx) => {
+              const isDone    = completedOpts.includes(idx);
+              const isPrimary = idx === 0;
+              const effortL   = opt.effort || (opt.detail ? opt.detail.split('·')[0].trim() : null);
+              const outcomeL  = opt.outcome || opt.bpImpact || null;
+              return (
+                <div key={idx} style={{position:'relative',overflow:'visible',marginBottom: isPrimary ? 7 : 5}}>
+                  <div onClick={()=>openDetail(opt, idx)} style={{
+                    display:'flex',alignItems:'center',gap:10,cursor:'pointer',
+                    padding: isPrimary ? '11px 11px' : '8px 10px',
+                    borderRadius: isPrimary ? 14 : 12,
+                    background: isDone ? '#f0faf4' : isPrimary ? card.bg : '#fafaf9',
+                    border: isDone ? '1.5px solid #4CAF7D33' : isPrimary ? `1.5px solid ${card.color}30` : `1px solid ${card.color}14`,
+                    transition:'border-color 0.15s,background 0.15s',
+                    position:'relative',overflow:'visible',
+                  }}>
+                    {isDone && <ConfettiBurst top={isPrimary?22:16} left={isPrimary?26:18} scale={isPrimary?1:0.6}/>}
+                    <div style={{
+                      width: isPrimary ? 40 : 30, height: isPrimary ? 40 : 30,
+                      borderRadius: isPrimary ? 12 : 9,
+                      background: isDone ? '#fff' : isPrimary ? `linear-gradient(135deg,${card.color}22,${card.color}0a)` : `${card.color}10`,
+                      color: isDone ? '#4CAF7D' : card.color,
+                      display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,
+                      boxShadow: isDone ? '0 1px 4px rgba(76,175,125,0.18)' : isPrimary ? `0 2px 8px ${card.color}20` : 'none',
+                      position:'relative',zIndex:2,
+                    }}>
+                      {isDone ? <I.Check/> : <opt.IC/>}
+                    </div>
+                    <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
+                      <p style={{
+                        fontSize: isPrimary ? 14 : 12, fontWeight: isPrimary ? 800 : 700,
+                        color: isDone ? '#4CAF7D' : '#1a1a1a',
+                        textDecoration: isDone ? 'line-through' : 'none',
+                        margin:'0 0 3px', letterSpacing:'-0.01em', lineHeight:1.2,
+                        overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',
+                      }}>{opt.label}</p>
+                      {!isDone && (
+                        <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                          {effortL && <span style={{fontSize:9,fontWeight:600,padding:'1.5px 6px',borderRadius:20,background:'rgba(0,0,0,0.06)',color:'#57534e'}}>{effortL}</span>}
+                          {outcomeL && <span style={{fontSize:9,fontWeight:700,padding:'1.5px 6px',borderRadius:20,background:`${card.color}14`,color:card.color}}>{outcomeL}</span>}
+                        </div>
+                      )}
+                      {isDone && <p style={{fontSize:10,color:'#4CAF7D',fontWeight:700,margin:'1px 0 0'}}>Done · arc updated</p>}
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke={isDone?'#4CAF7D':card.color} strokeWidth="2.5" width="11" height="11" style={{flexShrink:0,opacity:isDone?0.5:0.3,position:'relative',zIndex:2}}><polyline points="9 18 15 12 9 6"/></svg>
+                    {isBPPrimary && isPrimary && bpState && bpState.onDismiss && (
+                      <button onClick={(e)=>{ e.stopPropagation(); bpState.onDismiss(); }} aria-label="Dismiss" style={{position:'absolute',top:4,right:4,width:22,height:22,borderRadius:'50%',background:'rgba(255,255,255,0.92)',border:`1px solid ${card.color}30`,color:'#a8a29e',cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'inherit',zIndex:3}}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="11" height="11"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
             })}
-            {!ownDone && !ownOpen && (
-              <div onClick={()=>setOwnOpen(true)} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:12,border:`1.5px dashed ${card.color}40`,background:'transparent',marginBottom:0,cursor:'pointer'}}>
-                <div style={{width:32,height:32,borderRadius:10,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:20,fontWeight:300,lineHeight:1}}>+</div>
+            {/* Not today pill */}
+            {!isLoggingPillar && !skipReason && (
+              <button onClick={()=>onSkipOpen && onSkipOpen(card, handleSkip)} style={{display:'block',width:'100%',textAlign:'center',padding:'4px 0 2px',background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:11,fontWeight:600,color:'#c4bfba',letterSpacing:'0.01em'}}>
+                Not today
+              </button>
+            )}
+            {/* Skipped state */}
+            {!isLoggingPillar && skipReason && !skipReason.completion && (
+              <div className="fi" style={{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:12,background:'#fafaf8',border:'1.5px dashed #d6d3d1'}}>
+                <span style={{fontSize:16,flexShrink:0}}>{skipReason.emoji}</span>
                 <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:13,fontWeight:700,color:card.color,margin:'0 0 2px',letterSpacing:'-0.01em',lineHeight:1.2}}>Log your own</p>
-                  <p style={{fontSize:10,color:'#a8a29e',margin:0,lineHeight:1.35}}>Something else counts too.</p>
+                  <p style={{fontSize:12,fontWeight:700,color:'#78716c',margin:0}}>{skipReason.label} — skipped today</p>
+                  <p style={{fontSize:10,color:'#a8a29e',margin:'1px 0 0'}}>Tomorrow's suggestion will adapt.</p>
                 </div>
+                <button onClick={()=>setSkipReason(null)} style={{padding:'4px 9px',borderRadius:10,background:'transparent',border:'1px solid #e8e5de',color:'#a8a29e',fontSize:10.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Undo</button>
               </div>
             )}
-            {!ownDone && ownOpen && (
-              <div style={{borderRadius:11,border:`1.5px solid ${card.color}50`,background:card.bg,padding:'9px 10px',marginBottom:0}}>
-                <p style={{fontSize:10,fontWeight:700,color:card.color,margin:'0 0 6px',letterSpacing:'0.04em',textTransform:'uppercase'}}>{card.pillar} — log your own</p>
-                <input
-                  autoFocus
-                  value={ownText}
-                  onChange={e=>setOwnText(e.target.value)}
-                  onKeyDown={e=>{ if(e.key==='Enter') handleOwnSubmit(); }}
-                  placeholder={`What did you do for ${card.pillar.toLowerCase()}?`}
-                  style={{width:'100%',border:`1.5px solid ${card.color}30`,borderRadius:9,padding:'8px 10px',fontSize:12,fontFamily:'inherit',color:'#1a1a1a',background:'#fff',outline:'none',marginBottom:7,boxSizing:'border-box'}}
-                />
-                <div style={{display:'flex',gap:6}}>
-                  <button onClick={()=>{ setOwnOpen(false); setOwnText(''); }} style={{flex:1,padding:'7px',borderRadius:9,border:'1.5px solid #e8e5de',background:'transparent',fontSize:12,fontWeight:600,color:'#78716c',cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-                  <button onClick={handleOwnSubmit} disabled={!ownText.trim()} style={{flex:2,padding:'7px',borderRadius:9,border:'none',background:ownText.trim()?card.color:'#e8e5de',fontSize:12,fontWeight:700,color:'#fff',cursor:ownText.trim()?'pointer':'default',fontFamily:'inherit',transition:'background 0.15s'}}>I did this</button>
-                </div>
-              </div>
-            )}
-            {ownDone && (
-              <div className="fi" style={{position:'relative',display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:12,background:'#f0faf4',border:'1.5px solid #4CAF7D33',overflow:'visible'}}>
-                <div style={{width:32,height:32,borderRadius:10,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',position:'relative',zIndex:2}}><I.Check/></div>
-                <ConfettiBurst top={24} left={26} scale={0.75}/>
-                <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
-                  <p style={{fontSize:13,fontWeight:700,color:'#1a1a1a',margin:0,lineHeight:1.3,letterSpacing:'-0.01em',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ownText}</p>
-                  <p style={{fontSize:10.5,color:'#4CAF7D',fontWeight:700,margin:'2px 0 0'}}>Logged · arc updated</p>
-                </div>
-              </div>
-            )}
+          </div>
+        )}
+
+        {/* ── Log your own ── */}
+        {showLogOwn && !ownDone && !ownOpen && (
+          <div onClick={()=>setOwnOpen(true)} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:12,border:`1.5px dashed ${card.color}40`,background:'transparent',cursor:'pointer'}}>
+            <div style={{width:30,height:30,borderRadius:10,background:card.bg,color:card.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:18,fontWeight:300,lineHeight:1}}>+</div>
+            <div style={{flex:1,minWidth:0}}>
+              <p style={{fontSize:13,fontWeight:700,color:card.color,margin:'0 0 1px',letterSpacing:'-0.01em',lineHeight:1.2}}>Log your own</p>
+              <p style={{fontSize:10,color:'#a8a29e',margin:0,lineHeight:1.35}}>Something else counts too.</p>
+            </div>
+          </div>
+        )}
+        {showLogOwn && !ownDone && ownOpen && (
+          <div style={{borderRadius:11,border:`1.5px solid ${card.color}50`,background:card.bg,padding:'9px 10px'}}>
+            <p style={{fontSize:10,fontWeight:700,color:card.color,margin:'0 0 6px',letterSpacing:'0.04em',textTransform:'uppercase'}}>{card.pillar} — log your own</p>
+            <input autoFocus value={ownText} onChange={e=>setOwnText(e.target.value)}
+              onKeyDown={e=>{ if(e.key==='Enter') handleOwnSubmit(); }}
+              placeholder={`What did you do for ${card.pillar.toLowerCase()}?`}
+              style={{width:'100%',border:`1.5px solid ${card.color}30`,borderRadius:9,padding:'8px 10px',fontSize:12,fontFamily:'inherit',color:'#1a1a1a',background:'#fff',outline:'none',marginBottom:7,boxSizing:'border-box'}}
+            />
+            <div style={{display:'flex',gap:6}}>
+              <button onClick={()=>{ setOwnOpen(false); setOwnText(''); }} style={{flex:1,padding:'7px',borderRadius:9,border:'1.5px solid #e8e5de',background:'transparent',fontSize:12,fontWeight:600,color:'#78716c',cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+              <button onClick={handleOwnSubmit} disabled={!ownText.trim()} style={{flex:2,padding:'7px',borderRadius:9,border:'none',background:ownText.trim()?card.color:'#e8e5de',fontSize:12,fontWeight:700,color:'#fff',cursor:ownText.trim()?'pointer':'default',fontFamily:'inherit',transition:'background 0.15s'}}>I did this</button>
+            </div>
+          </div>
+        )}
+        {showLogOwn && ownDone && (
+          <div className="fi" style={{position:'relative',display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:12,background:'#f0faf4',border:'1.5px solid #4CAF7D33',overflow:'visible'}}>
+            <div style={{width:32,height:32,borderRadius:10,background:'#fff',color:'#4CAF7D',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 2px 6px rgba(76,175,125,0.18)',position:'relative',zIndex:2}}><I.Check/></div>
+            <ConfettiBurst top={24} left={26} scale={0.75}/>
+            <div style={{flex:1,minWidth:0,position:'relative',zIndex:2}}>
+              <p style={{fontSize:13,fontWeight:700,color:'#1a1a1a',margin:0,lineHeight:1.3,letterSpacing:'-0.01em',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ownText}</p>
+              <p style={{fontSize:10.5,color:'#4CAF7D',fontWeight:700,margin:'2px 0 0'}}>Logged · arc updated</p>
+            </div>
           </div>
         )}
       </div>
@@ -3039,8 +4032,22 @@ const StatsView = ({ persona, onSwitchPersona }) => {
           <div style={{width:36,height:36,borderRadius:'50%',background:p.avatarGrad,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'#fff',flexShrink:0}}>{p.initial}</div>
         </div>
 
+        {/* Cause & effect insight card — promoted above Lemon score.
+            Lemon's proprietary moat is the user's own causal graph, so the user's discovered
+            laws lead the page; the composite score is supporting context, not the headline. */}
+        {p.attribution && (
+          <div style={{margin:'12px 14px 6px',background:'linear-gradient(160deg,#fffcf5 0%,#fef9c3 100%)',border:'1px solid #fde047',borderRadius:18,padding:'14px 14px 13px',boxShadow:'0 2px 10px rgba(252,211,77,0.18)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+              <span style={{color:'#c9a227'}}><I.Sparkles/></span>
+              <span style={{fontSize:10,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#c9a227'}}>Cause &amp; effect</span>
+            </div>
+            <p style={{fontSize:13.5,fontWeight:700,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.01em',lineHeight:1.35}}>{p.attribution.headline}</p>
+            <p style={{fontSize:11.5,color:'#57534e',margin:0,lineHeight:1.5}}>{p.attribution.detail}</p>
+          </div>
+        )}
+
         {/* Lemon score card */}
-        <div style={{margin:'12px 14px',background:'#fff',borderRadius:20,border:'1px solid #efefed',boxShadow:'0 2px 10px rgba(0,0,0,0.04)',padding:'16px 16px 14px'}}>
+        <div style={{margin:'8px 14px 12px',background:'#fff',borderRadius:20,border:'1px solid #efefed',boxShadow:'0 2px 10px rgba(0,0,0,0.04)',padding:'16px 16px 14px'}}>
           <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'#a8a29e',margin:'0 0 6px'}}>Lemon score</p>
           <p style={{fontSize:13,fontWeight:700,color:'#4CAF7D',margin:'0 0 4px'}}>{p.lemonScore.state}</p>
           <div style={{display:'flex',alignItems:'flex-end',gap:8,marginBottom:14}}>
@@ -3096,18 +4103,6 @@ const StatsView = ({ persona, onSwitchPersona }) => {
             );
           })}
         </div>
-
-        {/* Attribution insight card — "the walking-to-BP signal" */}
-        {p.attribution && (
-          <div style={{margin:'8px 14px 12px',background:'linear-gradient(160deg,#fffcf5 0%,#fef9c3 100%)',border:'1px solid #fde047',borderRadius:18,padding:'14px 14px 13px',boxShadow:'0 2px 10px rgba(252,211,77,0.18)'}}>
-            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
-              <span style={{color:'#c9a227'}}><I.Sparkles/></span>
-              <span style={{fontSize:10,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'#c9a227'}}>Cause &amp; effect</span>
-            </div>
-            <p style={{fontSize:13.5,fontWeight:700,color:'#1a1a1a',margin:'0 0 4px',letterSpacing:'-0.01em',lineHeight:1.35}}>{p.attribution.headline}</p>
-            <p style={{fontSize:11.5,color:'#57534e',margin:0,lineHeight:1.5}}>{p.attribution.detail}</p>
-          </div>
-        )}
 
         {/* See all your health metrics */}
         <div style={{padding:'8px 14px 16px'}}>
@@ -3305,11 +4300,6 @@ const MealPrepView = ({ persona, onSwitchPersona }) => {
               <div style={{aspectRatio:'1',background:`linear-gradient(135deg,${plan.bgFrom},${plan.bgTo})`,position:'relative',overflow:'hidden'}}>
                 <div style={{position:'absolute',top:-30,right:-25,width:100,height:100,background:'rgba(255,255,255,0.18)',borderRadius:'50%'}}/>
                 <div style={{position:'absolute',bottom:-30,left:-22,width:110,height:110,background:'rgba(0,0,0,0.06)',borderRadius:'50%'}}/>
-                <div style={{position:'absolute',top:9,left:9,display:'flex',gap:4,flexWrap:'wrap',maxWidth:'calc(100% - 18px)'}}>
-                  <span style={{fontSize:8,fontWeight:800,padding:'3px 7px',borderRadius:6,background:'rgba(255,255,255,0.9)',color:'#1a1a1a',letterSpacing:'0.04em'}}>{plan.tag}</span>
-                  {plan.bpImpact && <span style={{fontSize:8,fontWeight:800,padding:'3px 7px',borderRadius:6,background:'rgba(255,255,255,0.9)',color:'#e05c5c',whiteSpace:'nowrap',letterSpacing:'0.02em'}}>{plan.bpImpact}</span>}
-                </div>
-                <span style={{position:'absolute',top:9,right:9,fontSize:8,fontWeight:800,padding:'3px 7px',borderRadius:6,background:'rgba(0,0,0,0.42)',color:'#fff',letterSpacing:'0.05em'}}>{plan.days} DAYS</span>
               </div>
               <div style={{padding:'12px 12px 11px'}}>
                 <p style={{fontSize:18,fontWeight:900,color:'#1a1a1a',margin:'0 0 5px',letterSpacing:'-0.02em',lineHeight:1.1}}>{plan.title}</p>
@@ -3498,11 +4488,14 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
   const [animK, setAnimK]               = useState(0);
   const [selectedDay, setSelectedDay]   = useState('fri');
   const [detail, setDetail]             = useState(null);
+  const [skip, setSkip]                 = useState(null); // {card, onSkip}
   const [breathing, setBreathing]       = useState(null);
   const [doneSessions, setDoneSessions] = useState(0);
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  // BP logging state — drives Options 4 (tile) and 5 (ask) and metric empty states. Variants start unlogged.
-  const [bpLogged, setBpLogged]   = useState(!p.bpLogVariant && !p.routerStrip);
+  // BP logging state — drives Options 4 (tile) and 5 (ask) and metric empty states.
+  // Variants start unlogged UNLESS the persona explicitly sets bpInitiallyLogged:true
+  // (Homepage MVP wants the BP tile to render with its default value, not an empty log-prompt).
+  const [bpLogged, setBpLogged]   = useState(p.bpInitiallyLogged === true ? true : (!p.bpLogVariant && !p.routerStrip));
   const [bpValue, setBpValue]     = useState(null);
   const [bpPulse, setBpPulse]     = useState(null);
   const [bpNotes, setBpNotes]     = useState([]);
@@ -3587,7 +4580,7 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
                 </div>
               )}
             </div>
-            <p style={{fontSize:12.5,color:'#1a1a1a',fontWeight:400,margin:'0 0 13px',lineHeight:1.5,letterSpacing:'-0.005em'}}>{p.isWorking}</p>
+            {p.isWorking && <p style={{fontSize:11.5,color:'#78716c',fontWeight:500,margin:'0 0 10px',lineHeight:1.4,letterSpacing:'-0.005em',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.isWorking}</p>}
             <MetricWidgets
               initialWidgets={p.widgets.map(w => {
                 if (w.id !== 'actions') return w;
@@ -3658,9 +4651,8 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
           {p.bpLogVariant === 'ask' && bpLogged && bpValue && (
             <BPConfirmationLine value={bpValue} deltaSys={bpDelta}/>
           )}
-          {!p.compactHeader && <HistoryStrip persona={p} selectedDay={selectedDay} onSelect={selectDay}/>}
           {p.cards.map((card,i)=>(
-            <div key={i} className={`su${i}`}><RecCard card={card} onDetail={openDetail} onActivityDone={onActivityDone} bpState={{ logged: bpLogged && !!bpValue, value: bpValue, pulse: bpPulse, notes: bpNotes, dismissed: bpDismissed, onDismiss: ()=>setBpDismissed(true), onUndoDismiss: ()=>setBpDismissed(false) }} onLogWorkout={(opt)=>onOpenChat && onOpenChat('workout-input', opt ? {label:opt.label, detail:opt.detail} : null)}/></div>
+            <div key={i} className={`su${i}`}><RecCard card={card} onDetail={openDetail} onActivityDone={onActivityDone} progress={p.pillars ? p.pillars[card.pillar.toLowerCase()] || null : null} bpState={{ logged: bpLogged && !!bpValue, value: bpValue, pulse: bpPulse, notes: bpNotes, dismissed: bpDismissed, onDismiss: ()=>setBpDismissed(true), onUndoDismiss: ()=>setBpDismissed(false) }} onLogWorkout={(opt)=>onOpenChat && onOpenChat('workout-input', opt ? {label:opt.label, detail:opt.detail} : null)} showLogOwn={!p.hideLogOwn} onSkipOpen={(card, onSkip)=>setSkip({card, onSkip})}/></div>
           ))}
         </div>
       </div>
@@ -3671,6 +4663,10 @@ const HomeView = ({ persona, onOpenReport, view: viewProp, setView: setViewProp,
         if (id==='stats' && onSwitchPersona)     onSwitchPersona('mayaStats');
         if (id==='community' && onSwitchPersona) onSwitchPersona('mayaCommunity');
       }}/>
+
+      {skip && (
+        <SkipSheet card={skip.card} onClose={()=>setSkip(null)} onSkip={(r)=>{ skip.onSkip(r); setSkip(null); }}/>
+      )}
 
       {detail && !breathing && (
         <DetailSheet
@@ -4107,6 +5103,698 @@ const H_BPCard = ({ sys, dia, pulse, notes, deltaSys, confirmed, onConfirm, onEd
 // Pattern: input = template (picker chips or form). Response = natural prose chat bubble.
 // Accepts initialStage so notification "Adjust" can deep-link straight to bp-input.
 // Accepts initialActivity so homepage Move card "Log this" can deep-link to a pre-filled workout entry.
+// ─────────────────────────────────────────────────────────────────────────────
+// ENGINE STD VIEW V2 — redesigned hero + pill cards + LemonNav
+// Hero: goal-centric gradient card with BP spark, completion ring, streak.
+// Cards: pillar icon + title + effort/outcome chips. No trigger line on face.
+// Focus Mode: isFocusMode prop collapses to single top-priority card.
+// ─────────────────────────────────────────────────────────────────────────────
+const EngineStdViewV2 = ({ persona, onSwitchPersona }) => {
+  const p = persona;
+  const [openKey, setOpenKey]     = useState(null);
+  const [openAlt, setOpenAlt]     = useState(null); // {n, c, why, how} — alt detail sheet
+  const [ntOpen, setNtOpen]       = useState(false);
+  const [done, setDone]           = useState(new Set());
+  const [breathOpen, setBreathOpen] = useState(false);
+  const brRef = useRef(null);
+  const PHASES = ['Inhale','Hold','Exhale','Hold'];
+  const PHASE_DUR = 4, TOTAL_CYCLES = 5;
+  const [brState, setBrState] = useState({ phaseIdx:0, count:PHASE_DUR, cycle:1 });
+
+  const card = p.cards.find(c => c.key === openKey) || null;
+  const activeCards = p.isFocusMode
+    ? [p.cards.find(c => !done.has(c.key)) || p.cards[0]]
+    : p.cards;
+
+  const startBreath = () => {
+    setBrState({ phaseIdx:0, count:PHASE_DUR, cycle:1 });
+    setBreathOpen(true);
+    brRef.current = setInterval(() => {
+      setBrState(s => {
+        let { phaseIdx, count, cycle } = s;
+        count--;
+        if (count < 1) {
+          phaseIdx = (phaseIdx + 1) % PHASES.length;
+          if (phaseIdx === 0) cycle++;
+          if (cycle > TOTAL_CYCLES) { clearInterval(brRef.current); setBreathOpen(false); return s; }
+          count = PHASE_DUR;
+        }
+        return { phaseIdx, count, cycle };
+      });
+    }, 1000);
+  };
+  const stopBreath = () => { clearInterval(brRef.current); setBreathOpen(false); };
+  useEffect(() => () => clearInterval(brRef.current), []);
+
+  const markDone = () => { if (!openKey) return; setDone(d => new Set([...d, openKey])); setOpenKey(null); };
+  const skipCard  = (reason) => {
+    if (reason === 'already-did') markDone();
+    setNtOpen(false);
+    if (openKey && reason !== 'already-did') setOpenKey(null);
+  };
+
+  const sheetOpen = !!openKey;
+
+  // ── Hero sub-components ─────────────────────────────────────────────────
+  const bpSeries = [130,128,127,126,125,124,124,123,122];
+  const weekDone = 18, weekTotal = 26, streak = 18;
+
+  const SparkLine = () => {
+    const w=80, h=30, pad=4;
+    const min=Math.min(...bpSeries)-2, max=Math.max(...bpSeries)+2;
+    const x = i => pad + (i*(w-pad*2))/(bpSeries.length-1);
+    const y = v => h-pad - ((v-min)/(max-min))*(h-pad*2);
+    const path = bpSeries.map((v,i)=>`${i===0?'M':'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    return (
+      <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} style={{display:'block'}}>
+        <path d={path} fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx={x(bpSeries.length-1)} cy={y(bpSeries[bpSeries.length-1])} r="3" fill="white"/>
+      </svg>
+    );
+  };
+
+  const DonutRing = ({ size=52 }) => {
+    const r=(size-8)/2, circ=2*Math.PI*r, pct=weekDone/weekTotal, dash=pct*circ;
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{display:'block'}}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="4.5"/>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="white" strokeWidth="4.5"
+          strokeDasharray={`${dash.toFixed(1)} ${(circ-dash).toFixed(1)}`} strokeLinecap="round"
+          transform={`rotate(-90 ${size/2} ${size/2})`}/>
+        <text x={size/2} y={size/2+1} textAnchor="middle" dominantBaseline="middle"
+          fontSize="11" fontWeight="700" fill="white" fontFamily="-apple-system,sans-serif">
+          {Math.round(pct*100)}%
+        </text>
+      </svg>
+    );
+  };
+
+  return (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'#f5f4f0', overflow:'hidden', position:'relative' }}>
+      <div style={{ flex:1, overflowY:'auto', overflowX:'hidden' }} className="hide-scrollbar">
+
+        {/* ── Top bar: greeting + date + avatar ───────────────────────── */}
+        <div style={{ background:'#fafaf8', padding:'13px 16px 11px', borderBottom:'0.5px solid #e8e5de', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:10 }}>
+          <div>
+            <div style={{ fontSize:10, color:'#a8a29e', fontWeight:500, lineHeight:1.1 }}>Thursday, May 29</div>
+            <div style={{ fontSize:17, fontWeight:600, color:'#1a1a18', lineHeight:1.3 }}>Good morning, Maya</div>
+          </div>
+          <div style={{ width:34, height:34, borderRadius:'50%', background:'linear-gradient(135deg,#fcd34d,#c9a227)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, color:'white' }}>M</div>
+        </div>
+
+        {/* ── Hero ────────────────────────────────────────────────────── */}
+        <div style={{ margin:'12px 12px 4px', borderRadius:20, background:'linear-gradient(140deg,#3a6b7a 0%,#3d9e9e 55%,#4a7fa6 100%)', padding:'18px 16px 16px', overflow:'hidden', position:'relative' }}>
+          {/* Subtle texture rings */}
+          <div style={{ position:'absolute', top:-40, right:-30, width:160, height:160, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.07)', pointerEvents:'none' }}/>
+          <div style={{ position:'absolute', top:-20, right:-10, width:100, height:100, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.06)', pointerEvents:'none' }}/>
+
+          {/* Goal */}
+          <div style={{ marginBottom:14 }}>
+            <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:4 }}>Your goal</div>
+            <div style={{ fontSize:19, fontWeight:700, color:'white', letterSpacing:'-0.01em', lineHeight:1.15 }}>Lose weight</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.55)', marginTop:4 }}>Managing hypertension · Week 4</div>
+          </div>
+
+          {/* Pillar progress strip */}
+          {(() => {
+            const pillars = [
+              { label:'Move',      pct:0.75, color:'#5ecfb0' },
+              { label:'Nutrition', pct:0.60, color:'#f9d26b' },
+              { label:'Sleep',     pct:0.50, color:'#8fb3d9' },
+              { label:'Mind',      pct:0.40, color:'#c4a3e0' },
+              { label:'Logging',   pct:0.85, color:'#f0a070' },
+            ];
+            return (
+              <div style={{ display:'flex', gap:7 }}>
+                {pillars.map(pl => (
+                  <div key={pl.label} style={{ flex:1 }}>
+                    <div style={{ fontSize:8, color:'rgba(255,255,255,0.55)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:5, textAlign:'center' }}>{pl.label}</div>
+                    <div style={{ height:4, borderRadius:3, background:'rgba(255,255,255,0.15)', overflow:'hidden' }}>
+                      <div style={{ height:'100%', borderRadius:3, background:pl.color, width:`${pl.pct*100}%`, transition:'width 0.6s ease' }}/>
+                    </div>
+                    <div style={{ fontSize:9, color:'rgba(255,255,255,0.6)', textAlign:'center', marginTop:4, fontWeight:600 }}>{Math.round(pl.pct*100)}%</div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* ── Section header ───────────────────────────────────────────── */}
+        <div style={{ padding:'14px 14px 8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ fontSize:11, fontWeight:600, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.06em' }}>
+            {p.isFocusMode ? 'One action today' : "Today's actions"}
+          </div>
+          {p.isFocusMode && (
+            <span style={{ fontSize:10, color:'#3d9e9e', fontWeight:600, background:'#e8f6f6', borderRadius:10, padding:'3px 9px' }}>Focus mode</span>
+          )}
+        </div>
+
+        {/* ── Cards ────────────────────────────────────────────────────── */}
+        <div style={{ padding:'0 12px', display:'flex', flexDirection:'column', gap:9, paddingBottom:24 }}>
+          {activeCards.map((c, idx) => {
+            const isDone = done.has(c.key);
+            const isPrimary = idx === 0 && p.isFocusMode;
+
+            /* ── Primary card (Focus Mode) — visual hero card ───────── */
+            if (isPrimary) return (
+              <div key={c.key} onClick={() => setOpenKey(c.key)}
+                style={{ background:'white', borderRadius:18, overflow:'hidden', cursor:'pointer', opacity:isDone?0.6:1, boxShadow:`0 6px 24px ${c.color}30`, userSelect:'none' }}>
+                {/* Colored band */}
+                <div style={{ background:`linear-gradient(135deg,${c.color}ee,${c.color}bb)`, padding:'18px 18px 14px', position:'relative', overflow:'hidden' }}>
+                  {/* Texture arcs */}
+                  <div style={{ position:'absolute', bottom:-30, right:-20, width:120, height:120, borderRadius:'50%', background:'rgba(255,255,255,0.07)', pointerEvents:'none' }}/>
+                  <div style={{ position:'absolute', bottom:-10, right:20, width:70, height:70, borderRadius:'50%', background:'rgba(255,255,255,0.05)', pointerEvents:'none' }}/>
+                  {/* Top row: pillar label + done badge */}
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.75)', textTransform:'uppercase', letterSpacing:'0.1em' }}>{c.pillar}</span>
+                    {isDone
+                      ? <span style={{ fontSize:9, color:'white', background:'rgba(255,255,255,0.25)', padding:'2px 9px', borderRadius:10 }}>Done ✓</span>
+                      : <span style={{ fontSize:9, fontWeight:600, color:'rgba(255,255,255,0.7)', background:'rgba(255,255,255,0.15)', padding:'2px 9px', borderRadius:10, letterSpacing:'0.04em' }}>Today's priority</span>
+                    }
+                  </div>
+                  {/* Icon + impact */}
+                  <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
+                    <div style={{ fontSize:44, lineHeight:1 }}>{c.icon || '⚡'}</div>
+                    {c.bpImpact && (
+                      <div style={{ textAlign:'right' }}>
+                        <div style={{ fontSize:9, color:'rgba(255,255,255,0.65)', marginBottom:2 }}>BP impact</div>
+                        <div style={{ fontSize:20, fontWeight:800, color:'white', letterSpacing:'-0.02em', lineHeight:1 }}>{c.bpImpact}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* White section */}
+                <div style={{ padding:'13px 16px 14px' }}>
+                  <div style={{ fontSize:17, fontWeight:700, color:'#1a1a18', lineHeight:1.25, marginBottom:5 }}>{c.title}</div>
+                  {c.tagline && <div style={{ fontSize:12, color:'#78716c', lineHeight:1.5, marginBottom:10 }}>{c.tagline}</div>}
+                  <div style={{ display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
+                    <span style={{ fontSize:11, background:'#f5f4f0', color:'#57534e', borderRadius:20, padding:'4px 10px' }}>{c.effortChip}</span>
+                    {c.conditionTag && <span style={{ fontSize:10, background:'#fdf0f0', color:'#e05c5c', borderRadius:20, padding:'4px 9px' }}>{c.conditionTag}</span>}
+                    <span style={{ marginLeft:'auto', fontSize:12, fontWeight:600, color:c.color }}>See how →</span>
+                  </div>
+                </div>
+              </div>
+            );
+
+            /* ── Regular card ────────────────────────────────────────── */
+            return (
+              <div key={c.key} onClick={() => setOpenKey(c.key)}
+                style={{ background:'white', borderRadius:16, border:'0.5px solid #e8e5de', overflow:'hidden', cursor:'pointer', opacity:isDone?0.55:1, transition:'opacity 0.2s', userSelect:'none' }}>
+                <div style={{ padding:'13px 14px 12px' }}>
+                  {/* Pillar row */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                    <div style={{ width:26, height:26, borderRadius:8, background:c.color+'15', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      <div style={{ width:7, height:7, borderRadius:'50%', background:c.color }}/>
+                    </div>
+                    <span style={{ fontSize:10, fontWeight:600, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.06em', flex:1 }}>{c.pillar}</span>
+                    {isDone && <span style={{ fontSize:9, color:'#778a62', background:'#e8ebe3', padding:'2px 8px', borderRadius:10 }}>Done ✓</span>}
+                  </div>
+                  {/* Title */}
+                  <div style={{ fontSize:15, fontWeight:600, color:'#1a1a18', lineHeight:1.3, marginBottom: c.tagline ? 4 : 10 }}>{c.title}</div>
+                  {/* Tagline */}
+                  {c.tagline && <div style={{ fontSize:12, color:'#78716c', lineHeight:1.45, marginBottom:10 }}>{c.tagline}</div>}
+                  {/* Pill row */}
+                  <div style={{ display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
+                    <span style={{ fontSize:11, background:'#f5f4f0', color:'#57534e', borderRadius:20, padding:'4px 10px', flexShrink:0 }}>{c.effortChip}</span>
+                    {c.bpImpact && <span style={{ fontSize:11, background:c.bg, color:c.color, borderRadius:20, padding:'4px 10px', flexShrink:0 }}>{c.bpImpact}</span>}
+                    {c.conditionTag && <span style={{ fontSize:10, background:'#fdf0f0', color:'#e05c5c', borderRadius:20, padding:'4px 9px', flexShrink:0 }}>{c.conditionTag}</span>}
+                    <div style={{ marginLeft:'auto', color:'#d6d3d1', fontSize:16, lineHeight:1, flexShrink:0 }}>›</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Bottom nav ───────────────────────────────────────────────── */}
+      <LemonNav active="home" onSelect={(id) => {
+        if (id==='meal'      && onSwitchPersona) onSwitchPersona('mayaMealPrep');
+        if (id==='stats'     && onSwitchPersona) onSwitchPersona('mayaStats');
+        if (id==='community' && onSwitchPersona) onSwitchPersona('mayaCommunity');
+      }}/>
+
+      {/* ── Detail sheet ────────────────────────────────────────────── */}
+      <div style={{ position:'absolute', inset:0, zIndex:40, pointerEvents:'none' }}>
+        <div style={{ position:'absolute', inset:0, background: sheetOpen?'rgba(0,0,0,0.38)':'rgba(0,0,0,0)', transition:'background 0.28s', pointerEvents: sheetOpen?'all':'none' }}
+          onClick={() => setOpenKey(null)}/>
+        <div style={{
+          position:'absolute', bottom:0, left:0, right:0, background:'#fafaf8',
+          borderRadius:'20px 20px 0 0', maxHeight:'90%', overflowY:'auto',
+          transform: sheetOpen?'translateY(0)':'translateY(100%)',
+          transition:'transform 0.3s cubic-bezier(0.32,0.72,0,1)',
+          pointerEvents: sheetOpen?'all':'none',
+        }} className="hide-scrollbar">
+          {card && (() => {
+            const isDone = done.has(card.key);
+            return (
+              <div>
+                <div style={{ width:34, height:4, background:'#d6d3d1', borderRadius:2, margin:'10px auto 0' }}/>
+                <div style={{ padding:'14px 16px 40px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:4 }}>
+                    <div style={{ width:7, height:7, borderRadius:'50%', background:card.color }}/>
+                    <span style={{ fontSize:11, fontWeight:500, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.06em' }}>{card.pillar}</span>
+                  </div>
+                  <div style={{ fontSize:18, fontWeight:500, color:'#1a1a18', lineHeight:1.3, marginBottom:14 }}>{card.title}</div>
+                  {/* Why today */}
+                  <div style={{ borderLeft:`2px solid ${card.color}`, background:card.bg, borderRadius:'0 10px 10px 0', padding:'10px 12px', marginBottom:14 }}>
+                    <div style={{ fontSize:9, fontWeight:500, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:4 }}>Why today</div>
+                    <div style={{ fontSize:13, color:'#1a1a18', lineHeight:1.6 }}>{card.whyToday}</div>
+                  </div>
+                  {/* Why it works */}
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:10 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>❤️</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>Why it works</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{card.why}</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {/* How */}
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:10 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>🗺</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>How to do it</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{card.how}</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {/* Alternatives */}
+                  <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:7 }}>Alternatives</div>
+                  {card.alts.map((a,i) => (
+                    <div key={i} onClick={(e) => { e.stopPropagation(); setOpenAlt({...a, cardColor: card.color, cardBg: card.bg}); }}
+                      style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:'#f5f5f4', borderRadius:10, marginBottom:6, cursor:'pointer', active:{background:'#ece9e3'} }}>
+                      <div>
+                        <div style={{ fontSize:13, color:'#1a1a18', fontWeight:500 }}>{a.n}</div>
+                        <div style={{ fontSize:11, color:'#78716c', marginTop:2 }}>{a.c}</div>
+                      </div>
+                      <span style={{ fontSize:16, color:'#a8a29e', marginLeft:8 }}>›</span>
+                    </div>
+                  ))}
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {/* Progress */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 0' }}>
+                    {card.streak && <div style={{ background:'#fef9c3', borderRadius:8, padding:'5px 9px', fontSize:11, fontWeight:500, color:'#b45309', flexShrink:0 }}>🔥 {card.streak}-day streak</div>}
+                    <div style={{ fontSize:12, color:'#57534e', lineHeight:1.4 }}>{card.progress}</div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {card.isBreathing && !isDone && (
+                    <button onClick={startBreath}
+                      style={{ width:'100%', padding:12, borderRadius:12, border:'0.5px solid #d6d3d1', background:'white', fontSize:14, fontWeight:500, color:'#1a1a18', cursor:'pointer', marginTop:8, marginBottom:2 }}>
+                      Start session →
+                    </button>
+                  )}
+                  <button onClick={isDone?undefined:markDone}
+                    style={{ width:'100%', padding:14, borderRadius:12, border:'none', color:'white', fontSize:15, fontWeight:500, cursor:isDone?'default':'pointer', marginTop:8, opacity:isDone?0.5:1, background:card.color, transition:'opacity 0.15s' }}>
+                    {isDone ? '✓ Done today' : 'Mark as done'}
+                  </button>
+                  <button onClick={() => setNtOpen(true)}
+                    style={{ width:'100%', padding:10, background:'none', border:'none', fontSize:13, color:'#a8a29e', cursor:'pointer', marginTop:2 }}>
+                    Not today
+                  </button>
+                  <div style={{ fontSize:10, color:'#a8a29e', lineHeight:1.6, marginTop:10 }}>{card.src}</div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* ── Alt detail sheet ─────────────────────────────────────────── */}
+      <div style={{ position:'absolute', inset:0, zIndex:50, pointerEvents:'none' }}>
+        <div style={{ position:'absolute', inset:0, background:openAlt?'rgba(0,0,0,0.35)':'rgba(0,0,0,0)', transition:'background 0.22s', pointerEvents:openAlt?'all':'none' }}
+          onClick={() => setOpenAlt(null)}/>
+        <div style={{
+          position:'absolute', bottom:0, left:0, right:0, background:'white',
+          borderRadius:'20px 20px 0 0', maxHeight:'82%', overflowY:'auto',
+          transform:openAlt?'translateY(0)':'translateY(100%)',
+          transition:'transform 0.28s cubic-bezier(0.32,0.72,0,1)',
+          pointerEvents:openAlt?'all':'none',
+        }}>
+          {openAlt && (() => {
+            const alt = openAlt;
+            const ac = alt.cardColor || '#3d9e9e';
+            const ab = alt.cardBg || '#e8f6f6';
+            // find parent card for markDone
+            const parentKey = openKey;
+            const isDoneAlt = done.has(parentKey);
+            return (
+              <div style={{ padding:'0 0 36px' }}>
+                {/* Handle */}
+                <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 2px' }}>
+                  <div style={{ width:36, height:4, borderRadius:2, background:'#d6d3d1' }}/>
+                </div>
+                {/* Header */}
+                <div style={{ display:'flex', alignItems:'center', padding:'10px 16px 14px' }}>
+                  <button onClick={() => setOpenAlt(null)}
+                    style={{ background:'none', border:'none', fontSize:22, color:'#a8a29e', cursor:'pointer', padding:'0 10px 0 0', lineHeight:1 }}>‹</button>
+                  <span style={{ fontSize:11, fontWeight:600, color:ac, textTransform:'uppercase', letterSpacing:'0.07em' }}>Alternative</span>
+                </div>
+                <div style={{ padding:'0 16px 16px' }}>
+                  <div style={{ fontSize:19, fontWeight:600, color:'#1a1a18', lineHeight:1.3, marginBottom:14 }}>{alt.n}</div>
+                  {/* Chip */}
+                  <div style={{ display:'inline-flex', alignItems:'center', background:ab, borderRadius:20, padding:'4px 10px', marginBottom:16 }}>
+                    <span style={{ fontSize:11, color:ac, fontWeight:500 }}>{alt.c}</span>
+                  </div>
+                  {/* Why it works */}
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:14 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>❤️</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>Why it works</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{alt.why}</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {/* How to do it */}
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:16 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>🗺</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>How to do it</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{alt.how}</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {/* CTA */}
+                  <button onClick={() => { setDone(prev => new Set([...prev, parentKey])); setOpenAlt(null); setOpenKey(null); }}
+                    style={{ width:'100%', padding:14, borderRadius:12, border:'none', color:'white', fontSize:15, fontWeight:500, cursor:isDoneAlt?'default':'pointer', opacity:isDoneAlt?0.5:1, background:ac, transition:'opacity 0.15s' }}>
+                    {isDoneAlt ? '✓ Done today' : 'Try this instead'}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* ── Not today panel ──────────────────────────────────────────── */}
+      <div style={{ position:'absolute', inset:0, zIndex:60, pointerEvents:'none' }}>
+        <div style={{ position:'absolute', inset:0, background:ntOpen?'rgba(0,0,0,0.45)':'rgba(0,0,0,0)', transition:'background 0.2s', pointerEvents:ntOpen?'all':'none' }}
+          onClick={() => setNtOpen(false)}/>
+        <div style={{
+          position:'absolute', bottom:0, left:0, right:0, background:'white',
+          borderRadius:'20px 20px 0 0', padding:'20px 16px 36px',
+          transform:ntOpen?'translateY(0)':'translateY(100%)',
+          transition:'transform 0.28s cubic-bezier(0.32,0.72,0,1)',
+          pointerEvents:ntOpen?'all':'none',
+        }}>
+          <div style={{ fontSize:13, color:'#78716c', textAlign:'center', marginBottom:14 }}>Why not today?</div>
+          {[['😴','Too tired','too-tired'],['✓','Already did this','already-did'],['—','Not relevant today','not-relevant'],['⏱','Too busy','too-busy']].map(([em,label,val]) => (
+            <button key={val} onClick={() => skipCard(val)}
+              style={{ display:'block', width:'100%', padding:'13px 14px', background:'#f5f5f4', borderRadius:12, border:'none', fontSize:14, color:'#1a1a18', cursor:'pointer', textAlign:'left', marginBottom:8 }}>
+              {em}&nbsp;&nbsp;{label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Breathing overlay ────────────────────────────────────────── */}
+      <div style={{
+        position:'absolute', inset:0, zIndex:80, background:'#1e1830',
+        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+        transform:breathOpen?'translateY(0)':'translateY(100%)',
+        transition:'transform 0.35s cubic-bezier(0.32,0.72,0,1)',
+      }}>
+        <button onClick={stopBreath} style={{ position:'absolute', top:18, right:18, color:'rgba(255,255,255,0.5)', background:'none', border:'none', fontSize:22, cursor:'pointer', padding:4 }}>✕</button>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:36, height:16 }}>{PHASES[brState.phaseIdx]}</div>
+        <div style={{ width:150, height:150, borderRadius:'50%', border:'1.5px solid rgba(255,255,255,0.15)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:36 }}>
+          <div style={{
+            width:70, height:70, borderRadius:'50%',
+            background:brState.phaseIdx===0?'rgba(139,109,170,0.8)':brState.phaseIdx===2?'rgba(139,109,170,0.4)':'rgba(139,109,170,0.6)',
+            transition:'transform 4s ease-in-out, background 1s',
+            transform:brState.phaseIdx===0?'scale(1.5)':brState.phaseIdx===2?'scale(0.8)':'scale(1)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>
+            <span style={{ fontSize:28, fontWeight:300, color:'white' }}>{brState.count}</span>
+          </div>
+        </div>
+        <div style={{ fontSize:13, color:'rgba(255,255,255,0.45)', marginTop:6, textAlign:'center' }}>Cycle {brState.cycle} of {TOTAL_CYCLES}</div>
+        <button onClick={stopBreath} style={{ padding:'11px 28px', background:'rgba(255,255,255,0.12)', border:'0.5px solid rgba(255,255,255,0.25)', borderRadius:10, color:'white', fontSize:14, cursor:'pointer', marginTop:16 }}>End session</button>
+      </div>
+
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENGINE STD VIEW — exact replica of lemon_engine_cards_standard_day.html
+// ─────────────────────────────────────────────────────────────────────────────
+const EngineStdView = ({ persona }) => {
+  const p = persona;
+  const [openKey, setOpenKey] = useState(null);
+  const [ntOpen, setNtOpen]   = useState(false);
+  const [done, setDone]       = useState(new Set());
+  const [breathOpen, setBreathOpen] = useState(false);
+  const brRef = useRef(null);
+  const PHASES = ['Inhale','Hold','Exhale','Hold'];
+  const PHASE_DUR = 4, TOTAL_CYCLES = 5;
+  const [brState, setBrState] = useState({ phaseIdx:0, count:PHASE_DUR, cycle:1 });
+
+  const card = p.cards.find(c => c.key === openKey) || null;
+
+  const startBreath = () => {
+    setBrState({ phaseIdx:0, count:PHASE_DUR, cycle:1 });
+    setBreathOpen(true);
+    brRef.current = setInterval(() => {
+      setBrState(s => {
+        let { phaseIdx, count, cycle } = s;
+        count--;
+        if (count < 1) {
+          phaseIdx = (phaseIdx + 1) % PHASES.length;
+          if (phaseIdx === 0) cycle++;
+          if (cycle > TOTAL_CYCLES) { clearInterval(brRef.current); setBreathOpen(false); return s; }
+          count = PHASE_DUR;
+        }
+        return { phaseIdx, count, cycle };
+      });
+    }, 1000);
+  };
+
+  const stopBreath = () => { clearInterval(brRef.current); setBreathOpen(false); };
+  useEffect(() => () => clearInterval(brRef.current), []);
+
+  const markDone = () => {
+    if (!openKey) return;
+    setDone(d => new Set([...d, openKey]));
+    setOpenKey(null);
+  };
+
+  const skipCard = (reason) => {
+    if (reason === 'already-did') markDone();
+    setNtOpen(false);
+    if (openKey && reason !== 'already-did') setOpenKey(null);
+  };
+
+  const sheetOpen = !!openKey;
+
+  return (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'#f5f4f0', overflow:'hidden', position:'relative' }}>
+
+      {/* Scrollable screen */}
+      <div style={{ flex:1, overflowY:'auto', overflowX:'hidden' }} className="hide-scrollbar">
+
+        {/* Header */}
+        <div style={{ background:'#fafaf8', padding:'18px 16px 14px', borderBottom:'0.5px solid #e8e5de', position:'sticky', top:0, zIndex:10 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+            <span style={{ fontSize:19, fontWeight:500, color:'#1a1a18' }}>{p.greeting}</span>
+            <span style={{ background:'linear-gradient(135deg,#c9a227,#e8b820)', borderRadius:8, padding:'3px 9px', fontSize:11, fontWeight:500, color:'white' }}>Lemon</span>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:7 }}>
+            {p.widgets.map((w, i) => (
+              <div key={i} style={{ background:'white', borderRadius:10, padding:'9px 10px', border:'0.5px solid #e8e5de' }}>
+                <div style={{ fontSize:9, color:'#a8a29e', marginBottom:2 }}>{w.label}</div>
+                <div style={{ fontSize:15, fontWeight:500, color:'#1a1a18' }}>{w.value}</div>
+                <div style={{ fontSize:9, color:'#a8a29e' }}>{w.sub}</div>
+                <div style={{ fontSize:9, marginTop:1, color:w.trendColor }}>{w.trend}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Card list */}
+        <div style={{ padding:'12px', display:'flex', flexDirection:'column', gap:9, paddingBottom:24 }}>
+          <div style={{ fontSize:11, fontWeight:500, color:'#a8a29e', marginBottom:4, padding:'0 2px' }}>Today's actions</div>
+          {p.cards.map(c => {
+            const isDone = done.has(c.key);
+            return (
+              <div key={c.key} onClick={() => setOpenKey(c.key)}
+                style={{ background:'white', borderRadius:14, border:'0.5px solid #e8e5de', overflow:'hidden', cursor:'pointer', opacity: isDone ? 0.55 : 1, transition:'opacity 0.2s', userSelect:'none' }}>
+                <div style={{ padding:'12px 14px 10px' }}>
+                  {/* Pill row */}
+                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:7 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                      <div style={{ width:7, height:7, borderRadius:'50%', background:c.color, flexShrink:0 }}/>
+                      <span style={{ fontSize:10, fontWeight:500, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.05em' }}>{c.pillar}</span>
+                    </div>
+                    {c.conditionTag && (
+                      <span style={{ fontSize:9, padding:'2px 7px', borderRadius:10, marginLeft:2, background:'#fdf0f0', color:'#e05c5c' }}>{c.conditionTag}</span>
+                    )}
+                    {isDone && <span style={{ marginLeft:'auto', fontSize:9, color:'#778a62', background:'#e8ebe3', padding:'2px 8px', borderRadius:10 }}>Done ✓</span>}
+                  </div>
+                  {/* Title */}
+                  <div style={{ fontSize:15, fontWeight:500, color:'#1a1a18', lineHeight:1.3, marginBottom:5 }}>{c.title}</div>
+                  {/* Trigger line */}
+                  <div style={{ fontSize:12, color:'#57534e', lineHeight:1.55, marginBottom:8 }}>{c.triggerLine}</div>
+                  {/* Bottom row */}
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <div style={{ fontSize:11, borderRadius:20, padding:'3px 9px', ...(c.effortChipStyle || { background:'#f0f4ef', color:'#5d6e4d' }) }}>{c.effortChip}</div>
+                    <div style={{ fontSize:11, color:'#a8a29e' }}>+{c.alts.length} options</div>
+                    <div style={{ marginLeft:'auto', color:'#d6d3d1', fontSize:13 }}>›</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Detail sheet ─────────────────────────────── */}
+      <div style={{ position:'absolute', inset:0, zIndex:40, pointerEvents:'none' }}>
+        {/* Scrim */}
+        <div style={{ position:'absolute', inset:0, background: sheetOpen ? 'rgba(0,0,0,0.38)' : 'rgba(0,0,0,0)', transition:'background 0.28s', pointerEvents: sheetOpen ? 'all' : 'none' }}
+          onClick={() => setOpenKey(null)}/>
+        {/* Panel */}
+        <div style={{
+          position:'absolute', bottom:0, left:0, right:0, background:'#fafaf8',
+          borderRadius:'20px 20px 0 0', maxHeight:'88%', overflowY:'auto',
+          transform: sheetOpen ? 'translateY(0)' : 'translateY(100%)',
+          transition:'transform 0.3s cubic-bezier(0.32,0.72,0,1)',
+          pointerEvents: sheetOpen ? 'all' : 'none',
+        }} className="hide-scrollbar">
+          {card && (() => {
+            const isDone = done.has(card.key);
+            return (
+              <div>
+                <div style={{ width:34, height:4, background:'#d6d3d1', borderRadius:2, margin:'10px auto 0' }}/>
+                <div style={{ padding:'14px 16px 36px' }}>
+                  {/* Pillar label */}
+                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:4 }}>
+                    <div style={{ width:7, height:7, borderRadius:'50%', background:card.color }}/>
+                    <span style={{ fontSize:11, fontWeight:500, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.06em' }}>{card.pillar}</span>
+                  </div>
+                  <div style={{ fontSize:18, fontWeight:500, color:'#1a1a18', lineHeight:1.3, marginBottom:14 }}>{card.title}</div>
+
+                  {/* Why today */}
+                  <div style={{ borderLeft:`2px solid ${card.color}`, background:card.bg, borderRadius:'0 10px 10px 0', padding:'10px 12px', marginBottom:14 }}>
+                    <div style={{ fontSize:9, fontWeight:500, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:4 }}>Why today</div>
+                    <div style={{ fontSize:13, color:'#1a1a18', lineHeight:1.6 }}>{card.whyToday}</div>
+                  </div>
+
+                  {/* Why it works */}
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:10 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>❤️</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>Why it works</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{card.why}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+
+                  {/* How */}
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:10 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>🗺</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>How to do it</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{card.how}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+
+                  {/* Alternatives */}
+                  <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:7 }}>Alternatives</div>
+                  {card.alts.map((a, i) => (
+                    <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 10px', background:'#f5f5f4', borderRadius:10, marginBottom:5 }}>
+                      <span style={{ fontSize:13, color:'#1a1a18' }}>{a.n}</span>
+                      <span style={{ fontSize:11, color:'#78716c' }}>{a.c}</span>
+                    </div>
+                  ))}
+
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+
+                  {/* Progress */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 0' }}>
+                    {card.streak && <div style={{ background:'#fef9c3', borderRadius:8, padding:'5px 9px', fontSize:11, fontWeight:500, color:'#b45309', flexShrink:0 }}>🔥 {card.streak}-day streak</div>}
+                    <div style={{ fontSize:12, color:'#57534e', lineHeight:1.4 }}>{card.progress}</div>
+                  </div>
+
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+
+                  {/* Buttons */}
+                  {card.isBreathing && !isDone && (
+                    <button onClick={startBreath}
+                      style={{ width:'100%', padding:12, borderRadius:12, border:'0.5px solid #d6d3d1', background:'white', fontSize:14, fontWeight:500, color:'#1a1a18', cursor:'pointer', marginTop:8, marginBottom:2 }}>
+                      Start session →
+                    </button>
+                  )}
+                  <button onClick={isDone ? undefined : markDone}
+                    style={{ width:'100%', padding:14, borderRadius:12, border:'none', color:'white', fontSize:15, fontWeight:500, cursor: isDone?'default':'pointer', marginTop:8, opacity: isDone?0.5:1, background:card.color, transition:'opacity 0.15s' }}>
+                    {isDone ? '✓ Done today' : 'Mark as done'}
+                  </button>
+                  <button onClick={() => setNtOpen(true)}
+                    style={{ width:'100%', padding:10, background:'none', border:'none', fontSize:13, color:'#a8a29e', cursor:'pointer', marginTop:2 }}>
+                    Not today
+                  </button>
+
+                  {/* Source */}
+                  <div style={{ fontSize:10, color:'#a8a29e', lineHeight:1.6, marginTop:10 }}>{card.src}</div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* ── Not today panel ──────────────────────────── */}
+      <div style={{ position:'absolute', inset:0, zIndex:60, pointerEvents:'none' }}>
+        <div style={{ position:'absolute', inset:0, background: ntOpen?'rgba(0,0,0,0.45)':'rgba(0,0,0,0)', transition:'background 0.2s', pointerEvents: ntOpen?'all':'none' }}
+          onClick={() => setNtOpen(false)}/>
+        <div style={{
+          position:'absolute', bottom:0, left:0, right:0, background:'white',
+          borderRadius:'20px 20px 0 0', padding:'20px 16px 36px',
+          transform: ntOpen?'translateY(0)':'translateY(100%)',
+          transition:'transform 0.28s cubic-bezier(0.32,0.72,0,1)',
+          pointerEvents: ntOpen?'all':'none',
+        }}>
+          <div style={{ fontSize:13, color:'#78716c', textAlign:'center', marginBottom:14 }}>Why not today?</div>
+          {[['😴','Too tired','too-tired'],['✓','Already did this','already-did'],['—','Not relevant today','not-relevant'],['⏱','Too busy','too-busy']].map(([em, label, val]) => (
+            <button key={val} onClick={() => skipCard(val)}
+              style={{ display:'block', width:'100%', padding:'13px 14px', background:'#f5f5f4', borderRadius:12, border:'none', fontSize:14, color:'#1a1a18', cursor:'pointer', textAlign:'left', marginBottom:8 }}>
+              {em}&nbsp;&nbsp;{label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Breathing overlay ────────────────────────── */}
+      <div style={{
+        position:'absolute', inset:0, zIndex:80, background:'#1e1830',
+        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+        transform: breathOpen?'translateY(0)':'translateY(100%)',
+        transition:'transform 0.35s cubic-bezier(0.32,0.72,0,1)',
+      }}>
+        <button onClick={stopBreath} style={{ position:'absolute', top:18, right:18, color:'rgba(255,255,255,0.5)', background:'none', border:'none', fontSize:22, cursor:'pointer', padding:4 }}>✕</button>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:36, height:16 }}>{PHASES[brState.phaseIdx]}</div>
+        <div style={{ width:150, height:150, borderRadius:'50%', border:'1.5px solid rgba(255,255,255,0.15)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:36 }}>
+          <div style={{
+            width:70, height:70, borderRadius:'50%',
+            background: brState.phaseIdx===0?'rgba(139,109,170,0.8)':brState.phaseIdx===2?'rgba(139,109,170,0.4)':'rgba(139,109,170,0.6)',
+            transition:'transform 4s ease-in-out, background 1s',
+            transform: brState.phaseIdx===0?'scale(1.5)':brState.phaseIdx===2?'scale(0.8)':'scale(1)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>
+            <span style={{ fontSize:28, fontWeight:300, color:'white' }}>{brState.count}</span>
+          </div>
+        </div>
+        <div style={{ fontSize:13, color:'rgba(255,255,255,0.45)', marginTop:6, textAlign:'center' }}>Cycle {brState.cycle} of {TOTAL_CYCLES}</div>
+        <button onClick={stopBreath} style={{ padding:'11px 28px', background:'rgba(255,255,255,0.12)', border:'0.5px solid rgba(255,255,255,0.25)', borderRadius:10, color:'white', fontSize:14, cursor:'pointer', marginTop:16 }}>End session</button>
+      </div>
+
+    </div>
+  );
+};
+
 const ChatLoggingView = ({ initialStage = 'main', initialActivity = null }) => {
   const [stage, setStage]         = useState(initialStage);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -4457,6 +6145,8 @@ function App() {
   };
 
   const p = PERSONAS[pk];
+  const isEngineStdView  = !!p.isEngineStdView;
+  const isEngineStdV2    = !!p.isEngineStdV2;
   const isHomeView = !!p.isHomeView;
   const seq = p.pageSequence || [1,2,3,4,5];
   const currentIdx = seq.indexOf(page);
@@ -4481,13 +6171,13 @@ function App() {
   return (
     <>
       <div style={{textAlign:'center',maxWidth:620}}>
-        <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#94a47f',margin:'0 0 4px'}}>Lemon · Hypertension use case</p>
-        <h1 style={{fontSize:22,fontWeight:800,color:'#1a1a1a',margin:'0 0 6px',letterSpacing:'-0.02em'}}>Maya’s hypertension use case.</h1>
+        <p style={{fontSize:11,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'#94a47f',margin:'0 0 4px'}}>Lemon · Use cases</p>
+        <h1 style={{fontSize:22,fontWeight:800,color:'#1a1a1a',margin:'0 0 6px',letterSpacing:'-0.02em'}}>Maya&apos;s hypertension use case.</h1>
         <p style={{fontSize:13,color:'#78716c',margin:0,lineHeight:1.5}}>{p.isChatView ? 'Chat-logging MVP (Option G) — sodium-aware AI meal flow. Tap "Looks right" to log; the red dot pulses; tap the hamburger to see the journal slide in.' : p.routerStrip ? 'Homepage MVP option 3 — logging lives in chat. Notification (above the device) is the daily-ritual path; the in-app router strip routes to chat for catch-up. The homepage carries no logging UI.' : p.weeklyReportPromoted ? 'Homepage MVP option 2 — weekly report promoted to hero, Logging pillar removed, LemonAsksBP carries the full BP form (sys / dia / pulse / notes) plus an X dismiss.' : p.bpLogVariant === 'ask' ? 'Homepage Logging CTA MVP — LemonAsksBP at the top with the full BP form (sys / dia / pulse / notes), Logging pillar in the rec stack with a "Logged today" state.' : isHomeView ? 'Hypertension homepage — DASH-adjusted nutrition, BP-aware sleep + mind cards, fully interactive. Tap any recommendation for the full detail sheet.' : `Weekly progress report — ${(p.pageSequence||[1,2,3,4,5]).length} pages. Page 1 stats, Page 2 chart + insight per metric, Page ${(p.pageSequence||[1,2,3,4,5]).slice(-1)[0]} commit.`}</p>
       </div>
 
-      <div style={{width:'100%',maxWidth:1100,overflowX:'auto'}} className="hide-scrollbar">
-        <div style={{display:'flex',gap:8,padding:'0 4px',flexWrap:'nowrap',justifyContent:'flex-start',minWidth:'max-content'}}>
+      <div style={{width:'100%',maxWidth:820}}>
+        <div style={{display:'flex',gap:8,padding:'0 4px',flexWrap:'wrap',justifyContent:'flex-start'}}>
           {PERSONA_LIST.map(pp=>{
             const active = pk===pp.key;
             return (
@@ -4508,71 +6198,15 @@ function App() {
         </div>
       </div>
 
-      {/* v5 — mocked iOS lock-screen notification, shown above the device to demonstrate the ambient daily-ritual path */}
-      {p.showLockNotif && notifState !== 'dismissed' && (
-        <div className="fi" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginBottom:-8}}>
-          <p style={{fontSize:11,fontWeight:600,letterSpacing:'0.08em',textTransform:'uppercase',color:'#94a47f',margin:0}}>Lock screen · 7:00 AM</p>
-          <div style={{
-            width:357,
-            background: notifState === 'logged' ? 'rgba(240,250,244,0.96)' : 'rgba(255,255,255,0.94)',
-            border:'1px solid rgba(0,0,0,0.06)',
-            borderRadius:18,
-            padding:'12px 14px 14px',
-            boxShadow:'0 14px 40px rgba(28,32,48,0.18)',
-            backdropFilter:'blur(20px)',
-            transition:'all 0.3s ease',
-          }}>
-            <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:8}}>
-              <div style={{
-                width:24, height:24, borderRadius:6,
-                background: notifState === 'logged' ? '#4CAF7D' : 'linear-gradient(135deg,#fcd34d,#fbbf24)',
-                color: notifState === 'logged' ? '#fff' : '#1a1a1a',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                fontWeight:800, fontSize:11, flexShrink:0,
-              }}>{notifState === 'logged' ? <I.Check/> : 'L'}</div>
-              <span style={{fontSize:11.5,fontWeight:600,color:'#3a3a38',letterSpacing:'0.02em'}}>LEMON</span>
-              <span style={{fontSize:11,color:'#a8a29e',marginLeft:'auto'}}>{notifState === 'logged' ? 'just now' : 'now'}</span>
-            </div>
-            {notifState === 'logged' ? (
-              <>
-                <p style={{fontSize:14,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px',letterSpacing:'-0.01em'}}>Logged · 124/82 mmHg</p>
-                <p style={{fontSize:12.5,color:'#4CAF7D',fontWeight:600,margin:0,lineHeight:1.4}}>Pulse 66 · 5-day streak below 125</p>
-              </>
-            ) : (
-              <>
-                <p style={{fontSize:14,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px',letterSpacing:'-0.01em'}}>Time to log your morning BP</p>
-                <p style={{fontSize:12.5,color:'#57534e',margin:'0 0 10px',lineHeight:1.4}}>Yesterday: <span style={{fontWeight:700,color:'#3a3a38'}}>124/82</span> · pulse 66</p>
-                <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr 0.9fr',gap:6,borderTop:'1px solid rgba(0,0,0,0.07)',paddingTop:8}}>
-                  <button onClick={handleNotifSame} style={{
-                    padding:'9px 8px', borderRadius:11,
-                    background:'rgba(0,0,0,0.05)', border:'none',
-                    fontSize:11.5, fontWeight:700, color:'#1a1a1a',
-                    cursor:'pointer', fontFamily:'inherit', transition:'background 0.15s',
-                  }}>Same as yesterday</button>
-                  <button onClick={handleNotifAdjust} style={{
-                    padding:'9px 8px', borderRadius:11,
-                    background:'rgba(0,0,0,0.05)', border:'none',
-                    fontSize:11.5, fontWeight:600, color:'#3a3a38',
-                    cursor:'pointer', fontFamily:'inherit', transition:'background 0.15s',
-                  }}>Adjust</button>
-                  <button onClick={handleNotifSnooze} style={{
-                    padding:'9px 8px', borderRadius:11,
-                    background:'rgba(0,0,0,0.05)', border:'none',
-                    fontSize:11.5, fontWeight:600, color:'#78716c',
-                    cursor:'pointer', fontFamily:'inherit', transition:'background 0.15s',
-                  }}>Snooze</button>
-                </div>
-              </>
-            )}
-          </div>
-          <p style={{fontSize:11,color:'#a8a29e',margin:0,maxWidth:357,textAlign:'center',lineHeight:1.4}}>{notifState === 'logged' ? 'Done. App never opened. The metric widget updates next time you do.' : '~80% of mornings: tap "Same as yesterday" → logged without opening the app.'}</p>
-        </div>
-      )}
-
+      <div style={{display:'flex',alignItems:'flex-start',gap:24}}>
       <div className="device" key={`${pk}-${animKey}`}>
         <div className="notch"/>
 
-        {p.isChatView ? (
+        {p.isEngineStdV2 ? (
+          <EngineStdViewV2 persona={p} onSwitchPersona={switchPersona}/>
+        ) : p.isEngineStdView ? (
+          <EngineStdView persona={p}/>
+        ) : p.isChatView ? (
           <ChatLoggingView/>
         ) : p.isStatsView ? (
           <StatsView persona={p} onSwitchPersona={switchPersona}/>
@@ -4680,13 +6314,79 @@ function App() {
         )}
       </div>
 
+      {/* Lock-screen notification — floats to the right of the phone */}
+      {p.showLockNotif && notifState !== 'dismissed' && (
+        <div className="fi" style={{display:'flex',flexDirection:'column',gap:10,paddingTop:48,width:280,flexShrink:0}}>
+          <p style={{fontSize:11,fontWeight:600,letterSpacing:'0.08em',textTransform:'uppercase',color:'#94a47f',margin:0}}>Lock screen · 7:00 AM</p>
+          <div style={{
+            background: notifState === 'logged' ? 'rgba(240,250,244,0.96)' : 'rgba(255,255,255,0.94)',
+            border:'1px solid rgba(0,0,0,0.06)',
+            borderRadius:18,
+            padding:'12px 14px 14px',
+            boxShadow:'0 14px 40px rgba(28,32,48,0.18)',
+            backdropFilter:'blur(20px)',
+            transition:'all 0.3s ease',
+          }}>
+            <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:8}}>
+              <div style={{
+                width:24, height:24, borderRadius:6,
+                background: notifState === 'logged' ? '#4CAF7D' : 'linear-gradient(135deg,#fcd34d,#fbbf24)',
+                color: notifState === 'logged' ? '#fff' : '#1a1a1a',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                fontWeight:800, fontSize:11, flexShrink:0,
+              }}>{notifState === 'logged' ? <I.Check/> : 'L'}</div>
+              <span style={{fontSize:11.5,fontWeight:600,color:'#3a3a38',letterSpacing:'0.02em'}}>LEMON</span>
+              <span style={{fontSize:11,color:'#a8a29e',marginLeft:'auto'}}>{notifState === 'logged' ? 'just now' : 'now'}</span>
+            </div>
+            {notifState === 'logged' ? (
+              <>
+                <p style={{fontSize:14,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px',letterSpacing:'-0.01em'}}>Logged · 124/82 mmHg</p>
+                <p style={{fontSize:12.5,color:'#4CAF7D',fontWeight:600,margin:0,lineHeight:1.4}}>Pulse 66 · 5-day streak below 125</p>
+              </>
+            ) : (
+              <>
+                <p style={{fontSize:14,fontWeight:700,color:'#1a1a1a',margin:'0 0 2px',letterSpacing:'-0.01em'}}>Time to log your morning BP</p>
+                <p style={{fontSize:12.5,color:'#57534e',margin:'0 0 10px',lineHeight:1.4}}>Yesterday: <span style={{fontWeight:700,color:'#3a3a38'}}>124/82</span> · pulse 66</p>
+                <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr 0.9fr',gap:6,borderTop:'1px solid rgba(0,0,0,0.07)',paddingTop:8}}>
+                  <button onClick={handleNotifSame} style={{
+                    padding:'9px 8px', borderRadius:11,
+                    background:'rgba(0,0,0,0.05)', border:'none',
+                    fontSize:11.5, fontWeight:700, color:'#1a1a1a',
+                    cursor:'pointer', fontFamily:'inherit', transition:'background 0.15s',
+                  }}>Same as yesterday</button>
+                  <button onClick={handleNotifAdjust} style={{
+                    padding:'9px 8px', borderRadius:11,
+                    background:'rgba(0,0,0,0.05)', border:'none',
+                    fontSize:11.5, fontWeight:600, color:'#3a3a38',
+                    cursor:'pointer', fontFamily:'inherit', transition:'background 0.15s',
+                  }}>Adjust</button>
+                  <button onClick={handleNotifSnooze} style={{
+                    padding:'9px 8px', borderRadius:11,
+                    background:'rgba(0,0,0,0.05)', border:'none',
+                    fontSize:11.5, fontWeight:600, color:'#78716c',
+                    cursor:'pointer', fontFamily:'inherit', transition:'background 0.15s',
+                  }}>Snooze</button>
+                </div>
+              </>
+            )}
+          </div>
+          <p style={{fontSize:11,color:'#a8a29e',margin:0,lineHeight:1.4}}>{notifState === 'logged' ? 'Done. App never opened. The metric widget updates next time you do.' : '~80% of mornings: tap "Same as yesterday" → logged without opening the app.'}</p>
+        </div>
+      )}
+
+      </div>{/* end phone + notification flex row */}
+
       <div style={{maxWidth:620,fontSize:11,color:'#a8a29e',textAlign:'center',lineHeight:1.6}}>
         {p.isChatView
           ? <>Chat logging (Option G refined) · Sodium-aware meal capture for hypertension. Tap “Looks right” to log → red dot pulses on the menu → tap the hamburger to slide in the Health Journal drawer.<br/>Numbers are illustrative.</>
           : p.bpLogVariant === 'ask'
           ? <>Option 3 — Lemon asks. A warm conversational prompt at the top of the cards area. Two inline number fields with yesterday as anchor → submit collapses the ask to a single sage confirmation line; the BP metric tile updates in lockstep.<br/>Numbers are illustrative.</>
           : isHomeView
-          ? <>Hypertension homepage · DASH-adjusted recommendations, fully interactive cards, calendar scheduling, and a Sunday "Week in review" banner that opens the weekly progress report.<br/>Numbers are illustrative.</>
+          ? p.key==='mayaHomeTrigger'
+            ? <>Main Page · Trigger Line — each recommendation card surfaces a data-grounded reason it&apos;s showing today. Signal first (bolded, card-colored), implication second. Tests whether personalised context drives action.<br/>Numbers are illustrative.</>
+            : p.key==='mayaHomeLogOwn'
+            ? <>Main Page · Log Your Own — same as Main Page MVP but with a free-text &ldquo;log your own&rdquo; input on each card. Users can record activities that aren&apos;t in the suggestion list.<br/>Numbers are illustrative.</>
+            : <>Hypertension homepage · DASH-adjusted recommendations, fully interactive cards, calendar scheduling, and a Sunday "Week in review" banner that opens the weekly progress report.<br/>Numbers are illustrative.</>
           : <>Weekly progress report · {(p.pageSequence||[1,2,3,4,5]).length} pages — Page 1 stats (BP / Weight / Actions), Page 2 charts and insights, {p.pageSequence && p.pageSequence.includes(3) ? 'Page 3 plan review, ' : ''}Page {(p.pageSequence||[1,2,3,4,5]).slice(-1)[0]} commit. Submit lands on a celebration screen.<br/>Numbers are illustrative.</>
         }
       </div>
