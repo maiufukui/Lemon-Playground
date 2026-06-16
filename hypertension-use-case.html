@@ -673,6 +673,13 @@ PERSONAS.mayaCommunity = {
   ],
 };
 
+// Maya Challenge Detail — improved challenge page with progress, leaderboard, and activity feed.
+PERSONAS.mayaChallenge = {
+  key:'mayaChallenge', name:'Maya', age:31, label:'Challenge detail',
+  initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', accent:'#c9a227',
+  isChallengeDetailView:true,
+};
+
 // Maya Stats MVP — 360-degree view of health: Lemon score, sub-scores, Activity/Sleep/Readiness tabs.
 PERSONAS.mayaStats = {
   key:'mayaStats', name:'Maya', age:31, label:'Stats MVP',
@@ -1195,12 +1202,58 @@ PERSONAS.mayaStandardDay = {
   ],
 };
 
+// ── Goal metrics map ──────────────────────────────────────────────────────────
+// For each user goal, defines the 3 hero metric cards shown in the goal section.
+// Source: Lemon Stats PRD v1.3 — Sleep Score, Readiness Score, Lemon Score + sub-signals.
+// metric shape: { label, value, unit, delta, deltaPos, sub }
+const GOAL_METRICS = {
+  // Lose weight: calorie deficit proxy + sleep (metabolic rate) + behavioral follow-through
+  'lose-weight': [
+    { label:'Active cal',  value:'420',  unit:'kcal',  delta:'+12% this week',  deltaPos:true,  sub:'vs. your avg' },
+    { label:'Sleep',       value:'72',   unit:'/ 100', delta:'Normal',          deltaPos:true,  sub:'7h 12m last night' },
+    { label:'Progress',    value:'75',   unit:'%',     delta:'3 of 4 done',     deltaPos:true,  sub:'actions today' },
+  ],
+  // Gain muscle: recovery capacity (HRV/RHR) + training load + sleep for repair
+  'gain-muscle': [
+    { label:'Readiness',   value:'78',   unit:'/ 100', delta:'Good',            deltaPos:true,  sub:'ready to train hard' },
+    { label:'Load',        value:'+18',  unit:'%',     delta:'above baseline',  deltaPos:true,  sub:'active cal this week' },
+    { label:'Sleep',       value:'74',   unit:'/ 100', delta:'Solid',           deltaPos:true,  sub:'REM 1h 18m' },
+  ],
+  // Boost energy: sleep is primary + HRV (autonomic energy reserve) + readiness
+  'boost-energy': [
+    { label:'Sleep',       value:'68',   unit:'/ 100', delta:'−28m from avg',   deltaPos:false, sub:'low last night' },
+    { label:'HRV',         value:'52',   unit:'ms',    delta:'+3ms from avg',   deltaPos:true,  sub:'above your norm' },
+    { label:'Readiness',   value:'71',   unit:'/ 100', delta:'Fair',            deltaPos:true,  sub:'okay to train' },
+  ],
+  // Improve sleep: sleep score + REM (architecture) + bedtime consistency
+  'improve-sleep': [
+    { label:'Sleep score', value:'62',   unit:'/ 100', delta:'Below avg',       deltaPos:false, sub:'−46m this week' },
+    { label:'REM',         value:'52',   unit:'min',   delta:'−18m from avg',   deltaPos:false, sub:'brain recovery' },
+    { label:'Consistency', value:'14',   unit:'min',   delta:'Stable',          deltaPos:true,  sub:'bedtime variance' },
+  ],
+  // Reduce stress: HRV (sympathetic tone) + resting HR + mind session completion
+  'reduce-stress': [
+    { label:'HRV',         value:'44',   unit:'ms',    delta:'−8ms from avg',   deltaPos:false, sub:'stress signal' },
+    { label:'Resting HR',  value:'63',   unit:'bpm',   delta:'+4 above avg',    deltaPos:false, sub:'elevated slightly' },
+    { label:'Mind',        value:'2',    unit:'/ 7',   delta:'Building habit',  deltaPos:null,  sub:'sessions this week' },
+  ],
+  // Longevity: HRV trend (cardiovascular health) + resting HR (cardiac efficiency) + Lemon Score
+  'longevity': [
+    { label:'HRV',         value:'56',   unit:'ms',    delta:'+5ms trend',      deltaPos:true,  sub:'28-day improving' },
+    { label:'Resting HR',  value:'57',   unit:'bpm',   delta:'Optimal',         deltaPos:true,  sub:'58-day low' },
+    { label:'Lemon score', value:'74',   unit:'/ 100', delta:'On track',        deltaPos:true,  sub:'sleep · readiness · habits' },
+  ],
+};
+
 // v2 — same card data as v1, adds bpImpact chip per card
 PERSONAS.mayaStandardDayV2 = {
   ...PERSONAS.mayaStandardDay,
   key:'mayaStandardDayV2', label:'Engine · Standard Day v2',
   isEngineStdV2: true,
   isFocusMode: false,
+  goalKey: 'lose-weight',
+  goalLabel: 'Lose weight',
+  goalSub: 'Managing hypertension',
   cards: PERSONAS.mayaStandardDay.cards.map(c => ({
     ...c,
     bpImpact: c.key==='move' ? '~4–7 mmHg' : c.key==='nutrition' ? '~5–11 mmHg' : c.key==='sleep' ? 'Protects ~5 mmHg' : '~3–5 mmHg',
@@ -1210,6 +1263,73 @@ PERSONAS.mayaStandardDayV2 = {
            : '10 minutes now prevents the weekday morning cortisol spike',
     icon: c.key==='move' ? '🏃' : c.key==='nutrition' ? '🥗' : c.key==='sleep' ? '🌙' : '🧘',
   })),
+  // Challenge cards — surface as rec cards alongside pillar cards
+  challengeCards: [
+    {
+      id:'challenge-core',
+      pillarLabel:'Movement', pillarColor:'#94a47f',
+      actionTitle:'Day 11 core routine',
+      challengeName:'Strong Core, Strong Body',
+      daterange:'Apr 6 – Apr 20',
+      exercises:['Planks','Bicycle Crunches','Flutter Kicks'],
+      duration:'~15 min',
+      rank:2, rankOf:8,
+      userRoutines:9, totalRoutines:14,
+      currentDay:11, totalDays:14,
+      gapText:'1 routine behind Steven',
+      leaderboard:[
+        { rank:1, name:'Steven',  initial:'S', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', routines:10 },
+        { rank:2, name:'Maya',    initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', routines:9,  isUser:true },
+        { rank:3, name:'Onur T.', initial:'O', grad:'linear-gradient(135deg,#5b7fa6,#3d5a78)', routines:7  },
+        { rank:4, name:'James',   initial:'J', grad:'linear-gradient(135deg,#a47f94,#6d5d7a)', routines:6  },
+        { rank:5, name:'Priya',   initial:'P', grad:'linear-gradient(135deg,#e8a87c,#c9813a)', routines:4  },
+        { rank:6, name:'Alex',    initial:'A', grad:'linear-gradient(135deg,#7fa494,#4d6e65)', routines:3  },
+        { rank:7, name:'Sam',     initial:'S', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', routines:2  },
+        { rank:8, name:'Taylor',  initial:'T', grad:'linear-gradient(135deg,#5b7fa6,#3d5a78)', routines:1  },
+      ],
+      activity:[
+        { name:'Steven',  initial:'S', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', action:'completed Day 10', time:'2h ago'     },
+        { name:'Maya',    initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', action:'completed Day 9',  time:'Yesterday',  isUser:true },
+        { name:'Onur T.', initial:'O', grad:'linear-gradient(135deg,#5b7fa6,#3d5a78)', action:'completed Day 7',  time:'2 days ago'  },
+        { name:'James',   initial:'J', grad:'linear-gradient(135deg,#a47f94,#6d5d7a)', action:'completed Day 6',  time:'2 days ago'  },
+        { name:'Priya',   initial:'P', grad:'linear-gradient(135deg,#e8a87c,#c9813a)', action:'completed Day 4',  time:'3 days ago'  },
+      ],
+    },
+    {
+      id:'challenge-zone2',
+      pillarLabel:'Movement', pillarColor:'#94a47f',
+      actionTitle:'Zone 2 walk · Day 8',
+      challengeName:'Zone 2 Five — 30 days',
+      daterange:'Apr 10 – May 9',
+      exercises:['30-min brisk walk','Conversational pace','Zone 2 heart rate'],
+      duration:'30 min',
+      rank:3, rankOf:12,
+      userRoutines:7, totalRoutines:30,
+      currentDay:8, totalDays:30,
+      gapText:'2 sessions behind Deniz B',
+      leaderboard:[
+        { rank:1, name:'Deniz B', initial:'D', grad:'linear-gradient(135deg,#3d9e9e,#2c7878)', routines:9  },
+        { rank:2, name:'Ali',     initial:'A', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', routines:8  },
+        { rank:3, name:'Maya',    initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', routines:7,  isUser:true },
+        { rank:4, name:'Lena',    initial:'L', grad:'linear-gradient(135deg,#a47f94,#6d5d7a)', routines:6  },
+        { rank:5, name:'Sam',     initial:'S', grad:'linear-gradient(135deg,#5b7fa6,#3d5a78)', routines:5  },
+      ],
+      activity:[
+        { name:'Deniz B', initial:'D', grad:'linear-gradient(135deg,#3d9e9e,#2c7878)', action:'completed Day 9',  time:'1h ago'     },
+        { name:'Ali',     initial:'A', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', action:'completed Day 8',  time:'3h ago'     },
+        { name:'Maya',    initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', action:'completed Day 7',  time:'Yesterday',  isUser:true },
+        { name:'Lena',    initial:'L', grad:'linear-gradient(135deg,#a47f94,#6d5d7a)', action:'completed Day 6',  time:'Yesterday'  },
+      ],
+    },
+  ],
+};
+
+// v3 — gradient goal hero + 5 pillar progress bars + pill cards (no illustration)
+PERSONAS.mayaStandardDayV3 = {
+  ...PERSONAS.mayaStandardDayV2,
+  key:'mayaStandardDayV3', label:'Engine · Standard Day v3',
+  isEngineStdV3: true,
+  isEngineStdV2: false,
 };
 
 // Focus Mode — same as v2, single primary card shown
@@ -1224,7 +1344,6 @@ const PERSONA_LIST = [
   PERSONAS.mayaChat,
   PERSONAS.mayaStats,
   PERSONAS.mayaMealPrep,
-  PERSONAS.mayaHomeV5,
   PERSONAS.mayaStandardDayV2,
 ];
 
@@ -5105,16 +5224,15 @@ const H_BPCard = ({ sys, dia, pulse, notes, deltaSys, confirmed, onConfirm, onEd
 // Accepts initialActivity so homepage Move card "Log this" can deep-link to a pre-filled workout entry.
 // ─────────────────────────────────────────────────────────────────────────────
 // ENGINE STD VIEW V2 — redesigned hero + pill cards + LemonNav
-// Hero: goal-centric gradient card with BP spark, completion ring, streak.
-// Cards: pillar icon + title + effort/outcome chips. No trigger line on face.
-// Focus Mode: isFocusMode prop collapses to single top-priority card.
 // ─────────────────────────────────────────────────────────────────────────────
-const EngineStdViewV2 = ({ persona, onSwitchPersona }) => {
+// ENGINE STD VIEW V3 — teal gradient goal hero + 5 pillar progress bars + pill cards
+// ─────────────────────────────────────────────────────────────────────────────
+const EngineStdViewV3 = ({ persona, onSwitchPersona }) => {
   const p = persona;
-  const [openKey, setOpenKey]     = useState(null);
-  const [openAlt, setOpenAlt]     = useState(null); // {n, c, why, how} — alt detail sheet
-  const [ntOpen, setNtOpen]       = useState(false);
-  const [done, setDone]           = useState(new Set());
+  const [openKey, setOpenKey] = useState(null);
+  const [openAlt, setOpenAlt] = useState(null);
+  const [ntOpen, setNtOpen]   = useState(false);
+  const [done, setDone]       = useState(new Set());
   const [breathOpen, setBreathOpen] = useState(false);
   const brRef = useRef(null);
   const PHASES = ['Inhale','Hold','Exhale','Hold'];
@@ -5122,9 +5240,294 @@ const EngineStdViewV2 = ({ persona, onSwitchPersona }) => {
   const [brState, setBrState] = useState({ phaseIdx:0, count:PHASE_DUR, cycle:1 });
 
   const card = p.cards.find(c => c.key === openKey) || null;
-  const activeCards = p.isFocusMode
-    ? [p.cards.find(c => !done.has(c.key)) || p.cards[0]]
-    : p.cards;
+  const sheetOpen = !!openKey;
+
+  const startBreath = () => {
+    setBrState({ phaseIdx:0, count:PHASE_DUR, cycle:1 });
+    setBreathOpen(true);
+    brRef.current = setInterval(() => {
+      setBrState(s => {
+        let { phaseIdx, count, cycle } = s;
+        count--;
+        if (count < 1) {
+          phaseIdx = (phaseIdx + 1) % PHASES.length;
+          if (phaseIdx === 0) cycle++;
+          if (cycle > TOTAL_CYCLES) { clearInterval(brRef.current); setBreathOpen(false); return s; }
+          count = PHASE_DUR;
+        }
+        return { phaseIdx, count, cycle };
+      });
+    }, 1000);
+  };
+  const stopBreath = () => { clearInterval(brRef.current); setBreathOpen(false); };
+  useEffect(() => () => clearInterval(brRef.current), []);
+  const markDone = () => { if (!openKey) return; setDone(d => new Set([...d, openKey])); setOpenKey(null); };
+  const skipCard = (reason) => {
+    if (reason === 'already-did') markDone();
+    setNtOpen(false);
+    if (openKey && reason !== 'already-did') setOpenKey(null);
+  };
+
+  const pillars = [
+    { label:'Move',      pct:0.75, color:'#5ecfb0' },
+    { label:'Nutrition', pct:0.60, color:'#f9d26b' },
+    { label:'Sleep',     pct:0.50, color:'#8fb3d9' },
+    { label:'Mind',      pct:0.40, color:'#c4a3e0' },
+    { label:'Logging',   pct:0.85, color:'#f0a070' },
+  ];
+
+  return (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'#f5f4f0', overflow:'hidden', position:'relative' }}>
+      <div style={{ flex:1, overflowY:'auto', overflowX:'hidden' }} className="hide-scrollbar">
+
+        {/* ── Top bar ── */}
+        <div style={{ padding:'14px 16px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div>
+            <div style={{ fontSize:11, color:'#a8a29e', fontWeight:500, lineHeight:1.2 }}>Thursday, May 29</div>
+            <div style={{ fontSize:20, fontWeight:800, color:'#1a1a18', letterSpacing:'-0.02em', lineHeight:1.25 }}>Good morning, Maya</div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ fontSize:18, color:'#a8a29e' }}>🔔</div>
+            <div style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#fcd34d,#c9a227)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'white' }}>M</div>
+          </div>
+        </div>
+
+        {/* ── Hero: gradient goal card + pillar bars ── */}
+        <div style={{ margin:'14px 12px 4px', borderRadius:20, background:'linear-gradient(140deg,#3a6b7a 0%,#3d9e9e 55%,#4a7fa6 100%)', padding:'18px 16px 18px', overflow:'hidden', position:'relative' }}>
+          <div style={{ position:'absolute', top:-40, right:-30, width:160, height:160, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.07)', pointerEvents:'none' }}/>
+          <div style={{ position:'absolute', top:-20, right:-10, width:100, height:100, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.06)', pointerEvents:'none' }}/>
+          {/* Goal label */}
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:4 }}>Your goal</div>
+            <div style={{ fontSize:21, fontWeight:800, color:'white', letterSpacing:'-0.01em', lineHeight:1.1 }}>{p.goalLabel || 'Lose weight'}</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.55)', marginTop:4 }}>{p.goalSub || 'Managing hypertension'}</div>
+          </div>
+          {/* Pillar progress bars */}
+          <div style={{ display:'flex', gap:6 }}>
+            {pillars.map(pl => (
+              <div key={pl.label} style={{ flex:1 }}>
+                <div style={{ fontSize:7.5, color:'rgba(255,255,255,0.55)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:5, textAlign:'center' }}>{pl.label}</div>
+                <div style={{ height:4, borderRadius:3, background:'rgba(255,255,255,0.15)', overflow:'hidden' }}>
+                  <div style={{ height:'100%', borderRadius:3, background:pl.color, width:`${pl.pct*100}%` }}/>
+                </div>
+                <div style={{ fontSize:9, color:'rgba(255,255,255,0.7)', textAlign:'center', marginTop:4, fontWeight:600 }}>{Math.round(pl.pct*100)}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Section header ── */}
+        <div style={{ padding:'14px 16px 8px' }}>
+          <div style={{ fontSize:11, fontWeight:600, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.06em' }}>Today's actions</div>
+        </div>
+
+        {/* ── Pill cards ── */}
+        <div style={{ padding:'0 12px', display:'flex', flexDirection:'column', gap:9, paddingBottom:24 }}>
+          {p.cards.map(c => {
+            const isDone = done.has(c.key);
+            return (
+              <div key={c.key} onClick={() => setOpenKey(c.key)}
+                style={{ background:'white', borderRadius:16, border:'0.5px solid #e8e5de', overflow:'hidden', cursor:'pointer', opacity:isDone?0.55:1, transition:'opacity 0.2s', userSelect:'none' }}>
+                <div style={{ padding:'13px 14px 12px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                    <div style={{ width:26, height:26, borderRadius:8, background:c.color+'15', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      <div style={{ width:7, height:7, borderRadius:'50%', background:c.color }}/>
+                    </div>
+                    <span style={{ fontSize:10, fontWeight:600, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.06em', flex:1 }}>{c.pillar}</span>
+                    {isDone && <span style={{ fontSize:9, color:'#778a62', background:'#e8ebe3', padding:'2px 8px', borderRadius:10 }}>Done ✓</span>}
+                  </div>
+                  <div style={{ fontSize:15, fontWeight:600, color:'#1a1a18', lineHeight:1.3, marginBottom: c.tagline ? 4 : 10 }}>{c.title}</div>
+                  {c.tagline && <div style={{ fontSize:12, color:'#78716c', lineHeight:1.45, marginBottom:10 }}>{c.tagline}</div>}
+                  <div style={{ display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
+                    <span style={{ fontSize:11, background:'#f5f4f0', color:'#57534e', borderRadius:20, padding:'4px 10px', flexShrink:0 }}>{c.effortChip}</span>
+                    {c.bpImpact && <span style={{ fontSize:11, background:c.bg, color:c.color, borderRadius:20, padding:'4px 10px', flexShrink:0 }}>{c.bpImpact}</span>}
+                    {c.conditionTag && <span style={{ fontSize:10, background:'#fdf0f0', color:'#e05c5c', borderRadius:20, padding:'4px 9px', flexShrink:0 }}>{c.conditionTag}</span>}
+                    <div style={{ marginLeft:'auto', color:'#d6d3d1', fontSize:16, lineHeight:1, flexShrink:0 }}>›</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Bottom nav ── */}
+      <LemonNav active="home" onSelect={(id) => {
+        if (id==='meal'      && onSwitchPersona) onSwitchPersona('mayaMealPrep');
+        if (id==='stats'     && onSwitchPersona) onSwitchPersona('mayaStats');
+        if (id==='community' && onSwitchPersona) onSwitchPersona('mayaCommunity');
+      }}/>
+
+      {/* ── Detail sheet ── */}
+      <div style={{ position:'absolute', inset:0, zIndex:40, pointerEvents:'none' }}>
+        <div style={{ position:'absolute', inset:0, background:sheetOpen?'rgba(0,0,0,0.38)':'rgba(0,0,0,0)', transition:'background 0.28s', pointerEvents:sheetOpen?'all':'none' }} onClick={() => setOpenKey(null)}/>
+        <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'#fafaf8', borderRadius:'20px 20px 0 0', maxHeight:'90%', overflowY:'auto', transform:sheetOpen?'translateY(0)':'translateY(100%)', transition:'transform 0.3s cubic-bezier(0.32,0.72,0,1)', pointerEvents:sheetOpen?'all':'none' }} className="hide-scrollbar">
+          {card && (() => {
+            const isDone = done.has(card.key);
+            return (
+              <div>
+                <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 2px' }}>
+                  <div style={{ width:36, height:4, borderRadius:2, background:'#d6d3d1' }}/>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px 4px' }}>
+                  <button onClick={() => setOpenKey(null)} style={{ background:'none', border:'none', fontSize:22, color:'#a8a29e', cursor:'pointer', padding:'0 10px 0 0', lineHeight:1 }}>✕</button>
+                </div>
+                <div style={{ padding:'4px 16px 36px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:4 }}>
+                    <div style={{ width:7, height:7, borderRadius:'50%', background:card.color }}/>
+                    <span style={{ fontSize:11, fontWeight:500, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.06em' }}>{card.pillar}</span>
+                  </div>
+                  <div style={{ fontSize:18, fontWeight:500, color:'#1a1a18', lineHeight:1.3, marginBottom:14 }}>{card.title}</div>
+                  {/* Why today */}
+                  <div style={{ borderLeft:`2px solid ${card.color}`, background:card.bg, borderRadius:'0 10px 10px 0', padding:'10px 12px', marginBottom:14 }}>
+                    <div style={{ fontSize:9, fontWeight:500, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:4 }}>Why today</div>
+                    <div style={{ fontSize:13, color:'#1a1a18', lineHeight:1.6 }}>{card.whyToday}</div>
+                  </div>
+                  {/* Why it works */}
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:10 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>❤️</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>Why it works</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{card.why}</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {/* How */}
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:10 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>🗺</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>How to do it</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{card.how}</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {/* Alts */}
+                  <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:7 }}>Alternatives</div>
+                  {card.alts.map((a,i) => (
+                    <div key={i} onClick={(e) => { e.stopPropagation(); setOpenAlt({...a, cardColor:card.color, cardBg:card.bg}); }}
+                      style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:'#f5f5f4', borderRadius:10, marginBottom:6, cursor:'pointer' }}>
+                      <div>
+                        <div style={{ fontSize:13, color:'#1a1a18', fontWeight:500 }}>{a.n}</div>
+                        <div style={{ fontSize:11, color:'#78716c', marginTop:2 }}>{a.c}</div>
+                      </div>
+                      <span style={{ fontSize:16, color:'#a8a29e' }}>›</span>
+                    </div>
+                  ))}
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {/* Progress */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 0' }}>
+                    {card.streak && <div style={{ background:'#fef9c3', borderRadius:8, padding:'5px 9px', fontSize:11, fontWeight:500, color:'#b45309', flexShrink:0 }}>🔥 {card.streak}-day streak</div>}
+                    <div style={{ fontSize:12, color:'#57534e', lineHeight:1.4 }}>{card.progress}</div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  {card.isBreathing && !isDone && (
+                    <button onClick={startBreath} style={{ width:'100%', padding:12, borderRadius:12, border:'0.5px solid #d6d3d1', background:'white', fontSize:14, fontWeight:500, color:'#1a1a18', cursor:'pointer', marginTop:8, marginBottom:2 }}>Start session →</button>
+                  )}
+                  <button onClick={isDone?undefined:markDone} style={{ width:'100%', padding:14, borderRadius:12, border:'none', color:'white', fontSize:15, fontWeight:500, cursor:isDone?'default':'pointer', marginTop:8, opacity:isDone?0.5:1, background:card.color }}>
+                    {isDone ? '✓ Done today' : 'Mark as done'}
+                  </button>
+                  <button onClick={() => setNtOpen(true)} style={{ width:'100%', padding:10, background:'none', border:'none', fontSize:13, color:'#a8a29e', cursor:'pointer', marginTop:2 }}>Not today</button>
+                  <div style={{ fontSize:10, color:'#a8a29e', lineHeight:1.6, marginTop:10 }}>{card.src}</div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* ── Alt detail sheet ── */}
+      <div style={{ position:'absolute', inset:0, zIndex:50, pointerEvents:'none' }}>
+        <div style={{ position:'absolute', inset:0, background:openAlt?'rgba(0,0,0,0.35)':'rgba(0,0,0,0)', transition:'background 0.22s', pointerEvents:openAlt?'all':'none' }} onClick={() => setOpenAlt(null)}/>
+        <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'white', borderRadius:'20px 20px 0 0', maxHeight:'82%', overflowY:'auto', transform:openAlt?'translateY(0)':'translateY(100%)', transition:'transform 0.28s cubic-bezier(0.32,0.72,0,1)', pointerEvents:openAlt?'all':'none' }}>
+          {openAlt && (() => {
+            const alt = openAlt; const ac = alt.cardColor||'#3d9e9e'; const ab = alt.cardBg||'#e8f6f6';
+            const isDoneAlt = done.has(openKey);
+            return (
+              <div style={{ padding:'0 0 36px' }}>
+                <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 2px' }}><div style={{ width:36, height:4, borderRadius:2, background:'#d6d3d1' }}/></div>
+                <div style={{ display:'flex', alignItems:'center', padding:'10px 16px 14px' }}>
+                  <button onClick={() => setOpenAlt(null)} style={{ background:'none', border:'none', fontSize:22, color:'#a8a29e', cursor:'pointer', padding:'0 10px 0 0', lineHeight:1 }}>‹</button>
+                  <span style={{ fontSize:11, fontWeight:600, color:ac, textTransform:'uppercase', letterSpacing:'0.07em' }}>Alternative</span>
+                </div>
+                <div style={{ padding:'0 16px 16px' }}>
+                  <div style={{ fontSize:19, fontWeight:600, color:'#1a1a18', lineHeight:1.3, marginBottom:14 }}>{alt.n}</div>
+                  <div style={{ display:'inline-flex', alignItems:'center', background:ab, borderRadius:20, padding:'4px 10px', marginBottom:16 }}>
+                    <span style={{ fontSize:11, color:ac, fontWeight:500 }}>{alt.c}</span>
+                  </div>
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:14 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>❤️</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>Why it works</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{alt.why}</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:16 }}>
+                    <div style={{ width:28, height:28, borderRadius:8, background:'#f0f0ef', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>🗺</div>
+                    <div>
+                      <div style={{ fontSize:9, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>How to do it</div>
+                      <div style={{ fontSize:13, color:'#57534e', lineHeight:1.6 }}>{alt.how}</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop:'0.5px solid #e8e5de', margin:'12px 0' }}/>
+                  <button onClick={() => { setDone(prev => new Set([...prev, openKey])); setOpenAlt(null); setOpenKey(null); }} style={{ width:'100%', padding:14, borderRadius:12, border:'none', color:'white', fontSize:15, fontWeight:500, cursor:isDoneAlt?'default':'pointer', opacity:isDoneAlt?0.5:1, background:ac }}>
+                    {isDoneAlt ? '✓ Done today' : 'Try this instead'}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* ── Not today panel ── */}
+      <div style={{ position:'absolute', inset:0, zIndex:60, pointerEvents:'none' }}>
+        <div style={{ position:'absolute', inset:0, background:ntOpen?'rgba(0,0,0,0.45)':'rgba(0,0,0,0)', transition:'background 0.2s', pointerEvents:ntOpen?'all':'none' }} onClick={() => setNtOpen(false)}/>
+        <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'white', borderRadius:'20px 20px 0 0', padding:'20px 16px 36px', transform:ntOpen?'translateY(0)':'translateY(100%)', transition:'transform 0.28s cubic-bezier(0.32,0.72,0,1)', pointerEvents:ntOpen?'all':'none' }}>
+          <div style={{ fontSize:13, color:'#78716c', textAlign:'center', marginBottom:14 }}>Why not today?</div>
+          {[['😴','Too tired','too-tired'],['✓','Already did this','already-did'],['—','Not relevant today','not-relevant'],['⏱','Too busy','too-busy']].map(([em,label,val]) => (
+            <button key={val} onClick={() => skipCard(val)} style={{ display:'block', width:'100%', padding:'13px 14px', background:'#f5f5f4', borderRadius:12, border:'none', fontSize:14, color:'#1a1a18', cursor:'pointer', textAlign:'left', marginBottom:8 }}>
+              {em}&nbsp;&nbsp;{label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Breathing overlay ── */}
+      <div style={{ position:'absolute', inset:0, zIndex:80, background:'#1e1830', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', transform:breathOpen?'translateY(0)':'translateY(100%)', transition:'transform 0.35s cubic-bezier(0.32,0.72,0,1)' }}>
+        <button onClick={stopBreath} style={{ position:'absolute', top:18, right:18, color:'rgba(255,255,255,0.5)', background:'none', border:'none', fontSize:22, cursor:'pointer', padding:4 }}>✕</button>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:36 }}>{PHASES[brState.phaseIdx]}</div>
+        <div style={{ width:150, height:150, borderRadius:'50%', border:'1.5px solid rgba(255,255,255,0.15)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:36 }}>
+          <div style={{ width:70, height:70, borderRadius:'50%', background:brState.phaseIdx===0?'rgba(139,109,170,0.8)':brState.phaseIdx===2?'rgba(139,109,170,0.4)':'rgba(139,109,170,0.6)', transition:'transform 4s ease-in-out, background 1s', transform:brState.phaseIdx===0?'scale(1.5)':brState.phaseIdx===2?'scale(0.8)':'scale(1)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <span style={{ fontSize:28, fontWeight:300, color:'white' }}>{brState.count}</span>
+          </div>
+        </div>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)' }}>Cycle {brState.cycle} of {TOTAL_CYCLES}</div>
+      </div>
+    </div>
+  );
+};
+
+// Hero: goal-centric gradient card with BP spark, completion ring, streak.
+// Cards: pillar icon + title + effort/outcome chips. No trigger line on face.
+// Focus Mode: isFocusMode prop collapses to single top-priority card.
+// ─────────────────────────────────────────────────────────────────────────────
+const EngineStdViewV2 = ({ persona, onSwitchPersona }) => {
+  const p = persona;
+  const [openKey, setOpenKey]     = useState(null);
+  const [openAlt, setOpenAlt]     = useState(null);
+  const [ntOpen, setNtOpen]       = useState(false);
+  const [done, setDone]           = useState(new Set());
+  const [breathOpen, setBreathOpen] = useState(false);
+  const [challengeSheet, setChallengeSheet] = useState(null);
+  const [todayChallengeIds, setTodayChallengeIds] = useState(new Set(['challenge-core']));
+  const [activePillar, setActivePillar] = useState('Movement');
+  const brRef = useRef(null);
+  const PHASES = ['Inhale','Hold','Exhale','Hold'];
+  const PHASE_DUR = 4, TOTAL_CYCLES = 5;
+  const [brState, setBrState] = useState({ phaseIdx:0, count:PHASE_DUR, cycle:1 });
+
+  const card = p.cards.find(c => c.key === openKey) || null;
 
   const startBreath = () => {
     setBrState({ phaseIdx:0, count:PHASE_DUR, cycle:1 });
@@ -5155,185 +5558,293 @@ const EngineStdViewV2 = ({ persona, onSwitchPersona }) => {
 
   const sheetOpen = !!openKey;
 
-  // ── Hero sub-components ─────────────────────────────────────────────────
-  const bpSeries = [130,128,127,126,125,124,124,123,122];
-  const weekDone = 18, weekTotal = 26, streak = 18;
+  // Metric cards for the new design
+  const progressMetrics = [
+    { label:'Actions done', value:'3/4', status:'On track', statusUp:true, color:'#22c55e' },
+    { label:'Weight', value:'68 kg', status:'Stalled', statusUp:false, color:'#ef4444' },
+    { label:'Blood pressure', value:'128 mmHg', status:'On track', statusUp:true, color:'#22c55e' },
+  ];
 
-  const SparkLine = () => {
-    const w=80, h=30, pad=4;
-    const min=Math.min(...bpSeries)-2, max=Math.max(...bpSeries)+2;
-    const x = i => pad + (i*(w-pad*2))/(bpSeries.length-1);
-    const y = v => h-pad - ((v-min)/(max-min))*(h-pad*2);
-    const path = bpSeries.map((v,i)=>`${i===0?'M':'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-    return (
-      <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} style={{display:'block'}}>
-        <path d={path} fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <circle cx={x(bpSeries.length-1)} cy={y(bpSeries[bpSeries.length-1])} r="3" fill="white"/>
-      </svg>
-    );
-  };
+  // Secondary cards: use cards 1–3
+  const secondaryCards = [
+    { pillar:'Nutrition', pillarColor:'#f59e0b', icon:'🥗', title:'Mediterranean lunch bowl', sub:'20 min · Easy · Supports BP control' },
+    { pillar:'Sleep', pillarColor:'#8b5cf6', icon:'🌙', title:'Wind down by 10pm tonight', sub:'8 hr window · Consistent schedule' },
+    { pillar:'Mental wellbeing', pillarColor:'#06b6d4', icon:'🧘', title:'5-minute breathing exercise', sub:'5 min · Calm · Reduces cortisol' },
+  ];
 
-  const DonutRing = ({ size=52 }) => {
-    const r=(size-8)/2, circ=2*Math.PI*r, pct=weekDone/weekTotal, dash=pct*circ;
-    return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{display:'block'}}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="4.5"/>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="white" strokeWidth="4.5"
-          strokeDasharray={`${dash.toFixed(1)} ${(circ-dash).toFixed(1)}`} strokeLinecap="round"
-          transform={`rotate(-90 ${size/2} ${size/2})`}/>
-        <text x={size/2} y={size/2+1} textAnchor="middle" dominantBaseline="middle"
-          fontSize="11" fontWeight="700" fill="white" fontFamily="-apple-system,sans-serif">
-          {Math.round(pct*100)}%
-        </text>
-      </svg>
-    );
-  };
+  // All challenges available in the carousel
+  const joinedChallenges = p.challengeCards || [];
+  const openChallenges = [
+    { id:'ch-open-1', challengeName:'March Challenge', daterange:'Mar 1 – Mar 31', author:'by Deniz', bgFrom:'#e8f0e8', bgTo:'#c8d8c0', joined:false },
+    { id:'ch-open-2', challengeName:'Flexibility Flow', daterange:'Apr 15 – May 15', author:'by Priya', bgFrom:'#fceee9', bgTo:'#f5d0c5', joined:false },
+  ];
+  const allCarouselChallenges = [...joinedChallenges.map(cc=>({...cc,joined:true})), ...openChallenges];
+  const addToToday = (id) => setTodayChallengeIds(s => new Set([...s, id]));
 
   return (
-    <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'#f5f4f0', overflow:'hidden', position:'relative' }}>
+    <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'#f7f6f3', overflow:'hidden', position:'relative' }}>
       <div style={{ flex:1, overflowY:'auto', overflowX:'hidden' }} className="hide-scrollbar">
 
-        {/* ── Top bar: greeting + date + avatar ───────────────────────── */}
-        <div style={{ background:'#fafaf8', padding:'13px 16px 11px', borderBottom:'0.5px solid #e8e5de', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:10 }}>
-          <div>
-            <div style={{ fontSize:10, color:'#a8a29e', fontWeight:500, lineHeight:1.1 }}>Thursday, May 29</div>
-            <div style={{ fontSize:17, fontWeight:600, color:'#1a1a18', lineHeight:1.3 }}>Good morning, Maya</div>
-          </div>
-          <div style={{ width:34, height:34, borderRadius:'50%', background:'linear-gradient(135deg,#fcd34d,#c9a227)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, color:'white' }}>M</div>
+        {/* ── Top bar: bell + avatar only ───────────────────────────── */}
+        <div style={{ padding:'16px 16px 0', display:'flex', justifyContent:'flex-end', alignItems:'center', gap:10 }}>
+          <div style={{ width:36, height:36, borderRadius:'50%', background:'#f0efe9', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, color:'#78716c' }}>🔔</div>
+          <div style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#fcd34d,#c9a227)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, color:'white' }}>M</div>
         </div>
 
-        {/* ── Hero ────────────────────────────────────────────────────── */}
-        <div style={{ margin:'12px 12px 4px', borderRadius:20, background:'linear-gradient(140deg,#3a6b7a 0%,#3d9e9e 55%,#4a7fa6 100%)', padding:'18px 16px 16px', overflow:'hidden', position:'relative' }}>
-          {/* Subtle texture rings */}
-          <div style={{ position:'absolute', top:-40, right:-30, width:160, height:160, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.07)', pointerEvents:'none' }}/>
-          <div style={{ position:'absolute', top:-20, right:-10, width:100, height:100, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.06)', pointerEvents:'none' }}/>
-
-          {/* Goal */}
-          <div style={{ marginBottom:14 }}>
-            <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:4 }}>Your goal</div>
-            <div style={{ fontSize:19, fontWeight:700, color:'white', letterSpacing:'-0.01em', lineHeight:1.15 }}>Lose weight</div>
-            <div style={{ fontSize:11, color:'rgba(255,255,255,0.55)', marginTop:4 }}>Managing hypertension · Week 4</div>
+        {/* ── Centered greeting ─────────────────────────────────────── */}
+        <div style={{ textAlign:'center', padding:'20px 20px 0' }}>
+          <div style={{ fontSize:28, fontWeight:800, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1.15 }}>Good morning, Maya</div>
+          {/* Goal + condition chips */}
+          <div style={{ display:'flex', justifyContent:'center', gap:8, marginTop:12, flexWrap:'wrap' }}>
+            <span style={{ fontSize:10, fontWeight:700, color:'#92400e', background:'#fef3c7', borderRadius:20, padding:'5px 12px', letterSpacing:'0.06em', textTransform:'uppercase' }}>Lose weight</span>
+            <span style={{ fontSize:10, fontWeight:700, color:'#1e40af', background:'#dbeafe', borderRadius:20, padding:'5px 12px', letterSpacing:'0.06em', textTransform:'uppercase' }}>Hypertension</span>
           </div>
+        </div>
 
-          {/* Pillar progress strip */}
-          {(() => {
-            const pillars = [
-              { label:'Move',      pct:0.75, color:'#5ecfb0' },
-              { label:'Nutrition', pct:0.60, color:'#f9d26b' },
-              { label:'Sleep',     pct:0.50, color:'#8fb3d9' },
-              { label:'Mind',      pct:0.40, color:'#c4a3e0' },
-              { label:'Logging',   pct:0.85, color:'#f0a070' },
-            ];
-            return (
-              <div style={{ display:'flex', gap:7 }}>
-                {pillars.map(pl => (
-                  <div key={pl.label} style={{ flex:1 }}>
-                    <div style={{ fontSize:8, color:'rgba(255,255,255,0.55)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:5, textAlign:'center' }}>{pl.label}</div>
-                    <div style={{ height:4, borderRadius:3, background:'rgba(255,255,255,0.15)', overflow:'hidden' }}>
-                      <div style={{ height:'100%', borderRadius:3, background:pl.color, width:`${pl.pct*100}%`, transition:'width 0.6s ease' }}/>
-                    </div>
-                    <div style={{ fontSize:9, color:'rgba(255,255,255,0.6)', textAlign:'center', marginTop:4, fontWeight:600 }}>{Math.round(pl.pct*100)}%</div>
-                  </div>
-                ))}
+        {/* ── Your progress ─────────────────────────────────────────── */}
+        <div style={{ padding:'22px 16px 10px' }}>
+          <div style={{ fontSize:13, fontWeight:700, color:'#1a1a18', letterSpacing:'-0.01em' }}>Your progress</div>
+        </div>
+
+        {/* ── 3 metric cards ────────────────────────────────────────── */}
+        <div style={{ padding:'0 12px', display:'flex', gap:8 }}>
+          {progressMetrics.map((m, i) => (
+            <div key={i} style={{ flex:1, background:'white', borderRadius:16, padding:'12px 10px 12px', boxShadow:'0 1px 4px rgba(0,0,0,0.06)', border:'0.5px solid #ede9e2', position:'relative' }}>
+              {/* + log button */}
+              <div style={{ position:'absolute', top:9, right:9, width:20, height:20, borderRadius:'50%', background:'#f5f4f0', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+                <span style={{ fontSize:13, color:'#78716c', lineHeight:1, marginTop:-1 }}>+</span>
               </div>
-            );
-          })()}
+              <div style={{ fontSize:8, fontWeight:600, color:'#a8a29e', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6, paddingRight:20 }}>{m.label}</div>
+              <div style={{ fontSize:15, fontWeight:800, color:'#1a1a18', letterSpacing:'-0.02em', lineHeight:1, marginBottom:7 }}>{m.value}</div>
+              <div style={{ display:'flex', alignItems:'center', gap:3 }}>
+                <span style={{ fontSize:9, fontWeight:700, color: m.statusUp ? '#16a34a' : '#dc2626' }}>
+                  {m.statusUp ? '▲' : '▼'}
+                </span>
+                <span style={{ fontSize:9, fontWeight:600, color: m.statusUp ? '#16a34a' : '#dc2626' }}>{m.status}</span>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* ── Section header ───────────────────────────────────────────── */}
-        <div style={{ padding:'14px 14px 8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <div style={{ fontSize:11, fontWeight:600, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.06em' }}>
-            {p.isFocusMode ? 'One action today' : "Today's actions"}
-          </div>
-          {p.isFocusMode && (
-            <span style={{ fontSize:10, color:'#3d9e9e', fontWeight:600, background:'#e8f6f6', borderRadius:10, padding:'3px 9px' }}>Focus mode</span>
-          )}
+        {/* ── Let's make today count ────────────────────────────────── */}
+        <div style={{ padding:'22px 16px 10px' }}>
+          <div style={{ fontSize:13, fontWeight:700, color:'#1a1a18', letterSpacing:'-0.01em' }}>Let's make today count</div>
         </div>
 
-        {/* ── Cards ────────────────────────────────────────────────────── */}
-        <div style={{ padding:'0 12px', display:'flex', flexDirection:'column', gap:9, paddingBottom:24 }}>
-          {activeCards.map((c, idx) => {
-            const isDone = done.has(c.key);
-            const isPrimary = idx === 0 && p.isFocusMode;
-
-            /* ── Primary card (Focus Mode) — visual hero card ───────── */
-            if (isPrimary) return (
-              <div key={c.key} onClick={() => setOpenKey(c.key)}
-                style={{ background:'white', borderRadius:18, overflow:'hidden', cursor:'pointer', opacity:isDone?0.6:1, boxShadow:`0 6px 24px ${c.color}30`, userSelect:'none' }}>
-                {/* Colored band */}
-                <div style={{ background:`linear-gradient(135deg,${c.color}ee,${c.color}bb)`, padding:'18px 18px 14px', position:'relative', overflow:'hidden' }}>
-                  {/* Texture arcs */}
-                  <div style={{ position:'absolute', bottom:-30, right:-20, width:120, height:120, borderRadius:'50%', background:'rgba(255,255,255,0.07)', pointerEvents:'none' }}/>
-                  <div style={{ position:'absolute', bottom:-10, right:20, width:70, height:70, borderRadius:'50%', background:'rgba(255,255,255,0.05)', pointerEvents:'none' }}/>
-                  {/* Top row: pillar label + done badge */}
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                    <span style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.75)', textTransform:'uppercase', letterSpacing:'0.1em' }}>{c.pillar}</span>
-                    {isDone
-                      ? <span style={{ fontSize:9, color:'white', background:'rgba(255,255,255,0.25)', padding:'2px 9px', borderRadius:10 }}>Done ✓</span>
-                      : <span style={{ fontSize:9, fontWeight:600, color:'rgba(255,255,255,0.7)', background:'rgba(255,255,255,0.15)', padding:'2px 9px', borderRadius:10, letterSpacing:'0.04em' }}>Today's priority</span>
-                    }
-                  </div>
-                  {/* Icon + impact */}
-                  <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
-                    <div style={{ fontSize:44, lineHeight:1 }}>{c.icon || '⚡'}</div>
-                    {c.bpImpact && (
-                      <div style={{ textAlign:'right' }}>
-                        <div style={{ fontSize:9, color:'rgba(255,255,255,0.65)', marginBottom:2 }}>BP impact</div>
-                        <div style={{ fontSize:20, fontWeight:800, color:'white', letterSpacing:'-0.02em', lineHeight:1 }}>{c.bpImpact}</div>
-                      </div>
-                    )}
-                  </div>
+        {/* ── Primary card: illustration + inline info ──────────────── */}
+        {(() => {
+          const primary = p.cards[0];
+          const isDonePrimary = done.has(primary.key);
+          return (
+            <div style={{ margin:'0 12px 10px' }} onClick={() => setOpenKey(primary.key)}>
+              <div style={{ background:'white', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,0.07)', cursor:'pointer', opacity:isDonePrimary?0.6:1, userSelect:'none' }}>
+                {/* Illustration area */}
+                <div style={{ height:150, background:'linear-gradient(170deg,#faf5ee 0%,#ede5da 60%,#e5d8c8 100%)', position:'relative', display:'flex', alignItems:'flex-end', justifyContent:'center' }}>
+                  <div style={{ position:'absolute', top:-20, right:-20, width:180, height:180, borderRadius:'50%', background:'radial-gradient(circle,rgba(245,185,100,0.1) 0%,transparent 70%)', pointerEvents:'none' }}/>
+                  <div style={{ position:'absolute', bottom:14, left:'50%', transform:'translateX(-30%)', width:80, height:10, borderRadius:'50%', background:'rgba(0,0,0,0.07)' }}/>
+                  <svg viewBox="0 0 160 175" width="112" height="124" xmlns="http://www.w3.org/2000/svg" style={{ display:'block', marginBottom:8 }}>
+                    <defs>
+                      <linearGradient id="skn2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#d4906a"/><stop offset="100%" stopColor="#b87050"/></linearGradient>
+                      <linearGradient id="shrt2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f7b733"/><stop offset="100%" stopColor="#e09a10"/></linearGradient>
+                      <linearGradient id="leg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1a44c8"/><stop offset="100%" stopColor="#1236a0"/></linearGradient>
+                    </defs>
+                    <circle cx="82" cy="24" r="16" fill="url(#skn2)"/>
+                    <ellipse cx="82" cy="14" rx="19" ry="16" fill="#2a1608"/>
+                    <ellipse cx="68" cy="18" rx="10" ry="13" fill="#2a1608"/>
+                    <ellipse cx="96" cy="18" rx="10" ry="13" fill="#2a1608"/>
+                    <ellipse cx="82" cy="10" rx="13" ry="10" fill="#331a08"/>
+                    <ellipse cx="66" cy="26" rx="4" ry="5" fill="url(#skn2)"/>
+                    <rect x="78" y="38" width="8" height="8" rx="3" fill="url(#skn2)"/>
+                    <path d="M70 46 C64 58 60 72 60 80 L84 80 L88 46 Z" fill="url(#shrt2)"/>
+                    <path d="M80 48 C77 58 75 68 75 76" stroke="rgba(255,255,255,0.25)" strokeWidth="3" fill="none" strokeLinecap="round"/>
+                    <path d="M62 78 C60 88 58 98 58 106 L76 104 L80 80 Z" fill="url(#leg2)" opacity="0.88"/>
+                    <path d="M82 80 L86 104 L102 100 C100 90 96 82 88 78 Z" fill="url(#leg2)" opacity="0.88"/>
+                    <path d="M62 102 C58 112 52 120 48 128" stroke="url(#skn2)" strokeWidth="11" fill="none" strokeLinecap="round"/>
+                    <path d="M48 128 C50 136 56 142 60 148" stroke="url(#skn2)" strokeWidth="10" fill="none" strokeLinecap="round"/>
+                    <path d="M55 146 Q58 152 70 152 Q74 152 74 149 Q70 146 62 146 Z" fill="#e2ddd6"/>
+                    <path d="M88 102 C94 110 100 116 106 120" stroke="url(#skn2)" strokeWidth="11" fill="none" strokeLinecap="round"/>
+                    <path d="M106 120 C108 112 110 106 112 100" stroke="url(#skn2)" strokeWidth="10" fill="none" strokeLinecap="round"/>
+                    <path d="M106 98 Q110 94 120 96 Q124 98 122 101 Q116 102 108 101 Z" fill="#e2ddd6"/>
+                    <path d="M68 52 C60 62 54 70 50 78" stroke="url(#skn2)" strokeWidth="9" fill="none" strokeLinecap="round"/>
+                    <circle cx="50" cy="79" r="5" fill="url(#skn2)"/>
+                    <path d="M82 50 C90 58 96 64 102 68" stroke="url(#skn2)" strokeWidth="9" fill="none" strokeLinecap="round"/>
+                    <circle cx="102" cy="69" r="5" fill="url(#skn2)"/>
+                    <line x1="22" y1="88" x2="44" y2="88" stroke="#c8a882" strokeWidth="2" strokeLinecap="round" opacity="0.35"/>
+                    <line x1="16" y1="98" x2="40" y2="98" stroke="#c8a882" strokeWidth="1.5" strokeLinecap="round" opacity="0.22"/>
+                    <line x1="24" y1="108" x2="43" y2="108" stroke="#c8a882" strokeWidth="1.5" strokeLinecap="round" opacity="0.22"/>
+                  </svg>
+                  {isDonePrimary && (
+                    <div style={{ position:'absolute', top:12, left:12, background:'#e8ebe3', borderRadius:12, padding:'4px 10px' }}>
+                      <span style={{ fontSize:9, fontWeight:700, color:'#5d6e4d' }}>Done ✓</span>
+                    </div>
+                  )}
                 </div>
-                {/* White section */}
-                <div style={{ padding:'13px 16px 14px' }}>
-                  <div style={{ fontSize:17, fontWeight:700, color:'#1a1a18', lineHeight:1.25, marginBottom:5 }}>{c.title}</div>
-                  {c.tagline && <div style={{ fontSize:12, color:'#78716c', lineHeight:1.5, marginBottom:10 }}>{c.tagline}</div>}
-                  <div style={{ display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
-                    <span style={{ fontSize:11, background:'#f5f4f0', color:'#57534e', borderRadius:20, padding:'4px 10px' }}>{c.effortChip}</span>
-                    {c.conditionTag && <span style={{ fontSize:10, background:'#fdf0f0', color:'#e05c5c', borderRadius:20, padding:'4px 9px' }}>{c.conditionTag}</span>}
-                    <span style={{ marginLeft:'auto', fontSize:12, fontWeight:600, color:c.color }}>See how →</span>
+                {/* Inline info strip */}
+                <div style={{ padding:'12px 14px 14px', display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ width:30, height:30, borderRadius:9, background:primary.color+'18', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>🏃</div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:14, fontWeight:700, color:'#1a1a18', lineHeight:1.25, marginBottom:2 }}>{primary.title}</div>
+                    <div style={{ fontSize:11, color:'#78716c' }}>{primary.effortChip} · {primary.bpImpact || 'High impact'}</div>
                   </div>
+                  <div style={{ fontSize:20, color:'#d6d3d1', flexShrink:0 }}>›</div>
                 </div>
               </div>
-            );
+            </div>
+          );
+        })()}
 
-            /* ── Regular card ────────────────────────────────────────── */
+        {/* ── Secondary cards ───────────────────────────────────────── */}
+        <div style={{ padding:'0 12px', display:'flex', flexDirection:'column', gap:8, paddingBottom:28 }}>
+          {secondaryCards.map((sc, idx) => {
+            const srcCard = p.cards[idx + 1];
+            const isDone = srcCard && done.has(srcCard.key);
             return (
-              <div key={c.key} onClick={() => setOpenKey(c.key)}
-                style={{ background:'white', borderRadius:16, border:'0.5px solid #e8e5de', overflow:'hidden', cursor:'pointer', opacity:isDone?0.55:1, transition:'opacity 0.2s', userSelect:'none' }}>
-                <div style={{ padding:'13px 14px 12px' }}>
-                  {/* Pillar row */}
-                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
-                    <div style={{ width:26, height:26, borderRadius:8, background:c.color+'15', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      <div style={{ width:7, height:7, borderRadius:'50%', background:c.color }}/>
-                    </div>
-                    <span style={{ fontSize:10, fontWeight:600, color:'#78716c', textTransform:'uppercase', letterSpacing:'0.06em', flex:1 }}>{c.pillar}</span>
-                    {isDone && <span style={{ fontSize:9, color:'#778a62', background:'#e8ebe3', padding:'2px 8px', borderRadius:10 }}>Done ✓</span>}
-                  </div>
-                  {/* Title */}
-                  <div style={{ fontSize:15, fontWeight:600, color:'#1a1a18', lineHeight:1.3, marginBottom: c.tagline ? 4 : 10 }}>{c.title}</div>
-                  {/* Tagline */}
-                  {c.tagline && <div style={{ fontSize:12, color:'#78716c', lineHeight:1.45, marginBottom:10 }}>{c.tagline}</div>}
-                  {/* Pill row */}
-                  <div style={{ display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
-                    <span style={{ fontSize:11, background:'#f5f4f0', color:'#57534e', borderRadius:20, padding:'4px 10px', flexShrink:0 }}>{c.effortChip}</span>
-                    {c.bpImpact && <span style={{ fontSize:11, background:c.bg, color:c.color, borderRadius:20, padding:'4px 10px', flexShrink:0 }}>{c.bpImpact}</span>}
-                    {c.conditionTag && <span style={{ fontSize:10, background:'#fdf0f0', color:'#e05c5c', borderRadius:20, padding:'4px 9px', flexShrink:0 }}>{c.conditionTag}</span>}
-                    <div style={{ marginLeft:'auto', color:'#d6d3d1', fontSize:16, lineHeight:1, flexShrink:0 }}>›</div>
-                  </div>
+              <div key={idx} onClick={() => srcCard && setOpenKey(srcCard.key)}
+                style={{ background:'white', borderRadius:16, border:'0.5px solid #ede9e2', padding:'14px 14px 13px', cursor:'pointer', opacity:isDone?0.55:1, userSelect:'none' }}>
+                {/* Pillar label */}
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:7 }}>
+                  <span style={{ fontSize:15 }}>{sc.icon}</span>
+                  <span style={{ fontSize:9, fontWeight:700, color:sc.pillarColor, textTransform:'uppercase', letterSpacing:'0.08em' }}>{sc.pillar}</span>
+                  {isDone && <span style={{ marginLeft:'auto', fontSize:9, color:'#778a62', background:'#e8ebe3', padding:'2px 8px', borderRadius:10 }}>Done ✓</span>}
                 </div>
+                {/* Title */}
+                <div style={{ fontSize:15, fontWeight:700, color:'#1a1a18', lineHeight:1.3, marginBottom:4 }}>{sc.title}</div>
+                {/* Subtitle */}
+                <div style={{ fontSize:11, color:'#a8a29e' }}>{sc.sub}</div>
               </div>
             );
           })}
+
+          {/* ── Challenge rec cards (dynamically added via "Add to today") ── */}
+          {joinedChallenges.filter(cc => todayChallengeIds.has(cc.id)).map(cc => (
+            <div key={cc.id} onClick={() => setChallengeSheet(cc)}
+              style={{ background:'white', borderRadius:16, border:'0.5px solid #ede9e2', padding:'14px 14px 13px', cursor:'pointer', userSelect:'none' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:7 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke={cc.pillarColor} strokeWidth="2.2" width="13" height="13"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                <span style={{ fontSize:9, fontWeight:700, color:cc.pillarColor, textTransform:'uppercase', letterSpacing:'0.08em' }}>{cc.pillarLabel}</span>
+                <div style={{ marginLeft:'auto', background:'rgba(251,191,36,0.13)', borderRadius:6, padding:'2px 7px', display:'inline-flex', alignItems:'center', gap:3 }}>
+                  <svg viewBox="0 0 24 24" fill="#c9a227" stroke="none" width="8" height="8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <span style={{ fontSize:9, fontWeight:700, color:'#c9a227' }}>#{cc.rank} of {cc.rankOf}</span>
+                </div>
+              </div>
+              <div style={{ fontSize:15, fontWeight:700, color:'#1a1a18', lineHeight:1.3, marginBottom:4 }}>{cc.actionTitle}</div>
+              <div style={{ fontSize:11, color:'#a8a29e' }}>{cc.challengeName} · {cc.duration} · {cc.gapText}</div>
+            </div>
+          ))}
+
+        </div>
+
+        {/* ── You might also like ───────────────────────────────────── */}
+        {(() => {
+          const suggestedPillars = ['Movement','Nutrition','Relaxation','Sleep'];
+          const suggested = [
+            { id:'s1', pillar:'Movement',   bg:'linear-gradient(135deg,#e8f0e8,#c8d8c0)', title:'Stretching session', sub:'15 min · by Deniz', imgColor:'#94a47f' },
+            { id:'s2', pillar:'Movement',   bg:'linear-gradient(135deg,#f0e8d8,#dcc8a8)', title:'Weight lifting',     sub:'30 min · by James', imgColor:'#c9a227' },
+            { id:'s3', pillar:'Movement',   bg:'linear-gradient(135deg,#e8eef5,#c8d4e0)', title:'Running basics',     sub:'20 min · by Alex',  imgColor:'#5b7fa6' },
+            { id:'s4', pillar:'Nutrition',  bg:'linear-gradient(135deg,#fceee9,#f5d0c5)', title:'Clean Plate April',  sub:'21 days · 34 members', imgColor:'#e07a5f' },
+            { id:'s5', pillar:'Relaxation', bg:'linear-gradient(135deg,#f0e8f5,#dcc8ea)', title:'Evening wind-down',  sub:'10 min · by Priya',  imgColor:'#a47f94' },
+            { id:'s6', pillar:'Sleep',      bg:'linear-gradient(135deg,#e8f0f5,#c8d8e8)', title:'Sleep hygiene reset', sub:'7 days · 22 members', imgColor:'#5b7fa6' },
+          ];
+          const filtered = suggested.filter(s => s.pillar === activePillar);
+          return (
+            <div style={{ paddingTop:18, paddingBottom:4 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:'#1a1a18', letterSpacing:'-0.01em', marginBottom:10, paddingLeft:16 }}>You might also like</div>
+              {/* Filter pills */}
+              <div style={{ display:'flex', gap:7, paddingLeft:16, paddingRight:16, overflowX:'auto', marginBottom:12 }} className="hide-scrollbar">
+                {suggestedPillars.map(pl => (
+                  <div key={pl} onClick={() => setActivePillar(pl)}
+                    style={{ flexShrink:0, padding:'5px 13px', borderRadius:20, fontSize:11, fontWeight:600, cursor:'pointer', userSelect:'none',
+                      background: activePillar===pl ? '#1a1a18' : 'white',
+                      color:       activePillar===pl ? 'white'   : '#78716c',
+                      border:      activePillar===pl ? 'none'    : '0.5px solid #d6d3d1',
+                    }}>{pl}</div>
+                ))}
+              </div>
+              {/* Horizontal scroll cards */}
+              <div style={{ display:'flex', gap:10, paddingLeft:16, paddingRight:16, overflowX:'auto' }} className="hide-scrollbar">
+                {filtered.map(s => (
+                  <div key={s.id} style={{ flexShrink:0, width:140, background:'white', borderRadius:16, border:'0.5px solid #ede9e2', overflow:'hidden', cursor:'pointer' }}>
+                    <div style={{ height:90, background:s.bg, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      <svg viewBox="0 0 40 40" width="38" height="38"><circle cx="20" cy="20" r="18" fill={s.imgColor} opacity="0.18"/><circle cx="20" cy="20" r="10" fill={s.imgColor} opacity="0.35"/></svg>
+                    </div>
+                    <div style={{ padding:'9px 10px 10px' }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:'#1a1a18', marginBottom:2, lineHeight:1.3 }}>{s.title}</div>
+                      <div style={{ fontSize:10, color:'#a8a29e', marginBottom:8 }}>{s.sub}</div>
+                      <div style={{ background:'#fbbf24', borderRadius:8, textAlign:'center', padding:'5px 0', fontSize:11, fontWeight:700, color:'#1a1a18' }}>Add</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── Your Challenges ───────────────────────────────────────── */}
+        <div style={{ paddingTop:18, paddingBottom:28 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingLeft:16, paddingRight:16, marginBottom:10 }}>
+            <span style={{ fontSize:13, fontWeight:700, color:'#1a1a18', letterSpacing:'-0.01em' }}>Your Challenges</span>
+            <span onClick={() => onSwitchPersona && onSwitchPersona('mayaChallenge')}
+              style={{ fontSize:11, fontWeight:600, color:'#778a62', cursor:'pointer', userSelect:'none' }}>See all</span>
+          </div>
+          <div style={{ display:'flex', gap:10, paddingLeft:16, paddingRight:16, overflowX:'auto' }} className="hide-scrollbar">
+            {allCarouselChallenges.map(ch => {
+              const isAdded = todayChallengeIds.has(ch.id);
+              return (
+                <div key={ch.id} onClick={() => ch.joined && setChallengeSheet(ch)}
+                  style={{ flexShrink:0, width:140, background:'white', borderRadius:16, border:'0.5px solid #ede9e2', overflow:'hidden', cursor:'pointer' }}>
+                  {/* Image area */}
+                  <div style={{ height:90, background:`linear-gradient(135deg,${ch.bgFrom||'#e8f0e8'},${ch.bgTo||'#c8d8c0'})`, position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    <svg viewBox="0 0 40 40" width="38" height="38"><circle cx="20" cy="20" r="18" fill="rgba(255,255,255,0.25)"/><circle cx="20" cy="20" r="10" fill="rgba(255,255,255,0.35)"/></svg>
+                    {ch.joined && ch.rank && (
+                      <div style={{ position:'absolute', top:7, right:7, background:'rgba(252,211,77,0.22)', borderRadius:6, padding:'2px 6px', display:'flex', alignItems:'center', gap:2 }}>
+                        <svg viewBox="0 0 24 24" fill="#c9a227" stroke="none" width="7" height="7"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <span style={{ fontSize:8, fontWeight:700, color:'#c9a227' }}>#{ch.rank}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Body */}
+                  <div style={{ padding:'9px 10px 10px' }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:'#1a1a18', marginBottom:1, lineHeight:1.3 }}>{ch.challengeName}</div>
+                    <div style={{ fontSize:9.5, color:'#a8a29e', marginBottom:8 }}>{ch.daterange}{ch.author ? ` · ${ch.author}` : ''}</div>
+                    {ch.joined ? (
+                      isAdded ? (
+                        <div style={{ background:'#e8ebe3', borderRadius:8, textAlign:'center', padding:'5px 0', fontSize:11, fontWeight:700, color:'#5d6e4d' }}>Added ✓</div>
+                      ) : (
+                        <div onClick={(e) => { e.stopPropagation(); addToToday(ch.id); }}
+                          style={{ background:'#fbbf24', borderRadius:8, textAlign:'center', padding:'5px 0', fontSize:11, fontWeight:700, color:'#1a1a18', cursor:'pointer' }}>Add to today</div>
+                      )
+                    ) : (
+                      <div style={{ background:'white', border:'1.5px solid #1a1a18', borderRadius:8, textAlign:'center', padding:'5px 0', fontSize:11, fontWeight:700, color:'#1a1a18' }}>Join</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* ── Bottom nav ───────────────────────────────────────────────── */}
-      <LemonNav active="home" onSelect={(id) => {
-        if (id==='meal'      && onSwitchPersona) onSwitchPersona('mayaMealPrep');
-        if (id==='stats'     && onSwitchPersona) onSwitchPersona('mayaStats');
-        if (id==='community' && onSwitchPersona) onSwitchPersona('mayaCommunity');
-      }}/>
+      {/* ── New bottom nav ────────────────────────────────────────────── */}
+      <div style={{ background:'white', borderTop:'0.5px solid #ede9e2', display:'flex', alignItems:'center', padding:'10px 0 14px', position:'relative', flexShrink:0 }}>
+        {[
+          { id:'home', label:'Home', icon:'⊙', active:true },
+          { id:'stats', label:'Stats', icon:'📊', active:false },
+          { id:'meals', label:'Meals', icon:'🥗', active:false },
+          { id:'ask', label:'Ask', icon:'💬', active:false },
+        ].map(tab => (
+          <div key={tab.id} onClick={() => {
+            if (tab.id==='stats' && onSwitchPersona) onSwitchPersona('mayaStats');
+            if (tab.id==='meals' && onSwitchPersona) onSwitchPersona('mayaMealPrep');
+          }} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, cursor:'pointer', userSelect:'none' }}>
+            <span style={{ fontSize:19 }}>{tab.icon}</span>
+            <span style={{ fontSize:9, fontWeight:tab.active?700:500, color:tab.active?'#2563eb':'#a8a29e' }}>{tab.label}</span>
+          </div>
+        ))}
+        {/* Floating + button */}
+        <div style={{ position:'absolute', top:-22, left:'50%', transform:'translateX(-50%)', width:44, height:44, borderRadius:'50%', background:'#2563eb', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 14px rgba(37,99,235,0.4)', cursor:'pointer', zIndex:10 }}>
+          <span style={{ fontSize:24, color:'white', lineHeight:1, marginTop:-2 }}>+</span>
+        </div>
+      </div>
 
       {/* ── Detail sheet ────────────────────────────────────────────── */}
       <div style={{ position:'absolute', inset:0, zIndex:40, pointerEvents:'none' }}>
@@ -5505,6 +6016,114 @@ const EngineStdViewV2 = ({ persona, onSwitchPersona }) => {
               {em}&nbsp;&nbsp;{label}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* ── Challenge detail sheet ──────────────────────────────────── */}
+      <div style={{ position:'absolute', inset:0, zIndex:70, pointerEvents:'none' }}>
+        <div style={{ position:'absolute', inset:0, background:challengeSheet?'rgba(0,0,0,0.42)':'rgba(0,0,0,0)', transition:'background 0.25s', pointerEvents:challengeSheet?'all':'none' }}
+          onClick={() => setChallengeSheet(null)}/>
+        <div style={{
+          position:'absolute', bottom:0, left:0, right:0, background:'#fafaf8',
+          borderRadius:'22px 22px 0 0', maxHeight:'88%', overflowY:'auto',
+          transform:challengeSheet?'translateY(0)':'translateY(100%)',
+          transition:'transform 0.3s cubic-bezier(0.32,0.72,0,1)',
+          pointerEvents:challengeSheet?'all':'none',
+        }} className="hide-scrollbar">
+          {challengeSheet && (() => {
+            const cc = challengeSheet;
+            const pct = (cc.userRoutines / cc.totalRoutines) * 100;
+            const leader = cc.leaderboard[0];
+            const userEntry = cc.leaderboard.find(e=>e.isUser);
+            const gap = leader.routines - (userEntry ? userEntry.routines : 0);
+            return (
+              <div style={{ paddingBottom:32 }}>
+                {/* Drag handle */}
+                <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 2px' }}>
+                  <div style={{ width:36, height:4, borderRadius:2, background:'#d6d3d1' }}/>
+                </div>
+
+                {/* Header */}
+                <div style={{ padding:'12px 16px 14px', borderBottom:'1px solid #efefed' }}>
+                  <div style={{ display:'flex', gap:6, marginBottom:8 }}>
+                    <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.07em', padding:'3px 8px', borderRadius:20, background:'rgba(119,138,98,0.12)', color:'#5d6e4d' }}>MOVEMENT</span>
+                    <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.07em', padding:'3px 8px', borderRadius:20, background:'rgba(119,138,98,0.08)', color:'#778a62' }}>STRENGTH</span>
+                  </div>
+                  <div style={{ fontSize:18, fontWeight:800, color:'#1a1a18', letterSpacing:'-0.02em', marginBottom:3 }}>{cc.challengeName}</div>
+                  <div style={{ fontSize:11, color:'#a8a29e' }}>{cc.daterange} · {cc.totalDays} days</div>
+                </div>
+
+                {/* Your progress */}
+                <div style={{ padding:'14px 16px', borderBottom:'1px solid #efefed' }}>
+                  <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase', color:'#a8a29e', marginBottom:10 }}>Your progress</div>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                    <div>
+                      <span style={{ fontSize:22, fontWeight:800, color:'#1a1a18', letterSpacing:'-0.025em' }}>{cc.userRoutines}</span>
+                      <span style={{ fontSize:13, fontWeight:500, color:'#a8a29e' }}> / {cc.totalRoutines} routines</span>
+                      <div style={{ fontSize:11, color:'#78716c', marginTop:2 }}>Day {cc.currentDay} of {cc.totalDays}</div>
+                    </div>
+                    <div style={{ background:'linear-gradient(135deg,#fcd34d,#fbbf24)', borderRadius:10, padding:'5px 11px', display:'flex', alignItems:'center', gap:4 }}>
+                      <svg viewBox="0 0 24 24" fill="#92400e" stroke="none" width="10" height="10"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      <span style={{ fontSize:13, fontWeight:800, color:'#92400e' }}>#{cc.rank} of {cc.rankOf}</span>
+                    </div>
+                  </div>
+                  <div style={{ height:5, background:'#f0efec', borderRadius:3, overflow:'hidden', marginBottom:5 }}>
+                    <div style={{ height:'100%', width:`${pct}%`, background:'linear-gradient(90deg,#fcd34d,#fbbf24)', borderRadius:3 }}/>
+                  </div>
+                  <div style={{ fontSize:10, color:'#57534e', fontWeight:500 }}>{cc.gapText} — complete today to close the gap</div>
+                </div>
+
+                {/* Leaderboard */}
+                <div style={{ padding:'14px 16px', borderBottom:'1px solid #efefed' }}>
+                  <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase', color:'#a8a29e', marginBottom:10 }}>Leaderboard</div>
+                  {cc.leaderboard.map((entry, idx) => {
+                    const lpct = (entry.routines / cc.totalRoutines) * 100;
+                    const medals = {1:{bg:'linear-gradient(135deg,#fcd34d,#fbbf24)',c:'#92400e'},2:{bg:'#e7e5e4',c:'#57534e'},3:{bg:'linear-gradient(135deg,#d4a95a,#c9813a)',c:'#7c4a0e'}};
+                    const medal = medals[entry.rank];
+                    return (
+                      <div key={idx} style={{
+                        display:'flex', alignItems:'center', gap:9, padding:'8px 10px',
+                        borderRadius:12, marginBottom:5,
+                        background: entry.isUser ? 'rgba(252,211,77,0.08)' : '#fff',
+                        border: entry.isUser ? '1.5px solid rgba(251,191,36,0.28)' : '1px solid #f5f5f4',
+                      }}>
+                        <div style={{ width:20, height:20, borderRadius:5, flexShrink:0, background:medal?medal.bg:'transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:800, color:medal?medal.c:'#c4bfb8' }}>{entry.rank}</div>
+                        <div style={{ width:28, height:28, borderRadius:'50%', flexShrink:0, background:entry.grad, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:11, fontWeight:700, boxShadow:entry.isUser?'0 0 0 2px rgba(251,191,36,0.45)':'none' }}>{entry.initial}</div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:4 }}>
+                            <span style={{ fontSize:12, fontWeight:entry.isUser?800:500, color:'#1a1a18' }}>{entry.name}</span>
+                            {entry.isUser && <span style={{ fontSize:8, fontWeight:700, padding:'1px 5px', borderRadius:4, background:'rgba(251,191,36,0.18)', color:'#c9a227' }}>You</span>}
+                          </div>
+                          <div style={{ height:3, background:'#f0efec', borderRadius:2, overflow:'hidden' }}>
+                            <div style={{ height:'100%', width:`${lpct}%`, background:entry.isUser?'linear-gradient(90deg,#fcd34d,#fbbf24)':entry.rank===1?'#778a62':'#d6d3d1', borderRadius:2 }}/>
+                          </div>
+                        </div>
+                        <div style={{ textAlign:'right', flexShrink:0, minWidth:24 }}>
+                          <span style={{ fontSize:13, fontWeight:800, color:'#1a1a18' }}>{entry.routines}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Activity */}
+                <div style={{ padding:'14px 16px' }}>
+                  <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase', color:'#a8a29e', marginBottom:10 }}>Recent activity</div>
+                  {cc.activity.map((item, idx) => (
+                    <div key={idx} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 0', borderBottom:idx<cc.activity.length-1?'1px solid #f5f5f4':'none' }}>
+                      <div style={{ width:32, height:32, borderRadius:'50%', flexShrink:0, background:item.grad, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:12, fontWeight:700, boxShadow:item.isUser?'0 0 0 2px rgba(251,191,36,0.4)':'none' }}>{item.initial}</div>
+                      <div style={{ flex:1 }}>
+                        <span style={{ fontSize:12.5, fontWeight:700, color:'#1a1a18' }}>{item.name}</span>
+                        {item.isUser && <span style={{ fontSize:8, fontWeight:700, padding:'1px 5px', borderRadius:4, background:'rgba(251,191,36,0.18)', color:'#c9a227', margin:'0 3px' }}>You</span>}
+                        <span style={{ fontSize:12, color:'#57534e', fontWeight:400 }}> {item.action}</span>
+                      </div>
+                      <span style={{ fontSize:10, color:'#a8a29e', flexShrink:0 }}>{item.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -6117,8 +6736,308 @@ const ChatLoggingView = ({ initialStage = 'main', initialActivity = null }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN APP
 // ─────────────────────────────────────────────────────────────────────────────
+// ── ChallengeDetailView — Challenge list page with detail bottom sheet ──────
+const ChallengeDetailView = ({ persona, onSwitchPersona }) => {
+  const [sheetChallenge, setSheetChallenge] = useState(null);
+
+  // Active challenges list
+  const activeChallenges = [
+    {
+      id:'core', title:'Strong Core, Strong Body',
+      subtitle:'14 Day Core Challenge',
+      daterange:'Apr 6 – Apr 20, 2026',
+      author:'Taylor Breaux', authorGrad:'linear-gradient(135deg,#5b7fa6,#3d5a78)',
+      goal:'Complete 14 routines',
+      bgFrom:'#2a3a52', bgTo:'#1c2030',
+      pillar:'MOVEMENT', pillarColor:'#94a47f',
+      seatsLeft:125, joined:true,
+      // Detail data
+      totalDays:14, currentDay:11,
+      userRoutines:9, totalRoutines:14,
+      rank:2, rankOf:8,
+      gapText:'1 routine behind Steven',
+      leaderboard:[
+        { rank:1, name:'Steven',  initial:'S', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', routines:10 },
+        { rank:2, name:'Maya',    initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', routines:9, isUser:true },
+        { rank:3, name:'Onur T.', initial:'O', grad:'linear-gradient(135deg,#5b7fa6,#3d5a78)', routines:7  },
+        { rank:4, name:'James',   initial:'J', grad:'linear-gradient(135deg,#a47f94,#6d5d7a)', routines:6  },
+        { rank:5, name:'Priya',   initial:'P', grad:'linear-gradient(135deg,#e8a87c,#c9813a)', routines:4  },
+        { rank:6, name:'Alex',    initial:'A', grad:'linear-gradient(135deg,#7fa494,#4d6e65)', routines:3  },
+        { rank:7, name:'Sam',     initial:'S', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', routines:2  },
+        { rank:8, name:'Taylor',  initial:'T', grad:'linear-gradient(135deg,#5b7fa6,#3d5a78)', routines:1  },
+      ],
+      activity:[
+        { name:'Steven',  initial:'S', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', action:'completed Day 10', time:'2h ago'    },
+        { name:'Maya',    initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', action:'completed Day 9',  time:'Yesterday', isUser:true },
+        { name:'Onur T.', initial:'O', grad:'linear-gradient(135deg,#5b7fa6,#3d5a78)', action:'completed Day 7',  time:'2 days ago' },
+        { name:'James',   initial:'J', grad:'linear-gradient(135deg,#a47f94,#6d5d7a)', action:'completed Day 6',  time:'2 days ago' },
+        { name:'Priya',   initial:'P', grad:'linear-gradient(135deg,#e8a87c,#c9813a)', action:'completed Day 4',  time:'3 days ago' },
+      ],
+    },
+    {
+      id:'zone2', title:'Zone 2 Five',
+      subtitle:'30 Day Cardio Challenge',
+      daterange:'Apr 10 – May 9, 2026',
+      author:'Deniz B', authorGrad:'linear-gradient(135deg,#3d9e9e,#2c7878)',
+      goal:'Complete 30 sessions',
+      bgFrom:'#2c5f5f', bgTo:'#1a3a3a',
+      pillar:'MOVEMENT', pillarColor:'#3d9e9e',
+      seatsLeft:48, joined:true,
+      totalDays:30, currentDay:8,
+      userRoutines:7, totalRoutines:30,
+      rank:3, rankOf:12,
+      gapText:'2 sessions behind Deniz B',
+      leaderboard:[
+        { rank:1, name:'Deniz B', initial:'D', grad:'linear-gradient(135deg,#3d9e9e,#2c7878)', routines:9 },
+        { rank:2, name:'Ali',     initial:'A', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', routines:8 },
+        { rank:3, name:'Maya',    initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', routines:7, isUser:true },
+        { rank:4, name:'Lena',    initial:'L', grad:'linear-gradient(135deg,#a47f94,#6d5d7a)', routines:6 },
+        { rank:5, name:'Sam',     initial:'S', grad:'linear-gradient(135deg,#5b7fa6,#3d5a78)', routines:5 },
+      ],
+      activity:[
+        { name:'Deniz B', initial:'D', grad:'linear-gradient(135deg,#3d9e9e,#2c7878)', action:'completed Day 9', time:'1h ago'    },
+        { name:'Ali',     initial:'A', grad:'linear-gradient(135deg,#94a47f,#5d6e4d)', action:'completed Day 8', time:'3h ago'    },
+        { name:'Maya',    initial:'M', grad:'linear-gradient(135deg,#fcd34d,#c9a227)', action:'completed Day 7', time:'Yesterday', isUser:true },
+        { name:'Lena',    initial:'L', grad:'linear-gradient(135deg,#a47f94,#6d5d7a)', action:'completed Day 6', time:'Yesterday' },
+      ],
+    },
+  ];
+
+  const pastChallenges = [
+    {
+      id:'pushup', title:'The Push-Up Gauntlet', subtitle:'Complete 14 routines',
+      daterange:'Apr 14 – May 14, 2026', author:'Steven',
+      authorGrad:'linear-gradient(135deg,#94a47f,#5d6e4d)',
+      bgFrom:'#3a2a4a', bgTo:'#1e1530', pillar:'MOVEMENT',
+      finalRank:2, rankOf:8, completed:true,
+    },
+  ];
+
+  const sheetOpen = !!sheetChallenge;
+
+  return (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'#f7f6f3', overflow:'hidden', position:'relative' }}>
+      <div style={{ flex:1, overflowY:'auto', overflowX:'hidden' }} className="hide-scrollbar">
+
+        {/* Top bar */}
+        <div style={{ padding:'16px 16px 0', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ fontSize:20, fontWeight:800, color:'#1a1a18', letterSpacing:'-0.02em' }}>Challenges</div>
+          <button style={{ width:32, height:32, borderRadius:'50%', background:'rgba(119,138,98,0.12)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'#778a62' }}>
+            <I.Plus/>
+          </button>
+        </div>
+
+        {/* Active challenges */}
+        <div style={{ padding:'18px 16px 6px' }}>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase', color:'#a8a29e', marginBottom:10 }}>Active challenges</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {activeChallenges.map(ch => {
+              return (
+                <div key={ch.id} onClick={() => setSheetChallenge(ch)}
+                  style={{ background:'#fff', borderRadius:16, border:'1px solid #efefed', overflow:'hidden', cursor:'pointer' }}>
+                  {/* Card header image area */}
+                  <div style={{ height:88, background:`linear-gradient(160deg,${ch.bgFrom},${ch.bgTo})`, position:'relative', overflow:'hidden', padding:'12px 14px' }}>
+                    <div style={{ position:'absolute', top:-30, right:-30, width:120, height:120, background:'rgba(255,255,255,0.05)', borderRadius:'50%' }}/>
+                    <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.07em', padding:'3px 8px', borderRadius:20, background:'rgba(255,255,255,0.12)', color:'rgba(255,255,255,0.8)' }}>{ch.pillar}</span>
+                    <div style={{ position:'absolute', bottom:12, right:14, display:'flex', alignItems:'center', gap:4, background:'rgba(252,211,77,0.18)', borderRadius:8, padding:'3px 8px' }}>
+                      <svg viewBox="0 0 24 24" fill="#fbbf24" stroke="none" width="9" height="9"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      <span style={{ fontSize:10, fontWeight:700, color:'#fbbf24' }}>#{ch.rank} of {ch.rankOf}</span>
+                    </div>
+                  </div>
+                  {/* Card body */}
+                  <div style={{ padding:'11px 14px 13px' }}>
+                    <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:6 }}>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontSize:13, fontWeight:800, color:'#1a1a18', letterSpacing:'-0.01em', marginBottom:2 }}>{ch.title}</div>
+                        <div style={{ fontSize:10, color:'#a8a29e' }}>{ch.daterange}</div>
+                      </div>
+                      <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                        <div style={{ width:18, height:18, borderRadius:'50%', background:ch.authorGrad, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:8, fontWeight:800 }}>{ch.author.charAt(0)}</div>
+                        <span style={{ fontSize:10, color:'#78716c', fontWeight:500 }}>by {ch.author}</span>
+                      </div>
+                    </div>
+                    {/* Rank + gap row */}
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:2 }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(252,211,77,0.13)', borderRadius:7, padding:'3px 8px' }}>
+                        <svg viewBox="0 0 24 24" fill="#c9a227" stroke="none" width="8" height="8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <span style={{ fontSize:9.5, fontWeight:700, color:'#c9a227' }}>#{ch.rank} of {ch.rankOf}</span>
+                      </div>
+                      <span style={{ fontSize:9.5, color:'#78716c', fontWeight:600 }}>{ch.gapText}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Past challenges */}
+        <div style={{ padding:'14px 16px 28px' }}>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase', color:'#a8a29e', marginBottom:10 }}>Past challenges</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            {pastChallenges.map(ch => (
+              <div key={ch.id} style={{ background:'#fff', borderRadius:14, border:'1px solid #efefed', overflow:'hidden' }}>
+                <div style={{ height:60, background:`linear-gradient(135deg,${ch.bgFrom},${ch.bgTo})`, position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.25)" stroke="none" width="22" height="22"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <div style={{ position:'absolute', top:6, right:8, fontSize:8, fontWeight:700, color:'rgba(255,255,255,0.6)', letterSpacing:'0.04em' }}>#{ch.finalRank} of {ch.rankOf}</div>
+                </div>
+                <div style={{ padding:'9px 10px' }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'#1a1a18', marginBottom:3, lineHeight:1.25 }}>{ch.title}</div>
+                  <div style={{ fontSize:9, color:'#a8a29e' }}>{ch.subtitle}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:4, marginTop:6 }}>
+                    <div style={{ width:14, height:14, borderRadius:'50%', background:ch.authorGrad, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:6, fontWeight:800 }}>{ch.author.charAt(0)}</div>
+                    <span style={{ fontSize:9, color:'#78716c' }}>by {ch.author}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom nav */}
+      <div style={{ background:'white', borderTop:'0.5px solid #ede9e2', display:'flex', alignItems:'center', padding:'10px 0 14px', position:'relative', flexShrink:0 }}>
+        {[
+          { id:'home', label:'Home', IC:I.Home, active:false },
+          { id:'stats', label:'Stats', IC:I.Chart, active:false },
+          { id:'meals', label:'Meals', IC:I.MealPlan, active:false },
+          { id:'ask', label:'Ask', IC:I.Chat, active:false },
+        ].map(tab => (
+          <div key={tab.id} onClick={() => {
+            if (tab.id==='home' && onSwitchPersona) onSwitchPersona('mayaStandardDayV2');
+            if (tab.id==='stats' && onSwitchPersona) onSwitchPersona('mayaStats');
+            if (tab.id==='meals' && onSwitchPersona) onSwitchPersona('mayaMealPrep');
+          }} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, cursor:'pointer', userSelect:'none' }}>
+            <div style={{ color:'#b0a99e' }}><tab.IC/></div>
+            <span style={{ fontSize:9, fontWeight:500, color:'#b0a99e' }}>{tab.label}</span>
+          </div>
+        ))}
+        <div style={{ position:'absolute', top:-22, left:'50%', transform:'translateX(-50%)', width:44, height:44, borderRadius:'50%', background:'linear-gradient(135deg,#fcd34d,#fbbf24)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 14px rgba(251,191,36,0.4)', cursor:'pointer', zIndex:10 }}>
+          <span style={{ fontSize:24, color:'#92400e', lineHeight:1, marginTop:-2, fontWeight:700 }}>🍋</span>
+        </div>
+      </div>
+
+      {/* ── Challenge detail bottom sheet ── */}
+      <div style={{ position:'absolute', inset:0, zIndex:40, pointerEvents:'none' }}>
+        <div style={{ position:'absolute', inset:0, background:sheetOpen?'rgba(0,0,0,0.42)':'rgba(0,0,0,0)', transition:'background 0.25s', pointerEvents:sheetOpen?'all':'none' }}
+          onClick={() => setSheetChallenge(null)}/>
+        <div style={{
+          position:'absolute', bottom:0, left:0, right:0, background:'#fafaf8',
+          borderRadius:'22px 22px 0 0', maxHeight:'88%', overflowY:'auto',
+          transform:sheetOpen?'translateY(0)':'translateY(100%)',
+          transition:'transform 0.3s cubic-bezier(0.32,0.72,0,1)',
+          pointerEvents:sheetOpen?'all':'none',
+        }} className="hide-scrollbar">
+          {sheetChallenge && (() => {
+            const cc = sheetChallenge;
+            const pct = (cc.userRoutines / cc.totalRoutines) * 100;
+            const leader = cc.leaderboard[0];
+            const userEntry = cc.leaderboard.find(e=>e.isUser);
+            const gap = leader ? leader.routines - (userEntry ? userEntry.routines : 0) : 0;
+            return (
+              <div style={{ paddingBottom:32 }}>
+                {/* Drag handle */}
+                <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 2px' }}>
+                  <div style={{ width:36, height:4, borderRadius:2, background:'#d6d3d1' }}/>
+                </div>
+
+                {/* Header */}
+                <div style={{ padding:'12px 16px 14px', borderBottom:'1px solid #efefed' }}>
+                  <div style={{ display:'flex', gap:6, marginBottom:8 }}>
+                    <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.07em', padding:'3px 8px', borderRadius:20, background:'rgba(119,138,98,0.12)', color:'#5d6e4d' }}>{cc.pillar}</span>
+                  </div>
+                  <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:18, fontWeight:800, color:'#1a1a18', letterSpacing:'-0.02em', marginBottom:2 }}>{cc.title}</div>
+                      <div style={{ fontSize:11, color:'#a8a29e' }}>{cc.daterange}</div>
+                    </div>
+                    <button onClick={(e)=>{ e.stopPropagation(); setSheetChallenge(null); }}
+                      style={{ width:28, height:28, borderRadius:'50%', background:'#f0efec', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'#78716c', flexShrink:0 }}>
+                      <I.Close/>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Your progress */}
+                <div style={{ padding:'14px 16px', borderBottom:'1px solid #efefed' }}>
+                  <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase', color:'#a8a29e', marginBottom:10 }}>Your progress</div>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                    <div>
+                      <span style={{ fontSize:24, fontWeight:800, color:'#1a1a18', letterSpacing:'-0.025em' }}>{cc.userRoutines}</span>
+                      <span style={{ fontSize:13, fontWeight:500, color:'#a8a29e' }}> / {cc.totalRoutines}</span>
+                      <div style={{ fontSize:11, color:'#78716c', marginTop:2 }}>Day {cc.currentDay} of {cc.totalDays}</div>
+                    </div>
+                    <div style={{ background:'linear-gradient(135deg,#fcd34d,#fbbf24)', borderRadius:10, padding:'6px 12px', display:'flex', alignItems:'center', gap:4 }}>
+                      <svg viewBox="0 0 24 24" fill="#92400e" stroke="none" width="10" height="10"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      <span style={{ fontSize:13, fontWeight:800, color:'#92400e' }}>#{cc.rank} of {cc.rankOf}</span>
+                    </div>
+                  </div>
+                  <div style={{ height:5, background:'#f0efec', borderRadius:3, overflow:'hidden', marginBottom:6 }}>
+                    <div style={{ height:'100%', width:`${pct}%`, background:'linear-gradient(90deg,#fcd34d,#fbbf24)', borderRadius:3 }}/>
+                  </div>
+                  <div style={{ fontSize:10.5, color:'#57534e', fontWeight:500 }}>{cc.gapText} — complete today to close the gap</div>
+                </div>
+
+                {/* Leaderboard */}
+                <div style={{ padding:'14px 16px', borderBottom:'1px solid #efefed' }}>
+                  <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase', color:'#a8a29e', marginBottom:10 }}>Leaderboard</div>
+                  {cc.leaderboard.map((entry, idx) => {
+                    const lpct = (entry.routines / cc.totalRoutines) * 100;
+                    const medals = {1:{bg:'linear-gradient(135deg,#fcd34d,#fbbf24)',c:'#92400e'},2:{bg:'#e7e5e4',c:'#57534e'},3:{bg:'linear-gradient(135deg,#d4a95a,#c9813a)',c:'#7c4a0e'}};
+                    const medal = medals[entry.rank];
+                    return (
+                      <div key={idx} style={{
+                        display:'flex', alignItems:'center', gap:9, padding:'8px 10px',
+                        borderRadius:12, marginBottom:5,
+                        background:entry.isUser?'rgba(252,211,77,0.08)':'#fff',
+                        border:entry.isUser?'1.5px solid rgba(251,191,36,0.28)':'1px solid #f5f5f4',
+                      }}>
+                        <div style={{ width:20, height:20, borderRadius:5, flexShrink:0, background:medal?medal.bg:'transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:800, color:medal?medal.c:'#c4bfb8' }}>{entry.rank}</div>
+                        <div style={{ width:28, height:28, borderRadius:'50%', flexShrink:0, background:entry.grad, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:11, fontWeight:700, boxShadow:entry.isUser?'0 0 0 2px rgba(251,191,36,0.45)':'none' }}>{entry.initial}</div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:4 }}>
+                            <span style={{ fontSize:12, fontWeight:entry.isUser?800:500, color:'#1a1a18' }}>{entry.name}</span>
+                            {entry.isUser && <span style={{ fontSize:8, fontWeight:700, padding:'1px 5px', borderRadius:4, background:'rgba(251,191,36,0.18)', color:'#c9a227' }}>You</span>}
+                          </div>
+                          <div style={{ height:3, background:'#f0efec', borderRadius:2, overflow:'hidden' }}>
+                            <div style={{ height:'100%', width:`${lpct}%`, background:entry.isUser?'linear-gradient(90deg,#fcd34d,#fbbf24)':entry.rank===1?'#778a62':'#d6d3d1', borderRadius:2 }}/>
+                          </div>
+                        </div>
+                        <div style={{ textAlign:'right', flexShrink:0, minWidth:24 }}>
+                          <span style={{ fontSize:13, fontWeight:800, color:'#1a1a18' }}>{entry.routines}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Activity feed */}
+                <div style={{ padding:'14px 16px' }}>
+                  <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase', color:'#a8a29e', marginBottom:10 }}>Recent activity</div>
+                  {cc.activity.map((item, idx) => (
+                    <div key={idx} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 0', borderBottom:idx<cc.activity.length-1?'1px solid #f5f5f4':'none' }}>
+                      <div style={{ width:32, height:32, borderRadius:'50%', flexShrink:0, background:item.grad, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:12, fontWeight:700, boxShadow:item.isUser?'0 0 0 2px rgba(251,191,36,0.4)':'none' }}>{item.initial}</div>
+                      <div style={{ flex:1 }}>
+                        <span style={{ fontSize:12.5, fontWeight:700, color:'#1a1a18' }}>{item.name}</span>
+                        {item.isUser && <span style={{ fontSize:8, fontWeight:700, padding:'1px 5px', borderRadius:4, background:'rgba(251,191,36,0.18)', color:'#c9a227', margin:'0 3px' }}>You</span>}
+                        <span style={{ fontSize:12, color:'#57534e', fontWeight:400 }}> {item.action}</span>
+                      </div>
+                      <span style={{ fontSize:10, color:'#a8a29e', flexShrink:0 }}>{item.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 function App() {
-  const [pk, setPk] = useState('mayaHomeV5');
+  const [pk, setPk] = useState('mayaStandardDayV2');
   const [page, setPage] = useState(1);
   const [animKey, setAnimKey] = useState(0);
   const [directions, setDirections] = useState({ move:null, sleep:null, nutrition:null, mind:null, logging:null });
@@ -6202,7 +7121,9 @@ function App() {
       <div className="device" key={`${pk}-${animKey}`}>
         <div className="notch"/>
 
-        {p.isEngineStdV2 ? (
+        {p.isEngineStdV3 ? (
+          <EngineStdViewV3 persona={p} onSwitchPersona={switchPersona}/>
+        ) : p.isEngineStdV2 ? (
           <EngineStdViewV2 persona={p} onSwitchPersona={switchPersona}/>
         ) : p.isEngineStdView ? (
           <EngineStdView persona={p}/>
@@ -6210,6 +7131,8 @@ function App() {
           <ChatLoggingView/>
         ) : p.isStatsView ? (
           <StatsView persona={p} onSwitchPersona={switchPersona}/>
+        ) : p.isChallengeDetailView ? (
+          <ChallengeDetailView persona={p} onSwitchPersona={switchPersona}/>
         ) : p.isCommunityView ? (
           <CommunityView persona={p} onSwitchPersona={switchPersona}/>
         ) : p.isMealPrepView ? (
