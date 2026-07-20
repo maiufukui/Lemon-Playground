@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lemon: A health benefit from your employer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          sage:  { 50:'#f6f7f4', 100:'#e8ebe3', 200:'#d4dac9', 300:'#b5c0a5', 400:'#94a47f', 500:'#778a62', 600:'#5d6e4d', 700:'#4a5a3c' },
+          warm:  { 50:'#fefcf9', 100:'#fdf8f0', 200:'#faf0df', 300:'#f5e4c8' },
+          lemon: { 50:'#fefce8', 100:'#fef9c3', 200:'#fef08a', 300:'#fde047', 400:'#fcd34d', 500:'#fbbf24' },
+          stone: { 50:'#fafaf9', 100:'#f5f5f4', 150:'#efefed', 200:'#e7e5e4', 300:'#d6d3d1', 400:'#a8a29e', 500:'#78716c', 600:'#57534e' }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif; background:#f8f7f3; }
+  @keyframes slide-up   { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fade-in    { from { opacity:0; } to { opacity:1; } }
+  .su  { animation: slide-up 0.6s ease-out both; }
+  .su1 { animation: slide-up 0.6s ease-out 0.08s both; }
+  .su2 { animation: slide-up 0.6s ease-out 0.16s both; }
+  .su3 { animation: slide-up 0.6s ease-out 0.24s both; }
+  .fi  { animation: fade-in 0.7s ease-out both; }
+  .card { background:#ffffff; border-radius:1rem; border:1px solid #efefed; box-shadow:0 1px 2px rgba(0,0,0,0.03); }
+  .hero-gradient { background: linear-gradient(180deg, #faf0df 0%, #f8f7f3 100%); }
+  html { scroll-behavior: smooth; }
+  .timeline-line { position:absolute; left:19px; top:44px; bottom:-8px; width:2px; background:#e7e5e4; }
+  .timeline-item:last-child .timeline-line { display:none; }
+</style>
+</head>
+<body class="text-stone-600">
+
+  <!-- NAV -->
+  <header class="sticky top-0 z-30 bg-warm-50/90 backdrop-blur border-b border-stone-150">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <ellipse cx="12" cy="13" rx="8" ry="9" fill="#fbbf24"/>
+          <path d="M12 4C13 2.5 15 2 16.5 2.8C15.8 4 14.3 4.6 12 4Z" fill="#778a62"/>
+        </svg>
+        <span class="text-base font-bold text-stone-600">Lemon</span>
+      </div>
+      <nav class="hidden sm:flex items-center gap-6 text-sm font-medium text-stone-500">
+        <a href="#how-it-works" class="hover:text-stone-600">How it works</a>
+        <a href="#get-started" class="hover:text-stone-600">Get started</a>
+        <a href="#first-week" class="hover:text-stone-600">Your first week</a>
+      </nav>
+      <a href="#how-it-works" class="bg-stone-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-stone-500 transition">See how it works</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero-gradient">
+    <div class="max-w-3xl mx-auto px-6 pt-20 pb-20 text-center">
+      <p class="text-xs font-semibold uppercase tracking-wide text-sage-600 mb-4 su">A health benefit from {{company_name}}</p>
+      <h1 class="text-4xl sm:text-5xl font-extrabold text-stone-600 leading-tight mb-6 su1">Small daily actions that build healthier habits.</h1>
+      <p class="text-lg text-stone-500 max-w-xl mx-auto mb-9 su2">Lemon turns your health data into visibility on what's working and closes the loop between what you do and what happens, so the next step is always obvious.<br class="hidden sm:block"><br>Covered by {{company_name}} at no cost to you.</p>
+      <div class="flex items-center justify-center gap-4 su3">
+        <a href="#get-started" class="bg-lemon-500 text-stone-600 font-semibold text-sm px-7 py-3.5 rounded-xl hover:bg-lemon-400 transition shadow-sm">Get started</a>
+        <a href="#how-it-works" class="text-stone-500 font-semibold text-sm px-4 py-3.5 hover:text-stone-600 transition">See how it works ↓</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 1: HOW LEMON WORKS -->
+  <section id="how-it-works" class="max-w-5xl mx-auto px-6 py-20 scroll-mt-16">
+    <div class="max-w-xl mx-auto text-center mb-14">
+      <p class="text-xs font-semibold uppercase tracking-wide text-sage-500 mb-3">How it works</p>
+      <h2 class="text-3xl font-extrabold text-stone-600 mb-4">What you get with Lemon</h2>
+      <p class="text-base text-stone-500 leading-relaxed">Lemon is a personal AI health companion that evolves with you, turning your health signals into clear guidance you can actually follow.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+
+      <div class="card p-6">
+        <div class="w-11 h-11 rounded-full bg-sage-100 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5d6e4d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-stone-600 mb-2">Your daily actions</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">Start each day with a few personalized actions based on your goals and progress.</p>
+      </div>
+
+      <div class="card p-6">
+        <div class="w-11 h-11 rounded-full bg-lemon-100 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-stone-600 mb-2">Ask anything</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">Log meals, workouts, weight, or ask health questions just by texting naturally.</p>
+      </div>
+
+      <div class="card p-6">
+        <div class="w-11 h-11 rounded-full bg-sage-100 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5d6e4d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-stone-600 mb-2">Know what's improving</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">See your sleep, activity, weight, and progress explained in plain language.</p>
+      </div>
+
+      <div class="card p-6">
+        <div class="w-11 h-11 rounded-full bg-lemon-100 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-stone-600 mb-2">Weekly check-in</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">A quick weekly check-in showing what worked, what's changing, and what to focus on next.</p>
+      </div>
+
+      <div class="card p-6">
+        <div class="w-11 h-11 rounded-full bg-sage-100 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5d6e4d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-stone-600 mb-2">Challenges</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">Invite a coworker or friend. You're more likely to stick with healthy habits together.</p>
+      </div>
+
+      <div class="card p-6">
+        <div class="w-11 h-11 rounded-full bg-lemon-100 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-stone-600 mb-2">Built to be done, not just read</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">Every recommendation tells you exactly what to do and why it matters.</p>
+      </div>
+
+    </div>
+
+    <p class="text-center text-2xl font-extrabold text-sage-700 mt-12">Free to you, fully covered by {{company_name}}.</p>
+  </section>
+
+  <!-- SECTION 2: GETTING STARTED -->
+  <section id="get-started" class="bg-white border-y border-stone-150 scroll-mt-16">
+    <div class="max-w-3xl mx-auto px-6 py-20">
+      <div class="max-w-xl mx-auto text-center mb-14">
+        <p class="text-xs font-semibold uppercase tracking-wide text-sage-500 mb-3">Getting started</p>
+        <h2 class="text-3xl font-extrabold text-stone-600 mb-4">Takes less than 2 minutes</h2>
+      </div>
+
+      <div class="space-y-6 max-w-lg mx-auto">
+
+        <div class="flex gap-5">
+          <div class="w-9 h-9 rounded-full bg-stone-600 text-white flex items-center justify-center text-sm font-bold shrink-0">1</div>
+          <div class="flex-1">
+            <h3 class="text-base font-bold text-stone-600 mb-1">Verify your work email</h3>
+            <p class="text-sm text-stone-500 leading-relaxed mb-4">Or enter your company code. This confirms you're covered under {{company_name}}'s Lemon benefit, at no cost to you.</p>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input type="email" placeholder="you@{{company_domain}}.com" class="flex-1 border border-stone-200 rounded-lg px-4 py-2.5 text-sm text-stone-600 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-sage-300" />
+              <button class="bg-stone-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-stone-500 transition whitespace-nowrap">Send link</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-5">
+          <div class="w-9 h-9 rounded-full bg-sage-100 text-sage-600 flex items-center justify-center text-sm font-bold shrink-0">2</div>
+          <div class="flex-1">
+            <h3 class="text-base font-bold text-stone-600 mb-1">Tell Lemon your goal</h3>
+            <p class="text-sm text-stone-500 leading-relaxed">Tell Lemon what you're working toward so your recommendations are personalized from day one.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-5">
+          <div class="w-9 h-9 rounded-full bg-sage-100 text-sage-600 flex items-center justify-center text-sm font-bold shrink-0">3</div>
+          <div class="flex-1">
+            <h3 class="text-base font-bold text-stone-600 mb-1">Connect Apple Health <span class="text-stone-400 font-normal">(optional, recommended)</span></h3>
+            <p class="text-sm text-stone-500 leading-relaxed">Connect Apple Health to automatically personalize your daily recommendations.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <p class="text-center text-sm text-stone-500 italic mt-12">Once you're set up, here's exactly what your first week looks like ↓</p>
+    </div>
+  </section>
+
+  <!-- SECTION 3: YOUR FIRST WEEK -->
+  <section id="first-week" class="max-w-3xl mx-auto px-6 py-20 scroll-mt-16">
+    <div class="text-center mb-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-sage-500 mb-3">Once you're in</p>
+      <h2 class="text-3xl font-extrabold text-stone-600 mb-4">Here's exactly what your first week looks like</h2>
+      <p class="text-base text-stone-500 max-w-lg mx-auto">Nothing else to set up. Here's what the next seven days actually look like, shown for a weight-loss goal as an example. Your actual week is paced around whatever you tell Lemon in step 2.</p>
+    </div>
+
+    <div class="max-w-xl mx-auto mt-14 space-y-8">
+
+      <div class="timeline-item relative pl-14">
+        <div class="timeline-line"></div>
+        <div class="absolute left-0 top-0 w-10 h-10 rounded-full bg-stone-600 text-white flex items-center justify-center text-xs font-bold">T</div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1">Today</p>
+        <div class="card p-4">
+          <p class="text-sm font-semibold text-stone-600 mb-1">Your health companion</p>
+          <p class="text-sm text-stone-500">Start by telling Lemon about yourself. Share today's meals, workout, weight, or ask a question. Lemon remembers what matters and adapts over time.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item relative pl-14">
+        <div class="timeline-line"></div>
+        <div class="absolute left-0 top-0 w-10 h-10 rounded-full bg-sage-100 text-sage-600 flex items-center justify-center text-xs font-bold">1</div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1">Tomorrow morning</p>
+        <div class="card p-4">
+          <p class="text-sm font-semibold text-stone-600 mb-1">Your daily actions</p>
+          <p class="text-sm text-stone-500">Tomorrow morning you'll receive your first personalized actions based on what you shared today.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item relative pl-14">
+        <div class="timeline-line"></div>
+        <div class="absolute left-0 top-0 w-10 h-10 rounded-full bg-sage-100 text-sage-600 flex items-center justify-center text-xs font-bold">3</div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1">Day 3</p>
+        <div class="card p-4">
+          <p class="text-sm font-semibold text-stone-600 mb-1">Your daily macros</p>
+          <p class="text-sm text-stone-500">See how your meals compare to your daily nutrition targets and get suggestions to close any gaps.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item relative pl-14">
+        <div class="timeline-line"></div>
+        <div class="absolute left-0 top-0 w-10 h-10 rounded-full bg-sage-100 text-sage-600 flex items-center justify-center text-xs font-bold">5</div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1">Day 5</p>
+        <div class="card p-4">
+          <p class="text-sm font-semibold text-stone-600 mb-1">Know what's improving</p>
+          <p class="text-sm text-stone-500">See what's improving with a simple weekly summary using your own data.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item relative pl-14">
+        <div class="timeline-line"></div>
+        <div class="absolute left-0 top-0 w-10 h-10 rounded-full bg-lemon-500 text-stone-600 flex items-center justify-center text-xs font-bold">7</div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-lemon-500 mb-1">Day 7 · Sunday</p>
+        <div class="card p-4 border-lemon-200">
+          <p class="text-sm font-semibold text-stone-600 mb-1">Weekly check-in</p>
+          <p class="text-sm text-stone-500">Every Sunday, review your progress, celebrate wins, and set up your next week in just a few minutes.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item relative pl-14">
+        <div class="absolute left-0 top-0 w-10 h-10 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center text-xs font-bold">+</div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1">Whenever you're ready</p>
+        <div class="card p-4">
+          <p class="text-sm font-semibold text-stone-600 mb-1">Health challenges</p>
+          <p class="text-sm text-stone-500">Invite a coworker or friend for accountability and a little friendly competition.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER CTA -->
+  <section class="hero-gradient">
+    <div class="max-w-2xl mx-auto px-6 py-16 text-center">
+      <h2 class="text-2xl font-extrabold text-stone-600 mb-3">Ready when you are.</h2>
+      <p class="text-sm text-stone-500 mb-7">Free to you, fully covered by {{company_name}}. Takes less than 2 minutes to set up.</p>
+      <a href="#get-started" class="inline-block bg-lemon-500 text-stone-600 font-semibold text-sm px-8 py-3.5 rounded-xl hover:bg-lemon-400 transition shadow-sm">Get started</a>
+    </div>
+  </section>
+
+  <footer class="border-t border-stone-150">
+    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <ellipse cx="12" cy="13" rx="8" ry="9" fill="#fbbf24"/>
+          <path d="M12 4C13 2.5 15 2 16.5 2.8C15.8 4 14.3 4.6 12 4Z" fill="#778a62"/>
+        </svg>
+        <span class="text-sm font-semibold text-stone-500">Lemon Health, Inc.</span>
+      </div>
+      <p class="text-xs text-stone-400">Provided as a benefit through {{company_name}}. Not a medical device.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
